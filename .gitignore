@@ -1,0 +1,17 @@
+*.class
+*~
+*.pyc
+*.o
+*.aux
+*.log
+*.out
+*.pdf
+*.synctex.gz
+*.idea/
+*.ipynb
+.DS_Store
+*.zip
+*.bbl
+*.blg
+*.dvi
+build

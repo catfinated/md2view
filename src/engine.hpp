@@ -2,7 +2,7 @@
 
 #include "common.hpp"
 #include "resource_manager.hpp"
-#include "md2gui.hpp"
+#include "gui.hpp"
 
 #include <GLFW/glfw3.h>
 
@@ -271,6 +271,5 @@ void GLFWEngine<Game>::mouse_callback(double xpos, double ypos)
         game_.on_mouse_movement(xoffset, yoffset);
     }
 }
-
 
 } // namespace blue
