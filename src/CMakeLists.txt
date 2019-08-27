@@ -47,7 +47,7 @@ include_directories("imgui")
 
 add_executable(md2view
   md2view.cpp
-  md2gui.cpp
+  gui.cpp
   md2.cpp
   imgui/imgui.cpp
   imgui/imgui_draw.cpp

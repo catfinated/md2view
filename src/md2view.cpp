@@ -110,11 +110,8 @@ void MD2View::render(EngineBase& engine)
 
     //translate, rotate, scale
     glm::mat4 model(1.0);
-    //model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    //model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     model = glm::scale(model, glm::vec3(1.0f/64.0f, 1.0f/64.0f, 1.0f/64.0f));
-    //model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     //std::cout << glm::to_string(model) << '\n';
 
     shader.use();
@@ -179,8 +176,6 @@ void MD2View::render(EngineBase& engine)
     ImGui::InputFloat4("", glm::value_ptr(model[3]), -1, ImGuiInputTextFlags_ReadOnly);
 
     ImGui::End();
-
-
 }
 
 void MD2View::update(EngineBase& engine, GLfloat delta_time)

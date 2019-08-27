@@ -3,7 +3,6 @@
 #include "common.hpp"
 #include "shader.hpp"
 #include "texture2D.hpp"
-#include "targa.h"
 
 #include <boost/filesystem.hpp>
 
@@ -134,14 +133,8 @@ Texture2D& ResourceManager::load_texture2D(char const * file, std::string const&
                                             0,
                                             alpha ? SOIL_LOAD_RGBA : SOIL_LOAD_RGB);
 
-    //TargaImage img;
-    //img.load(texture_path);
-    //width = img.getWidth();
-    //height = img.getHeight();
-
     BLUE_EXPECT(image);
     BLUE_EXPECT(texture.init(width, height, image));
-    //BLUE_EXPECT(texture.init(width, height, img.getImageData()));
     std::cout << "loaded 2D texture " << texture_path << " width: " << width << " height: " << height << "\n";
 
     SOIL_free_image_data(image);

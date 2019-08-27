@@ -1,6 +1,5 @@
 #pragma once
 
-#include "texture.hpp"
 #include "shader.hpp"
 #include "texture2D.hpp"
 #include "resource_manager.hpp"
@@ -77,7 +76,7 @@ Quad::Quad()
     glEnableVertexAttribArray(2);
     glBindVertexArray(0);
 
-    CheckError();
+    glCheckError();
 }
 
 inline
@@ -93,7 +92,7 @@ void Quad::Draw(blue::Shader& shader)
     glBindVertexArray(VAO_);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glBindVertexArray(0);
-    CheckError();
+    glCheckError();
 }
 
 inline
@@ -103,7 +102,6 @@ TexturedQuad::TexturedQuad(std::string const& texture, bool alpha)
     static blue::ResourceManager rm("../src");
     auto& tex = rm.load_texture2D(texture.c_str(), "foo", alpha);
     texture_ = std::addressof(tex);
-        //textureID_ = loadTexture(texture.c_str(), alpha);
 }
 
 inline
@@ -131,7 +129,7 @@ ScreenQuad::ScreenQuad()
     glEnableVertexAttribArray(1);
     glBindVertexArray(0);
 
-    CheckError();
+    glCheckError();
 }
 
 inline
@@ -147,7 +145,7 @@ void ScreenQuad::Draw(blue::Shader& shader)
     glBindVertexArray(VAO_);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
-    //CheckError();
+    //glCheckError();
 }
 
 Quad::vertices_t const& Quad::default_vertices()
