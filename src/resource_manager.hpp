@@ -111,7 +111,12 @@ inline
 Texture2D& ResourceManager::load_texture2D(char const * file, std::string const& name, bool alpha)
 {
     BLUE_EXPECT(file != nullptr);
-    BLUE_EXPECT(textures2D_.find(name) == textures2D_.end());
+    //BLUE_EXPECT(textures2D_.find(name) == textures2D_.end());
+
+    auto iter = textures2D_.find(name);
+    if (iter != textures2D_.end()) {
+        return iter->second;
+    }
 
     boost::filesystem::path p(file);
     auto texture_path = p.string();

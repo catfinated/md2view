@@ -59,6 +59,7 @@ bool Model::load(std::string const& filename)
     infile.read(reinterpret_cast<char * >(skins.data()),
                 sizeof(Skin) * skins.size());
     assert(skins.size() == static_cast<size_t>(hdr_.num_skins));
+    std::cout << "num skins=" << skins.size() << '\n';
 
     auto root = boost::filesystem::path(filename).parent_path();
 
