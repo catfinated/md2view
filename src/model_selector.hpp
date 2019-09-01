@@ -304,4 +304,34 @@ inline void ModelSelector::draw_ui()
 
         ImGui::TreePop();
     }
+
+    int index = model().animation_index();
+
+    ImGui::Combo("Animation", &index,
+                 [](void * data, int idx, char const ** out_text) -> bool {
+                     blue::md2::Model const * model = reinterpret_cast<blue::md2::Model const *>(data);
+                     assert(model);
+                     if (idx < 0 || idx >= model->animations().size()) { return false; }
+                     *out_text = model->animations()[idx].name.c_str();
+                     return true;
+                 },
+                 reinterpret_cast<void *>(&model()),
+                 model().animations().size());
+
+    model().set_animation(static_cast<size_t>(index));
+
+    int sindex = model().skin_index();
+
+    ImGui::Combo("Skin", &sindex,
+                 [](void * data, int idx, char const ** out_text) -> bool {
+                     blue::md2::Model const * model = reinterpret_cast<blue::md2::Model const *>(data);
+                     assert(model);
+                     if (idx < 0 || idx >= model->skins().size()) { return false; }
+                     *out_text = model->skins()[idx].name.c_str();
+                     return true;
+                 },
+                 reinterpret_cast<void *>(&model()),
+                 model().skins().size());
+
+    model().set_skin_index(static_cast<size_t>(sindex));
 }

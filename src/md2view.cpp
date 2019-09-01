@@ -89,7 +89,9 @@ bool MD2View::on_engine_initialized(EngineBase& engine)
     //engine.resource_manager().load_texture2D(model_.skins()[0].c_str(), "skin", false);
     std::cout << ms_.model_name() << '\n';
     std::cout << ms_.model().skins().size() << '\n';
-    engine.resource_manager().load_texture2D(ms_.model().skins()[0].c_str(), ms_.model_path(), false);
+    engine.resource_manager().load_texture2D(ms_.model().current_skin().fpath.c_str(),
+                                             ms_.model().current_skin().fpath,
+                                             false);
 
     camera_.Position = glm::vec3(0.0f, 0.0f, 3.0f);
 
@@ -115,7 +117,7 @@ void MD2View::render(EngineBase& engine)
     auto& shader = engine.resource_manager().shader("md2");
     //auto& shader = engine.resource_manager().shader("quad");
     //auto& texture = engine.resource_manager().texture2D("skin");
-    auto& texture = engine.resource_manager().texture2D(ms_.model_path());
+    auto& texture = engine.resource_manager().texture2D(ms_.model().current_skin().fpath);
 
 
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -152,39 +154,11 @@ void MD2View::render(EngineBase& engine)
     if (ImGui::Button("Reset Camera")) {
         reset_camera();
     }
-/*
-    int model_index = ms_.model_index();
 
-    ImGui::ListBox("Model", &model_index,
-                   [](void * data, int idx, char const ** out) -> bool {
-                       auto ms = reinterpret_cast<ModelSelector const *>(data);
-                       if (idx < 0 || idx >= ms->items().size()) { return false; }
-                       *out = ms->items()[idx].c_str();
-                       return true;
-                   },
-                   reinterpret_cast<void *>(&ms_),
-                   ms_.items().size());
-
-    ms_.set_model_index(model_index);
-*/
     ms_.draw_ui();
-    engine.resource_manager().load_texture2D(ms_.model().skins()[0].c_str(), ms_.model_path(), false);
-
-
-    int index = ms_.model().animation_index();
-
-    ImGui::Combo("Animation", &index,
-                 [](void * data, int idx, char const ** out_text) -> bool {
-                     blue::md2::Model const * model = reinterpret_cast<blue::md2::Model const *>(data);
-                     assert(model);
-                     if (idx < 0 || idx >= model->animations().size()) { return false; }
-                     *out_text = model->animations()[idx].name.c_str();
-                     return true;
-                 },
-                 reinterpret_cast<void *>(&ms_.model()),
-                 ms_.model().animations().size());
-
-    ms_.model().set_animation(static_cast<size_t>(index));
+    engine.resource_manager().load_texture2D(ms_.model().current_skin().fpath.c_str(),
+                                             ms_.model().current_skin().fpath,
+                                             false);
 
     float fps = ms_.model().frames_per_second();
     //ImGui::SliderFloat("Animation FPS", &fps, 1.0f, 60.0f);

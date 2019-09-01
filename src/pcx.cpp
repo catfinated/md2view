@@ -56,7 +56,7 @@ PcxFile::PcxFile(std::istream& ds)
     for (auto i = 0; i < length; ++i) {
         for (auto j = 0; j < width; ++j) {
             auto index = scan_lines[i][j];
-            std::cout << "index=" << (int)index << '\n';
+            //std::cout << "index=" << (int)index << '\n';
             assert(index < colors_.size());
             auto loc = (j + (i * width)) * 3;
             auto& color = colors_[index];

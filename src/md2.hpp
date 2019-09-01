@@ -108,6 +108,17 @@ public:
         std::vector<Vertex> vertices;
     };
 
+    struct SkinData
+    {
+        std::string fpath;
+        std::string name;
+
+        SkinData(std::string const& fp, std::string const& n)
+            : fpath(fp)
+            , name(n)
+        {}
+    };
+
     // accessors
     Header const& header() const { return hdr_; }
 
@@ -117,12 +128,19 @@ public:
     void draw(blue::Shader& shader);
     void update(float delta_time);
 
-    std::vector<std::string> const& skins() const { return skins_; }
+    std::vector<SkinData> const& skins() const { return skins_; }
 
     void set_animation(std::string const& id);
     void set_animation(size_t id);
 
     size_t animation_index() const { return current_animation_index_; }
+    size_t skin_index() const { return current_skin_index_; }
+    void set_skin_index(size_t idx);
+    SkinData const& current_skin() const
+    {
+        assert(current_skin_index_ >= 0 && current_skin_index_ < skins_.size());
+        return skins_[current_skin_index_];
+    }
 
     std::vector<Animation> const& animations() const { return animations_; }
 
@@ -145,7 +163,7 @@ private:
     std::vector<Frame>    frames_;
     std::vector<InternalFrame> internal_frames_;
     std::vector<glm::vec2> internal_texcoords_;
-    std::vector<std::string> skins_;
+    std::vector<SkinData> skins_;
     std::vector<Animation> animations_;
     std::unordered_map<std::string, size_t> animation_index_map_;
     std::vector<glm::vec3> interpolated_vertices_;
@@ -159,6 +177,8 @@ private:
     int current_frame_;
     float interpolation_;
     float frames_per_second_ = 8.0f;
+
+    ssize_t current_skin_index_;
 };
 
 std::ostream& operator<<(std::ostream&, Model::Header const&);

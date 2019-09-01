@@ -30,6 +30,7 @@ bool Model::load(std::string const& filename)
     next_frame_ = 1;
     current_frame_ = 0;
     current_animation_index_ = -1;
+    current_skin_index_ = -1;
     interpolation_ = 0.0f;
 
     if (filename.empty()) {
@@ -64,7 +65,7 @@ bool Model::load(std::string const& filename)
     auto root = boost::filesystem::path(filename).parent_path();
 
     for (auto const& skin : skins) {
-        std::cout << skin.name << '\n';
+        //std::cout << skin.name << '\n';
         boost::filesystem::path f(std::string(skin.name));
         auto p = root / f.filename();
         //auto p = root / "Ogrobase_orig.tga";
@@ -72,19 +73,20 @@ bool Model::load(std::string const& filename)
         auto cp = p;
         p.replace_extension("png");
         if (boost::filesystem::exists(cp)) {
-            skins_.push_back(cp.string());
+            skins_.emplace_back(cp.string(), cp.stem().string());
+            std::cout << skins_.back().fpath << '\n';
         }
-        else {
-            skins_.push_back(p.string());
+        else if (boost::filesystem::exists(p)) {
+            skins_.emplace_back(p.string(), cp.stem().string());
+            std::cout << skins_.back().fpath << '\n';
         }
-        std::cout << skins_.back() << '\n';
     }
 
     if (skins_.empty()) {
         auto base = root.filename();
         auto p =  root / base;
-        skins_.push_back(p.string() + ".png");
-        std::cout << skins_.back() << '\n';
+        skins_.emplace_back(p.string() + ".png", base.string());
+        std::cout << skins_.back().fpath << '\n';
     }
 
     // read triangles
@@ -207,6 +209,9 @@ bool Model::load(std::string const& filename)
 
     setup_buffers();
 
+    set_animation(0);
+    set_skin_index(0);
+
     return true;
 }
 
@@ -261,6 +266,13 @@ void Model::set_animation(size_t index)
         next_frame_ = anim.start_frame;
         current_animation_index_ = index;
     }
+}
+
+void Model::set_skin_index(size_t index)
+{
+    assert(index < skins_.size());
+
+    current_skin_index_ = index;
 }
 
 void Model::update(float dt)
