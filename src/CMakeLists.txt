@@ -49,6 +49,7 @@ add_executable(md2view
   md2view.cpp
   gui.cpp
   md2.cpp
+  pcx.cpp
   imgui/imgui.cpp
   imgui/imgui_draw.cpp
   imgui/imgui_demo.cpp)

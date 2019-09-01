@@ -21,7 +21,7 @@ public:
 
     EngineBase()
         : resource_manager_("../src") // up from build dir
-        , mt_(1729)
+        , mt_(std::random_device{}()/*1729*/)
     {}
 
     int width() const { return width_; }

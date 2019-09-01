@@ -68,8 +68,15 @@ bool Model::load(std::string const& filename)
         boost::filesystem::path f(std::string(skin.name));
         auto p = root / f.filename();
         //auto p = root / "Ogrobase_orig.tga";
+
+        auto cp = p;
         p.replace_extension("png");
-        skins_.push_back(p.string());
+        if (boost::filesystem::exists(cp)) {
+            skins_.push_back(cp.string());
+        }
+        else {
+            skins_.push_back(p.string());
+        }
         std::cout << skins_.back() << '\n';
     }
 

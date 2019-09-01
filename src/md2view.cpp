@@ -35,25 +35,25 @@ private:
     Camera camera_;
     std::unique_ptr<TexturedQuad> quad_;
     boost::program_options::options_description options_;
-    std::string model_name_;
+    std::string models_dir_;
     std::string anim_name_;
     ModelSelector ms_;
 };
 
 MD2View::MD2View()
     : options_("Game options")
-    , ms_("../src/models")
 {
     options_.add_options()
-        ("model,m", boost::program_options::value<std::string>(&model_name_)/*->required()*/, "MD2 Model")
-        ("anim,a", boost::program_options::value<std::string>(&anim_name_), "Model Animation");
+        ("models,m", boost::program_options::value<std::string>(&models_dir_)/*->required()*/, "MD2 Models Directory or PAK file");
+        //("anim,a", boost::program_options::value<std::string>(&anim_name_), "Model Animation");
 }
 
 bool MD2View::parse_args(EngineBase& engine)
 {
-    if (model_name_.empty()) {
-        std::cerr << "no MD2 model name specified\n";
-        return false;
+    if (models_dir_.empty()) {
+        models_dir_ = "../src/models";
+        // std::cerr << "no MD2 model name specified\n";
+        //return false;
     }
 
     return true;
@@ -67,7 +67,7 @@ void MD2View::reset_camera()
 
 bool MD2View::on_engine_initialized(EngineBase& engine)
 {
-    ms_.init();
+    ms_.init(models_dir_, engine);
 
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 
@@ -89,7 +89,7 @@ bool MD2View::on_engine_initialized(EngineBase& engine)
     //engine.resource_manager().load_texture2D(model_.skins()[0].c_str(), "skin", false);
     std::cout << ms_.model_name() << '\n';
     std::cout << ms_.model().skins().size() << '\n';
-    engine.resource_manager().load_texture2D(ms_.model().skins()[0].c_str(), ms_.model_name(), false);
+    engine.resource_manager().load_texture2D(ms_.model().skins()[0].c_str(), ms_.model_path(), false);
 
     camera_.Position = glm::vec3(0.0f, 0.0f, 3.0f);
 
@@ -106,12 +106,18 @@ bool MD2View::on_engine_initialized(EngineBase& engine)
 
 void MD2View::render(EngineBase& engine)
 {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    //ImGui::ShowTestWindow(nullptr);
+    //return;
+    //std::cout << " model path=" << ms_.model_path() << '\n';
+
     auto& shader = engine.resource_manager().shader("md2");
     //auto& shader = engine.resource_manager().shader("quad");
     //auto& texture = engine.resource_manager().texture2D("skin");
-    auto& texture = engine.resource_manager().texture2D(ms_.model_name());
+    auto& texture = engine.resource_manager().texture2D(ms_.model_path());
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     glm::mat4 view = camera_.GetViewMatrix();
@@ -146,7 +152,7 @@ void MD2View::render(EngineBase& engine)
     if (ImGui::Button("Reset Camera")) {
         reset_camera();
     }
-
+/*
     int model_index = ms_.model_index();
 
     ImGui::ListBox("Model", &model_index,
@@ -160,7 +166,9 @@ void MD2View::render(EngineBase& engine)
                    ms_.items().size());
 
     ms_.set_model_index(model_index);
-    engine.resource_manager().load_texture2D(ms_.model().skins()[0].c_str(), ms_.model_name(), false);
+*/
+    ms_.draw_ui();
+    engine.resource_manager().load_texture2D(ms_.model().skins()[0].c_str(), ms_.model_path(), false);
 
 
     int index = ms_.model().animation_index();
