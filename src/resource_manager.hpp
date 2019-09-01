@@ -3,6 +3,7 @@
 #include "common.hpp"
 #include "shader.hpp"
 #include "texture2D.hpp"
+#include "pcx.hpp"
 
 #include <boost/filesystem.hpp>
 
@@ -111,7 +112,12 @@ inline
 Texture2D& ResourceManager::load_texture2D(char const * file, std::string const& name, bool alpha)
 {
     BLUE_EXPECT(file != nullptr);
-    BLUE_EXPECT(textures2D_.find(name) == textures2D_.end());
+    //BLUE_EXPECT(textures2D_.find(name) == textures2D_.end());
+
+    auto iter = textures2D_.find(name);
+    if (iter != textures2D_.end()) {
+        return iter->second;
+    }
 
     boost::filesystem::path p(file);
     auto texture_path = p.string();
@@ -124,20 +130,29 @@ Texture2D& ResourceManager::load_texture2D(char const * file, std::string const&
     std::cout << "loading 2D texture " << texture_path << " (alpha: " << std::boolalpha << alpha << ")\n";
 
     Texture2D texture;
-    texture.set_alpha(alpha);
 
-    int width, height;
-    unsigned char * image = SOIL_load_image(texture_path.c_str(),
-                                            &width,
-                                            &height,
-                                            0,
-                                            alpha ? SOIL_LOAD_RGBA : SOIL_LOAD_RGB);
+    if (".pcx" != p.extension()) {
+        texture.set_alpha(alpha);
 
-    BLUE_EXPECT(image);
-    BLUE_EXPECT(texture.init(width, height, image));
-    std::cout << "loaded 2D texture " << texture_path << " width: " << width << " height: " << height << "\n";
+        int width, height;
+        unsigned char * image = SOIL_load_image(texture_path.c_str(),
+                                                &width,
+                                                &height,
+                                                0,
+                                                alpha ? SOIL_LOAD_RGBA : SOIL_LOAD_RGB);
 
-    SOIL_free_image_data(image);
+        BLUE_EXPECT(image);
+        BLUE_EXPECT(texture.init(width, height, image));
+        std::cout << "loaded 2D texture " << texture_path << " width: " << width << " height: " << height << "\n";
+
+        SOIL_free_image_data(image);
+    }
+    else {
+        std::ifstream inf(p.string().c_str(), std::ios_base::in | std::ios_base::binary);
+        PcxFile pcx(inf);
+        texture.set_alpha(false);
+        texture.init(pcx.width(), pcx.height(), pcx.image().data());
+    }
 
     auto result = textures2D_.emplace(std::make_pair(name, std::move(texture)));
 

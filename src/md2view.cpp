@@ -2,6 +2,7 @@
 #include "camera.hpp"
 #include "md2.hpp"
 #include "quad.hpp"
+#include "model_selector.hpp"
 
 #include "glm/gtx/string_cast.hpp"
 
@@ -29,28 +30,30 @@ private:
     void reset_camera();
 
 private:
-    blue::md2::Model model_;
+    //blue::md2::Model model_;
     //MD2Model model_;
     Camera camera_;
     std::unique_ptr<TexturedQuad> quad_;
     boost::program_options::options_description options_;
-    std::string model_name_;
+    std::string models_dir_;
     std::string anim_name_;
+    ModelSelector ms_;
 };
 
 MD2View::MD2View()
     : options_("Game options")
 {
     options_.add_options()
-        ("model,m", boost::program_options::value<std::string>(&model_name_)/*->required()*/, "MD2 Model")
-        ("anim,a", boost::program_options::value<std::string>(&anim_name_), "Model Animation");
+        ("models,m", boost::program_options::value<std::string>(&models_dir_)/*->required()*/, "MD2 Models Directory or PAK file");
+        //("anim,a", boost::program_options::value<std::string>(&anim_name_), "Model Animation");
 }
 
 bool MD2View::parse_args(EngineBase& engine)
 {
-    if (model_name_.empty()) {
-        std::cerr << "no MD2 model name specified\n";
-        return false;
+    if (models_dir_.empty()) {
+        models_dir_ = "../src/models";
+        // std::cerr << "no MD2 model name specified\n";
+        //return false;
     }
 
     return true;
@@ -64,43 +67,59 @@ void MD2View::reset_camera()
 
 bool MD2View::on_engine_initialized(EngineBase& engine)
 {
+    ms_.init(models_dir_, engine);
+
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 
-    boost::filesystem::path p(engine.resource_manager().models_dir());
-    p /= model_name_;
-    p /= "tris.md2";
-    BLUE_EXPECT(model_.load(p.string()));
+    //boost::filesystem::path p(engine.resource_manager().models_dir());
+    //p /= model_name_;
+    //p /= "tris.md2";
+    //BLUE_EXPECT(model_.load(p.string()));
 
-    if (!anim_name_.empty()) {
-        model_.set_animation(anim_name_);
-    }
-    else {
-        model_.set_animation(0);
-    }
+    //if (!anim_name_.empty()) {
+    //    model_.set_animation(anim_name_);
+    // }
+    //else {
+    //    model_.set_animation(0);
+    // }
 
     engine.resource_manager().load_shader("md2.vert", "md2.frag", nullptr, "md2");
     engine.resource_manager().load_shader("md2_model.vert", "md2_model.frag", nullptr, "md2_model");
     engine.resource_manager().load_shader("blending.vert", "blending.frag", nullptr, "quad");
-    engine.resource_manager().load_texture2D(model_.skins()[0].c_str(), "skin", false);
+    //engine.resource_manager().load_texture2D(model_.skins()[0].c_str(), "skin", false);
+    std::cout << ms_.model_name() << '\n';
+    std::cout << ms_.model().skins().size() << '\n';
+    engine.resource_manager().load_texture2D(ms_.model().current_skin().fpath.c_str(),
+                                             ms_.model().current_skin().fpath,
+                                             false);
 
     camera_.Position = glm::vec3(0.0f, 0.0f, 3.0f);
 
-    quad_.reset(new TexturedQuad(model_.skins()[0]));
+    //quad_.reset(new TexturedQuad(model_.skins()[0]));
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glDepthFunc(GL_LEQUAL);
 
+    std::cout << "done on engine init\n";
+    glCheckError();
     return true;
 }
 
 void MD2View::render(EngineBase& engine)
 {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    //ImGui::ShowTestWindow(nullptr);
+    //return;
+    //std::cout << " model path=" << ms_.model_path() << '\n';
+
     auto& shader = engine.resource_manager().shader("md2");
     //auto& shader = engine.resource_manager().shader("quad");
-    auto& texture = engine.resource_manager().texture2D("skin");
+    //auto& texture = engine.resource_manager().texture2D("skin");
+    auto& texture = engine.resource_manager().texture2D(ms_.model().current_skin().fpath);
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     glm::mat4 view = camera_.GetViewMatrix();
@@ -120,7 +139,7 @@ void MD2View::render(EngineBase& engine)
     shader.set_projection(projection);
 
     texture.bind();
-    model_.draw(shader);
+    ms_.model().draw(shader);
     glCheckError();
     //quad_->Draw(shader);
 
@@ -136,21 +155,20 @@ void MD2View::render(EngineBase& engine)
         reset_camera();
     }
 
-    int index = model_.animation_index();
-    ImGui::Combo("Animation", &index,
-                 [](void * data, int idx, char const ** out_text) -> bool {
-                     blue::md2::Model const * model = reinterpret_cast<blue::md2::Model const *>(data);
-                     assert(model);
-                     if (idx < 0 || idx >= model->animations().size()) { return false; }
-                     *out_text = model->animations()[idx].name.c_str();
-                     return true;
-                 }, reinterpret_cast<void *>(&model_), model_.animations().size());
-    model_.set_animation(static_cast<size_t>(index));
+    if (ImGui::Button("Random Model")) {
+        ms_.select_random_model(engine.random_engine());
+    }
 
-    float fps = model_.frames_per_second();
+    ms_.draw_ui();
+
+    engine.resource_manager().load_texture2D(ms_.model().current_skin().fpath.c_str(),
+                                             ms_.model().current_skin().fpath,
+                                             false);
+
+    float fps = ms_.model().frames_per_second();
     //ImGui::SliderFloat("Animation FPS", &fps, 1.0f, 60.0f);
     ImGui::InputFloat("Animation FPS", &fps, 1.0f, 5.0f, 1);
-    model_.set_frames_per_second(fps);
+    ms_.model().set_frames_per_second(fps);
 
     //ImGui::ColorEdit3("clear color", (float*)&clear_color);
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
@@ -180,7 +198,7 @@ void MD2View::render(EngineBase& engine)
 
 void MD2View::update(EngineBase& engine, GLfloat delta_time)
 {
-    model_.update(delta_time);
+    ms_.model().update(delta_time);
 }
 
 void MD2View::process_input(EngineBase& engine, GLfloat delta_time)
