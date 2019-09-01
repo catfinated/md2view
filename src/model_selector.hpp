@@ -147,23 +147,37 @@ inline void ModelSelector::init(std::string const& path, blue::EngineBase& eb)
 template <typename RandEngine>
 void ModelSelector::select_random_model(RandEngine& eng)
 {
-    Node * curr = &root_;
+    std::cout << "selecting random\n";
 
-    while (curr && !selected_) {
-        if (curr->children.empty()) {
-            throw std::runtime_error("no models available to select from");
+    auto last_selected = selected_;
+
+    while (selected_ == last_selected) {
+        if (selected_) {
+            selected_->selected = false;
         }
 
-        std::uniform_int_distribution<> dist(0, curr->children.size() - 1);
-        auto idx = dist(eng);
-        curr = curr->children[idx].get();
+        Node * curr = &root_;
 
-        if (curr->children.empty()) {
-            if (load_model_node(*curr)) {
-                selected_ = curr;
-                curr->selected = true;
+        while (curr) {
+            if (curr->children.empty()) {
+                throw std::runtime_error("no models available to select from");
+            }
+
+            std::uniform_int_distribution<> dist(0, curr->children.size() - 1);
+            auto idx = dist(eng);
+            curr = curr->children[idx].get();
+
+            if (curr->children.empty()) {
+                if (load_model_node(*curr)) {
+                    selected_ = curr;
+                    curr->selected = true;
+                    std::cout << "selected random model=" << selected_->path << '\n';
+                    break;
+                }
             }
         }
+
+        std::cout << " selected=" << selected_ << " curr=" << curr << " last= " << last_selected << '\n';
     }
 }
 

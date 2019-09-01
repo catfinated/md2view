@@ -155,7 +155,12 @@ void MD2View::render(EngineBase& engine)
         reset_camera();
     }
 
+    if (ImGui::Button("Random Model")) {
+        ms_.select_random_model(engine.random_engine());
+    }
+
     ms_.draw_ui();
+
     engine.resource_manager().load_texture2D(ms_.model().current_skin().fpath.c_str(),
                                              ms_.model().current_skin().fpath,
                                              false);
