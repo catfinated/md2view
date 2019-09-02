@@ -28,6 +28,7 @@ public:
 
 private:
     void reset_camera();
+    void reset_model_matrix();
     void load_current_texture(EngineBase&);
 
 private:
@@ -38,11 +39,15 @@ private:
     std::string anim_name_;
     ModelSelector ms_;
     bool vsync_enabled_ = false;
+    float scale_ = 64.0f;
+    std::array<float, 3> rot_;
 };
 
 MD2View::MD2View()
     : options_("Game options")
 {
+    reset_model_matrix();
+
     options_.add_options()
         ("models,m",
          boost::program_options::value<std::string>(&models_dir_),
@@ -56,6 +61,15 @@ bool MD2View::parse_args(EngineBase& engine)
     }
 
     return true;
+}
+
+void MD2View::reset_model_matrix()
+{
+    rot_[0] = 0.0f;
+    rot_[1] = -90.0f; // quake used different world matrix
+    rot_[2] = 0.0f;
+    scale_ = 64.0f;
+
 }
 
 void MD2View::reset_camera()
@@ -119,8 +133,13 @@ void MD2View::render(EngineBase& engine)
 
     //translate, rotate, scale
     glm::mat4 model(1.0);
-    model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    model = glm::scale(model, glm::vec3(1.0f/64.0f, 1.0f/64.0f, 1.0f/64.0f));
+    glm::quat rotx = glm::angleAxis(glm::radians(rot_[0]), glm::vec3(1.0f, 0.0f, 0.0f));
+    glm::quat roty = glm::angleAxis(glm::radians(rot_[1]), glm::vec3(0.0f, 1.0f, 0.0f));
+    glm::quat rotz = glm::angleAxis(glm::radians(rot_[2]), glm::vec3(0.0f, 0.0f, 1.0f));
+    //model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    model = glm::mat4_cast(roty * rotz * rotx);
+    auto s = 1.0f / scale_; // uniform scale factor
+    model = glm::scale(model, glm::vec3(s, s, s));
 
     shader.use();
     shader.set_model(model);
@@ -133,6 +152,7 @@ void MD2View::render(EngineBase& engine)
     //quad_->Draw(shader);
 
     // draw gui
+    ImGui::Begin("Model");
     ImGui::Text("Camera");
 
     ImGui::InputFloat3("Position", glm::value_ptr(camera_.Position), -1, ImGuiInputTextFlags_ReadOnly);
@@ -158,30 +178,49 @@ void MD2View::render(EngineBase& engine)
 
     ms_.draw_ui();
 
-    load_current_texture(engine);
-
     //ImGui::ColorEdit3("clear color", (float*)&clear_color);
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+    ImGui::End();
+
+    load_current_texture(engine);
 
     ImGui::Begin("Matrices");
 
+    static float const vec4width = 275;
+    static int const precision = 5;
+
     ImGui::Text("View");
-    ImGui::InputFloat4("", glm::value_ptr(view[0]), -1, ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat4("", glm::value_ptr(view[1]), -1, ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat4("", glm::value_ptr(view[2]), -1, ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat4("", glm::value_ptr(view[3]), -1, ImGuiInputTextFlags_ReadOnly);
+    ImGui::PushItemWidth(vec4width);
+    ImGui::InputFloat4("", glm::value_ptr(view[0]), precision, ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputFloat4("", glm::value_ptr(view[1]), precision, ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputFloat4("", glm::value_ptr(view[2]), precision, ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputFloat4("", glm::value_ptr(view[3]), precision, ImGuiInputTextFlags_ReadOnly);
+    ImGui::PopItemWidth();
 
     ImGui::Text("Projection");
-    ImGui::InputFloat4("", glm::value_ptr(projection[0]), -1, ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat4("", glm::value_ptr(projection[1]), -1, ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat4("", glm::value_ptr(projection[2]), -1, ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat4("", glm::value_ptr(projection[3]), -1, ImGuiInputTextFlags_ReadOnly);
+    ImGui::PushItemWidth(vec4width);
+    ImGui::InputFloat4("", glm::value_ptr(projection[0]), precision, ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputFloat4("", glm::value_ptr(projection[1]), precision, ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputFloat4("", glm::value_ptr(projection[2]), precision, ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputFloat4("", glm::value_ptr(projection[3]), precision, ImGuiInputTextFlags_ReadOnly);
+    ImGui::PopItemWidth();
 
     ImGui::Text("Model");
-    ImGui::InputFloat4("", glm::value_ptr(model[0]), -1, ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat4("", glm::value_ptr(model[1]), -1, ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat4("", glm::value_ptr(model[2]), -1, ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat4("", glm::value_ptr(model[3]), -1, ImGuiInputTextFlags_ReadOnly);
+    ImGui::PushItemWidth(vec4width);
+    ImGui::InputFloat4("", glm::value_ptr(model[0]), precision, ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputFloat4("", glm::value_ptr(model[1]), precision, ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputFloat4("", glm::value_ptr(model[2]), precision, ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputFloat4("", glm::value_ptr(model[3]), precision, ImGuiInputTextFlags_ReadOnly);
+    ImGui::PopItemWidth();
+
+    ImGui::InputFloat("Scale Factor", &scale_, 1.0f, 5.0f, 1);
+    ImGui::SliderFloat("X-Rotation", &rot_[0], -360.0f, 360.0f);
+    ImGui::SliderFloat("Y-Rotation", &rot_[1], -360.0f, 360.0f);
+    ImGui::SliderFloat("Z-Rotation", &rot_[2], -360.0f, 360.0f);
+
+    if (ImGui::Button("Reset Model")) {
+        reset_model_matrix();
+    }
 
     ImGui::End();
 }
