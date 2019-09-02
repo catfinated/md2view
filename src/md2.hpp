@@ -6,6 +6,7 @@ http://tfc.duke.free.fr/old/models/md2.htm
 */
 
 #include "shader.hpp"
+#include "pak.hpp"
 
 #include <glm/glm.hpp>
 
@@ -124,6 +125,7 @@ public:
 
     // modifiers
     bool load(std::string const& filename);
+    bool load(PakFile const&, std::string const& filename);
 
     void draw(blue::Shader& shader);
     void update(float delta_time);
@@ -150,6 +152,7 @@ public:
 private:
     bool validate_header(Header const& hdr);
     void setup_buffers();
+    bool load(std::ifstream&, std::string const&, bool = false);
 
     struct InternalFrame
     {

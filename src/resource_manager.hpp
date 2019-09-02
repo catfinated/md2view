@@ -4,6 +4,7 @@
 #include "shader.hpp"
 #include "texture2D.hpp"
 #include "pcx.hpp"
+#include "pak.hpp"
 
 #include <boost/filesystem.hpp>
 
@@ -41,7 +42,9 @@ public:
 
     Shader& shader(std::string const& name) { return shaders_.at(name); }
 
-    Texture2D& load_texture2D(char const * file, std::string const& name, bool alpha = false);
+    Texture2D& load_texture2D(std::string const& path, std::string const& name = std::string(), bool alpha = false);
+
+    Texture2D& load_texture2D(PakFile const& pf, std::string const& path, std::string const& name = std::string());
 
     Texture2D& texture2D(std::string const& name) { return textures2D_.at(name); }
 
@@ -57,8 +60,7 @@ private:
     std::unordered_map<std::string, Texture2D> textures2D_;
 };
 
-inline
-ResourceManager::ResourceManager(std::string const& rootdir)
+inline ResourceManager::ResourceManager(std::string const& rootdir)
     : root_dir_(rootdir)
     , models_dir_("models/")
     , textures_dir_("textures/")
@@ -79,11 +81,10 @@ ResourceManager::ResourceManager(std::string const& rootdir)
     }
 }
 
-inline
-Shader& ResourceManager::load_shader(char const * vertex,
-                                     char const * fragment,
-                                     char const * geometry,
-                                     std::string const& name)
+inline Shader& ResourceManager::load_shader(char const * vertex,
+                                            char const * fragment,
+                                            char const * geometry,
+                                            std::string const& name)
 {
     BLUE_EXPECT(vertex != nullptr);
     BLUE_EXPECT(fragment != nullptr);
@@ -108,13 +109,50 @@ Shader& ResourceManager::load_shader(char const * vertex,
     return result.first->second;
 }
 
-inline
-Texture2D& ResourceManager::load_texture2D(char const * file, std::string const& name, bool alpha)
+inline Texture2D& ResourceManager::load_texture2D(PakFile const& pf, std::string const& path, std::string const& name)
 {
-    BLUE_EXPECT(file != nullptr);
-    //BLUE_EXPECT(textures2D_.find(name) == textures2D_.end());
+    auto key = name.empty() ? path : name;
+    auto iter = textures2D_.find(key);
 
-    auto iter = textures2D_.find(name);
+    if (iter != textures2D_.end()) {
+        return iter->second;
+    }
+
+    std::cout << "loading 2D texture " << path << " from PAK " << pf.filename() << '\n';
+
+    BLUE_EXPECT(".pcx" == boost::filesystem::path(path).extension());
+
+    auto node = pf.find(path);
+    BLUE_EXPECT(node);
+
+    std::ifstream inf(pf.filename().c_str(), std::ios_base::in | std::ios_base::binary);
+    BLUE_EXPECT(inf);
+
+    inf.seekg(node->filepos);
+
+    PcxFile pcx(inf);
+    inf.close();
+
+    Texture2D texture;
+    texture.set_alpha(false);
+    texture.init(pcx.width(), pcx.height(), pcx.image().data());
+
+    std::cout << "loaded 2D texture " << path << '\n';
+
+    auto result = textures2D_.emplace(std::make_pair(key, std::move(texture)));
+
+    BLUE_EXPECT(result.second);
+    BLUE_EXPECT(!texture.initialized());
+    BLUE_EXPECT(result.first->second.initialized());
+
+    return result.first->second;
+}
+
+inline Texture2D& ResourceManager::load_texture2D(std::string const& file, std::string const& name, bool alpha)
+{
+    auto key = name.empty() ? file : name;
+    auto iter = textures2D_.find(key);
+
     if (iter != textures2D_.end()) {
         return iter->second;
     }
@@ -152,9 +190,10 @@ Texture2D& ResourceManager::load_texture2D(char const * file, std::string const&
         PcxFile pcx(inf);
         texture.set_alpha(false);
         texture.init(pcx.width(), pcx.height(), pcx.image().data());
+        inf.close();
     }
 
-    auto result = textures2D_.emplace(std::make_pair(name, std::move(texture)));
+    auto result = textures2D_.emplace(std::make_pair(key, std::move(texture)));
 
     BLUE_EXPECT(result.second);
     BLUE_EXPECT(!texture.initialized());

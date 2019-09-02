@@ -1,6 +1,7 @@
 #pragma once
 
 #include "md2.hpp"
+#include "pak.hpp"
 
 #include <boost/filesystem.hpp>
 #include <boost/range/iterator_range.hpp>
@@ -17,13 +18,7 @@ public:
 
     void init(std::string const& path, blue::EngineBase& eb);
 
-    std::vector<std::string> const& items() const { return items_; }
-
-    void set_model_index(int item) { current_ = item; load_model(); }
-    int model_index() const { return current_; }
-
-    std::string const& model_name() const { if (selected_) { return selected_->name; } else { return items_[current_]; } }
-    std::string model_path() const { if (selected_) { return selected_->path; } else { return std::string{}; } }
+    std::string model_name() const { if (selected_) { return selected_->name; } else { return std::string{}; } }
 
     blue::md2::Model& model() { assert(model_); return *model_; }
 
@@ -31,6 +26,8 @@ public:
 
     template <typename RandEngine>
     void select_random_model(RandEngine& eng);
+
+    PakFile const * pak() const { return pak_.get(); }
 
 private:
     struct Node {
@@ -72,19 +69,43 @@ private:
     template <typename Visitor>
     void preorder(Visitor& v);
 
-    void load_model();
     bool load_model_node(Node& n);
 
+    void add_node(boost::filesystem::path const& path);
+
     std::string path_;
-    std::vector<std::string> paths_;
-    std::vector<std::string> items_;
-    int current_ = 0;
     blue::md2::Model * model_ = nullptr;
-    std::unordered_map<int, std::unique_ptr<blue::md2::Model>> models_;
     Node root_;
     Node * selected_ = nullptr;
 
+    std::unique_ptr<PakFile> pak_;
+
 };
+
+inline void ModelSelector::add_node(boost::filesystem::path const& path)
+{
+    auto parent = &root_;
+
+    for (auto& part : path) {
+        auto child = parent->find(part.string());
+
+        if (!child) {
+            if (part.extension() == ".md2") {
+                child = new Node{};
+                child->name = part.string();
+                child->path = path.string();
+            }
+            else {
+                child = new Node{};
+                child->name = part.string();
+            }
+            parent->insert(child);
+        }
+
+        parent = child;
+        child = nullptr;
+    }
+}
 
 inline void ModelSelector::init(std::string const& path, blue::EngineBase& eb)
 {
@@ -97,16 +118,6 @@ inline void ModelSelector::init(std::string const& path, blue::EngineBase& eb)
     }
 
     if (boost::filesystem::is_directory(p)) {
-        auto iter_range = boost::make_iterator_range(boost::filesystem::directory_iterator(p), {});
-
-        for (auto const& entry : iter_range) {
-            if (boost::filesystem::is_directory(entry)) {
-                paths_.emplace_back(entry.path().string());
-                items_.emplace_back(entry.path().stem().string());
-                std::cout << entry.path().stem() << '\n';
-            }
-        }
-
         boost::filesystem::recursive_directory_iterator iter(p), end;
 
         for (; iter != end; ++iter ) {
@@ -136,12 +147,23 @@ inline void ModelSelector::init(std::string const& path, blue::EngineBase& eb)
                 }
             }
         }
+    }
+    else if (".pak" == p.extension()) {
+        pak_.reset(new PakFile{p.string()});
+        pak_->visit([this](PakFile::Node const * n) {
+                     //std::cout << n->path << '\n';
+                     if (".md2" == boost::filesystem::path(n->path).extension()) {
+                         std::cout << n->path << '\n';
+                         this->add_node(boost::filesystem::path(n->path));
+                     }
+                 });
 
+    }
+    else {
+        throw std::runtime_error("models must be in dir or a pak file");
     }
 
     select_random_model(eb.random_engine());
-
-    //load_model();
 }
 
 template <typename RandEngine>
@@ -181,42 +203,6 @@ void ModelSelector::select_random_model(RandEngine& eng)
     }
 }
 
-inline void ModelSelector::load_model()
-{
-    auto iter = models_.find(current_);
-
-    if (iter != models_.end()) {
-        model_ = iter->second.get();
-        return;
-    }
-
-    assert(current_ < items_.size());
-    assert(current_ < paths_.size());
-
-    //auto const& name = items_[current_];
-    auto const& dirname = paths_[current_];
-
-    boost::filesystem::path p(dirname);
-    p /= "tris.md2";
-    auto m = std::unique_ptr<blue::md2::Model>(new blue::md2::Model{});
-
-    std::cout << "loading model " << p << '\n';
-
-    BLUE_EXPECT(m->load(p.string()));
-    m->set_animation(0);
-    models_[current_] = std::move(m);
-    model_ = models_[current_].get();
-
-    std::cout << "loaded model " << p << ' ' << current_ << '\n';
-
-    //if (!anim_name_.empty()) {
-    //    model_.set_animation(anim_name_);
-    //}
-    //else {
-    //    model_.set_animation(0);
-    //}
-}
-
 inline bool ModelSelector::load_model_node(Node& node)
 {
     if (node.model) {
@@ -229,13 +215,18 @@ inline bool ModelSelector::load_model_node(Node& node)
 
     std::cout << "loading model " << p << '\n';
 
-    BLUE_EXPECT(m->load(p.string()));
+    if (pak_) {
+        BLUE_EXPECT(m->load(*pak_, p.string()));
+    }
+    else {
+        BLUE_EXPECT(m->load(p.string()));
+    }
+
     m->set_animation(0);
     node.model = std::move(m);
-    //model_ = models_[current_].get();
     model_ = node.model.get();
 
-    std::cout << "loaded model " << p << ' ' << current_ << '\n';
+    std::cout << "loaded model " << p << '\n';
     return true;
 }
 
@@ -258,22 +249,7 @@ void ModelSelector::preorder(Visitor& v)
 
 inline void ModelSelector::draw_ui()
 {
-    /*
-    int mindex = model_index();
-
-    ImGui::ListBox("Model", &mindex,
-                   [](void * data, int idx, char const ** out) -> bool {
-                       auto ms = reinterpret_cast<ModelSelector const *>(data);
-                       if (idx < 0 || idx >= ms->items().size()) { return false; }
-                       *out = ms->items()[idx].c_str();
-                       return true;
-                   },
-                   reinterpret_cast<void *>(this),
-                   items().size());
-
-    //set_model_index(mindex);
-    */
-    if (ImGui::TreeNode("Models")) {
+    if (ImGui::TreeNode("Select Model")) {
         ImGui::Text("%s", path_.c_str());
         std::stack<Node *> stack;
 
@@ -297,7 +273,7 @@ inline void ModelSelector::draw_ui()
                 ImGui::TreeNodeEx(curr->name.c_str(), flags);
 
                 if (ImGui::IsItemClicked()) {
-                    std::cout << "seelected model=" << curr->name << ' ' << curr->path << '\n';
+                    std::cout << "selected model=" << curr->name << ' ' << curr->path << '\n';
 
                     if (load_model_node(*curr)) {
                         if (selected_) {
@@ -318,6 +294,8 @@ inline void ModelSelector::draw_ui()
 
         ImGui::TreePop();
     }
+
+    ImGui::TextColored(ImVec4(0.0f, 1.0f ,0.0f, 1.0f), "Model: %s", selected_->path.c_str());
 
     int index = model().animation_index();
 
@@ -348,4 +326,8 @@ inline void ModelSelector::draw_ui()
                  model().skins().size());
 
     model().set_skin_index(static_cast<size_t>(sindex));
+
+    float fps = model().frames_per_second();
+    ImGui::InputFloat("Animation FPS", &fps, 1.0f, 5.0f, 1);
+    model().set_frames_per_second(fps);
 }

@@ -25,7 +25,40 @@ std::string animation_id_from_frame_name(std::string const& name)
     return id;
 }
 
+bool Model::load(PakFile const& pf, std::string const& filename)
+{
+    if (filename.empty()) { return false; }
+    std::cout << filename << '\n';
+
+    auto node = pf.find(filename);
+    if (!node) { return false; }
+
+    std::ifstream inf(pf.filename().c_str(), std::ios_base::binary);
+    if (!inf) { return false; }
+
+    inf.seekg(node->filepos);
+
+    auto result = load(inf, filename, true);
+    inf.close();
+    return result;
+}
+
 bool Model::load(std::string const& filename)
+{
+    if (filename.empty()) { return false; }
+
+    std::cout << filename << '\n';
+
+    std::ifstream inf(filename.c_str(), std::ios::binary);
+
+    if (!inf.good()) { return false; }
+
+    auto result = load(inf, filename);
+    inf.close();
+    return result;
+}
+
+bool Model::load(std::ifstream& infile, std::string const& filename, bool ispak)
 {
     next_frame_ = 1;
     current_frame_ = 0;
@@ -33,20 +66,9 @@ bool Model::load(std::string const& filename)
     current_skin_index_ = -1;
     interpolation_ = 0.0f;
 
-    if (filename.empty()) {
-        return false;
-    }
-
-    std::cout << filename << '\n';
-
-    std::ifstream infile(filename.c_str(),
-                         std::ios::binary);
-
-    if (!infile.good()) {
-        return false;
-    }
-
     static_assert(sizeof(hdr_) == (17 * sizeof(int32_t)), "md2 header has padding");
+
+    size_t offset = infile.tellg();
 
     infile.read(reinterpret_cast<char * >(&hdr_), sizeof(hdr_));
 
@@ -56,7 +78,7 @@ bool Model::load(std::string const& filename)
     static_assert(sizeof(Skin) == 64, "md2 skin has padding");
     std::vector<Skin> skins;
     skins.resize(hdr_.num_skins); // need resize so we actually push elements
-    infile.seekg(hdr_.offset_skins);
+    infile.seekg(offset + hdr_.offset_skins);
     infile.read(reinterpret_cast<char * >(skins.data()),
                 sizeof(Skin) * skins.size());
     assert(skins.size() == static_cast<size_t>(hdr_.num_skins));
@@ -65,24 +87,30 @@ bool Model::load(std::string const& filename)
     auto root = boost::filesystem::path(filename).parent_path();
 
     for (auto const& skin : skins) {
-        //std::cout << skin.name << '\n';
+        std::cout << "'" << skin.name << "'\n";
         boost::filesystem::path f(std::string(skin.name));
-        auto p = root / f.filename();
-        //auto p = root / "Ogrobase_orig.tga";
 
-        auto cp = p;
-        p.replace_extension("png");
-        if (boost::filesystem::exists(cp)) {
-            skins_.emplace_back(cp.string(), cp.stem().string());
+        if (ispak) {
+            skins_.emplace_back(f.string(), f.stem().string());
             std::cout << skins_.back().fpath << '\n';
         }
-        else if (boost::filesystem::exists(p)) {
-            skins_.emplace_back(p.string(), cp.stem().string());
-            std::cout << skins_.back().fpath << '\n';
+        else {
+            auto p = root / f.filename();
+            auto cp = p;
+            p.replace_extension("png");
+
+            if (boost::filesystem::exists(cp)) {
+                skins_.emplace_back(cp.string(), cp.stem().string());
+                std::cout << skins_.back().fpath << '\n';
+            }
+            else if (boost::filesystem::exists(p)) {
+                skins_.emplace_back(p.string(), cp.stem().string());
+                std::cout << skins_.back().fpath << '\n';
+            }
         }
     }
 
-    if (skins_.empty()) {
+    if (!ispak && skins_.empty()) {
         auto base = root.filename();
         auto p =  root / base;
         skins_.emplace_back(p.string() + ".png", base.string());
@@ -92,7 +120,7 @@ bool Model::load(std::string const& filename)
     // read triangles
     static_assert(sizeof(Triangle) == 6 * sizeof(uint16_t), "md2 triangle has padding");
     triangles_.resize(hdr_.num_tris);
-    infile.seekg(hdr_.offset_tris);
+    infile.seekg(offset + hdr_.offset_tris);
     infile.read(reinterpret_cast<char *>(triangles_.data()),
                 sizeof(Triangle) * triangles_.size());
     assert(triangles_.size() == static_cast<size_t>(hdr_.num_tris));
@@ -100,7 +128,7 @@ bool Model::load(std::string const& filename)
     // read texcoords
     static_assert(sizeof(TexCoord) == 2 * sizeof(int16_t), "md2 texcoord has padding");
     texcoords_.resize(hdr_.num_st);
-    infile.seekg(hdr_.offset_st);
+    infile.seekg(offset + hdr_.offset_st);
     infile.read(reinterpret_cast<char *>(texcoords_.data()),
                 sizeof(TexCoord) * texcoords_.size());
     assert(texcoords_.size() == static_cast<size_t>(hdr_.num_st));
@@ -127,7 +155,7 @@ bool Model::load(std::string const& filename)
     // read frames
     frames_.resize(hdr_.num_frames);
     internal_frames_.resize(hdr_.num_frames);
-    infile.seekg(hdr_.offset_frames);
+    infile.seekg(offset + hdr_.offset_frames);
 
     Animation current_anim;
     current_anim.start_frame = -1;
