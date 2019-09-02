@@ -70,7 +70,6 @@ private:
 
 private:
     Header header_;
-    //std::unique_ptr<QImage> image_;
     std::vector<unsigned char> image_;
     std::vector<Color> colors_;
     int width_ = 0;

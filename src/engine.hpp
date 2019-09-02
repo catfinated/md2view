@@ -204,6 +204,9 @@ bool GLFWEngine<Game>::init(int argc, char const * argv[])
 template <typename Game>
 void GLFWEngine<Game>::run()
 {
+    last_frame_ = glfwGetTime();
+    //glfwSwapInterval(1);
+
     while (!glfwWindowShouldClose(window_)) {
         GLfloat current_frame = glfwGetTime();
         delta_time_ = current_frame - last_frame_;
@@ -225,6 +228,7 @@ void GLFWEngine<Game>::run()
         glCheckError();
 
         glfwSwapBuffers(window_);
+
     }
 
     glCheckError();
