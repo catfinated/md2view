@@ -11,6 +11,7 @@
 #include <SOIL.h>
 
 #include <unordered_map>
+#include <memory>
 
 namespace blue {
 
@@ -35,12 +36,12 @@ public:
     std::string const& audio_dir()    const { return audio_dir_;    }
     std::string const& fonts_dir()    const { return fonts_dir_;    }
 
-    Shader& load_shader(char const * vertex,
-                        char const * fragment,
-                        char const * geometry,
-                        std::string const& name);
+    std::shared_ptr<Shader> load_shader(char const * vertex,
+                                        char const * fragment,
+                                        char const * geometry,
+                                        std::string const& name);
 
-    Shader& shader(std::string const& name) { return shaders_.at(name); }
+    std::shared_ptr<Shader> shader(std::string const& name) { return shaders_.at(name); }
 
     Texture2D& load_texture2D(std::string const& path, std::string const& name = std::string(), bool alpha = false);
 
@@ -56,7 +57,7 @@ private:
     std::string audio_dir_;
     std::string fonts_dir_;
 
-    std::unordered_map<std::string, Shader> shaders_;
+    std::unordered_map<std::string, std::shared_ptr<Shader>> shaders_;
     std::unordered_map<std::string, Texture2D> textures2D_;
 };
 
@@ -81,10 +82,10 @@ inline ResourceManager::ResourceManager(std::string const& rootdir)
     }
 }
 
-inline Shader& ResourceManager::load_shader(char const * vertex,
-                                            char const * fragment,
-                                            char const * geometry,
-                                            std::string const& name)
+inline std::shared_ptr<Shader> ResourceManager::load_shader(char const * vertex,
+                                                            char const * fragment,
+                                                            char const * geometry,
+                                                            std::string const& name)
 {
     BLUE_EXPECT(vertex != nullptr);
     BLUE_EXPECT(fragment != nullptr);
@@ -94,17 +95,12 @@ inline Shader& ResourceManager::load_shader(char const * vertex,
     auto fragment_path = shaders_dir() + fragment;
     auto geometry_path = geometry != nullptr ? shaders_dir() + geometry : std::string{};
 
-    Shader shader{vertex_path, fragment_path, geometry_path};
-
-    //auto result = shaders_.emplace(std::piecewise_construct,
-    //                               std::forward_as_tuple(name),
-    //                               std::forward_as_tuple(vertex_path, fragment_path, geometry_path));
-
-    auto result = shaders_.emplace(std::make_pair(name, std::move(shader)));
+    std::shared_ptr<Shader> shader{new Shader{vertex_path, fragment_path, geometry_path}};
+    auto result = shaders_.emplace(std::make_pair(name, shader));
 
     BLUE_EXPECT(result.second);
-    BLUE_EXPECT(!shader.initialized());
-    BLUE_EXPECT(result.first->second.initialized());
+    BLUE_EXPECT(shader->initialized());
+    BLUE_EXPECT(result.first->second->initialized());
 
     return result.first->second;
 }

@@ -93,6 +93,9 @@ protected:
     void mouse_callback(double xpos, double ypos);
     bool parse_args(int argc, char const * argv[]);
 
+    void window_resize_callback(int x, int y);
+    void framebuffer_resize_callback(int x, int y);
+
 private:
     Game game_;
     Gui gui_;
@@ -143,10 +146,10 @@ bool GLFWEngine<Game>::init(int argc, char const * argv[])
     screen_height_ = height;
 
     glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+    //glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
     window_ = glfwCreateWindow(width, height, game_.title(), nullptr, nullptr);
@@ -165,6 +168,8 @@ bool GLFWEngine<Game>::init(int argc, char const * argv[])
         engine->key_callback(key, action);
     };
 
+    glfwSetKeyCallback(window_, key_callback);
+
     auto mouse_callback = [](GLFWwindow * window, double xpos, double ypos) {
         using EngineType = GLFWEngine<Game>;
         EngineType * engine = static_cast<EngineType *>(glfwGetWindowUserPointer(window));
@@ -172,8 +177,27 @@ bool GLFWEngine<Game>::init(int argc, char const * argv[])
         engine->mouse_callback(xpos, ypos);
     };
 
-    glfwSetKeyCallback(window_, key_callback);
     glfwSetCursorPosCallback(window_, mouse_callback);
+
+    auto win_resize_callback = [](GLFWwindow * window, int width, int height) {
+        using EngineType = GLFWEngine<Game>;
+        EngineType * engine = static_cast<EngineType *>(glfwGetWindowUserPointer(window));
+        assert(engine);
+        engine->window_resize_callback(width, height);
+    };
+
+    glfwSetWindowSizeCallback(window_, win_resize_callback);
+
+    auto fb_resize_callback = [](GLFWwindow * window, int width, int height) {
+        using EngineType = GLFWEngine<Game>;
+        EngineType * engine = static_cast<EngineType *>(glfwGetWindowUserPointer(window));
+        assert(engine);
+        engine->framebuffer_resize_callback(width, height);
+    };
+
+    glfwSetFramebufferSizeCallback(window_, fb_resize_callback);
+
+
     glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     glewExperimental = GL_TRUE;
@@ -274,5 +298,22 @@ void GLFWEngine<Game>::mouse_callback(double xpos, double ypos)
         game_.on_mouse_movement(xoffset, yoffset);
     }
 }
+
+template <typename Game>
+void GLFWEngine<Game>::window_resize_callback(int x, int y)
+{
+    std::cout << "window resize x=" << x << " y=" << y << '\n';
+}
+
+template <typename Game>
+void GLFWEngine<Game>::framebuffer_resize_callback(int x, int y)
+{
+    std::cout << "framebuffer resize x=" << x << " y=" << y << '\n';
+    width_ = x;
+    height_ = y;
+    glViewport(0, 0, x, y);
+    game_.on_framebuffer_resized(aspect_ratio());
+}
+
 
 } // namespace blue
