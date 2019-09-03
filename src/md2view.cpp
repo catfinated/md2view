@@ -41,6 +41,7 @@ private:
     bool vsync_enabled_ = false;
     float scale_ = 64.0f;
     std::array<float, 3> rot_;
+    glm::vec3 pos_;
 };
 
 MD2View::MD2View()
@@ -66,9 +67,11 @@ bool MD2View::parse_args(EngineBase& engine)
 void MD2View::reset_model_matrix()
 {
     rot_[0] = 0.0f;
-    rot_[1] = -90.0f; // quake used different world matrix
+    rot_[1] = glm::radians(-90.0f); // quake used different world matrix
     rot_[2] = 0.0f;
     scale_ = 64.0f;
+
+    pos_ = glm::vec3(0.0f, 0.0f, 0.0f);
 
 }
 
@@ -133,11 +136,12 @@ void MD2View::render(EngineBase& engine)
 
     //translate, rotate, scale
     glm::mat4 model(1.0);
-    glm::quat rotx = glm::angleAxis(glm::radians(rot_[0]), glm::vec3(1.0f, 0.0f, 0.0f));
-    glm::quat roty = glm::angleAxis(glm::radians(rot_[1]), glm::vec3(0.0f, 1.0f, 0.0f));
-    glm::quat rotz = glm::angleAxis(glm::radians(rot_[2]), glm::vec3(0.0f, 0.0f, 1.0f));
+    model = glm::translate(model, pos_);
+    glm::quat rotx = glm::angleAxis(rot_[0], glm::vec3(1.0f, 0.0f, 0.0f));
+    glm::quat roty = glm::angleAxis(rot_[1], glm::vec3(0.0f, 1.0f, 0.0f));
+    glm::quat rotz = glm::angleAxis(rot_[2], glm::vec3(0.0f, 0.0f, 1.0f));
     //model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    model = glm::mat4_cast(roty * rotz * rotx);
+    model *= glm::mat4_cast(roty * rotz * rotx);
     auto s = 1.0f / scale_; // uniform scale factor
     model = glm::scale(model, glm::vec3(s, s, s));
 
@@ -214,9 +218,12 @@ void MD2View::render(EngineBase& engine)
     ImGui::PopItemWidth();
 
     ImGui::InputFloat("Scale Factor", &scale_, 1.0f, 5.0f, 1);
-    ImGui::SliderFloat("X-Rotation", &rot_[0], -360.0f, 360.0f);
-    ImGui::SliderFloat("Y-Rotation", &rot_[1], -360.0f, 360.0f);
-    ImGui::SliderFloat("Z-Rotation", &rot_[2], -360.0f, 360.0f);
+    ImGui::SliderFloat("X-Position", &pos_[0], -7.0f, 7.0f);
+    ImGui::SliderFloat("Y-Position", &pos_[1], -7.0f, 7.0f);
+    ImGui::SliderFloat("Z-Position", &pos_[2], -7.0f, 7.0f);
+    ImGui::SliderAngle("X-Rotation", &rot_[0]);
+    ImGui::SliderAngle("Y-Rotation", &rot_[1]);
+    ImGui::SliderAngle("Z-Rotation", &rot_[2]);
 
     if (ImGui::Button("Reset Model")) {
         reset_model_matrix();

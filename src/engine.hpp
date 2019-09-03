@@ -247,7 +247,6 @@ void GLFWEngine<Game>::key_callback(int key, int action)
         }
         else if (key >= 0 && static_cast<size_t>(key) < max_keys) {
             keys_[key] = true;
-            std::cout << "key pressed: " << key << '\n';
         }
     }
     else if (action == GLFW_RELEASE && key >= 0 && static_cast<size_t>(key) < max_keys)
