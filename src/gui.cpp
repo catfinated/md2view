@@ -26,10 +26,10 @@ void Gui::init(GLFWwindow * window)
 
     glCheckError();
 
-    auto& shader = engine_.resource_manager().load_shader("imgui.vert", "imgui.frag", nullptr, "imgui");
+    auto shader = engine_.resource_manager().load_shader("imgui.vert", "imgui.frag", nullptr, "imgui");
 
-    attrib_location_tex_ = shader.uniform_location("texture0");
-    attrib_location_projection_ = shader.uniform_location("projection");
+    attrib_location_tex_ = shader->uniform_location("texture0");
+    attrib_location_projection_ = shader->uniform_location("projection");
     attrib_location_position_ = 0; //shader.uniform_location("position");
     attrib_location_uv_ = 1; //shader.uniform_location("uv");
     attrib_location_color_ = 2; //shader.uniform_location("color");
@@ -195,12 +195,12 @@ void Gui::render()
         {-1.0f,                  1.0f,                   0.0f, 1.0f },
     };
     //glUseProgram(g_ShaderHandle);
-    auto& shader = engine_.resource_manager().shader("imgui");
-    shader.use();
+    auto shader = engine_.resource_manager().shader("imgui");
+    shader->use();
 
     glUniform1i(attrib_location_tex_, 0);
     //glUniformMatrix4fv(g_AttribLocationProjMtx, 1, GL_FALSE, &ortho_projection[0][0]);
-    shader.set_projection(ortho_projection);
+    shader->set_projection(ortho_projection);
     glBindVertexArray(vao_);
 
     for (int n = 0; n < draw_data->CmdListsCount; n++)

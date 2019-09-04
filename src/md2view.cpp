@@ -19,6 +19,7 @@ public:
     bool on_engine_initialized(EngineBase& engine);
     void process_input(EngineBase& engine, GLfloat delta_time);
     void on_mouse_movement(GLfloat xoffset, GLfloat yoffset);
+    void on_framebuffer_resized(float);
     void update(EngineBase& engine, GLfloat delta_time);
     void render(EngineBase& engine);
     char const * const title() const { return "MD2View"; }
@@ -32,6 +33,7 @@ private:
     void load_current_texture(EngineBase&);
 
 private:
+    std::shared_ptr<blue::Shader> shader_;
     Camera camera_;
     std::unique_ptr<TexturedQuad> quad_;
     boost::program_options::options_description options_;
@@ -99,7 +101,7 @@ bool MD2View::on_engine_initialized(EngineBase& engine)
 
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 
-    engine.resource_manager().load_shader("md2.vert", "md2.frag", nullptr, "md2");
+    shader_ = engine.resource_manager().load_shader("md2.vert", "md2.frag", nullptr, "md2");
     //engine.resource_manager().load_shader("md2_model.vert", "md2_model.frag", nullptr, "md2_model");
     engine.resource_manager().load_shader("blending.vert", "blending.frag", nullptr, "quad");
     std::cout << ms_.model_name() << '\n';
@@ -117,6 +119,16 @@ bool MD2View::on_engine_initialized(EngineBase& engine)
     return true;
 }
 
+void MD2View::on_framebuffer_resized(float aspect_ratio)
+{
+    //auto& shader = engine.resource_manager().shader("md2");
+   glm::mat4 projection = glm::perspective(glm::radians(camera_.Zoom),
+                                           aspect_ratio,
+                                           0.1f, 500.0f);
+
+    shader_->set_projection(projection);
+}
+
 void MD2View::render(EngineBase& engine)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -125,7 +137,7 @@ void MD2View::render(EngineBase& engine)
     //return;
     //std::cout << " model path=" << ms_.model_path() << '\n';
 
-    auto& shader = engine.resource_manager().shader("md2");
+    //auto& shader = engine.resource_manager().shader("md2");
     auto& texture = engine.resource_manager().texture2D(ms_.model().current_skin().fpath);
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -145,13 +157,13 @@ void MD2View::render(EngineBase& engine)
     auto s = 1.0f / scale_; // uniform scale factor
     model = glm::scale(model, glm::vec3(s, s, s));
 
-    shader.use();
-    shader.set_model(model);
-    shader.set_view(view);
-    shader.set_projection(projection);
+    shader_->use();
+    shader_->set_model(model);
+    shader_->set_view(view);
+    shader_->set_projection(projection);
 
     texture.bind();
-    ms_.model().draw(shader);
+    ms_.model().draw(*shader_);
     glCheckError();
     //quad_->Draw(shader);
 
