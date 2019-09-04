@@ -1,6 +1,6 @@
 #pragma once
 
-#include <GL/glew.h> // so we have all opengl headers
+#include "gl.hpp"
 
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
@@ -12,8 +12,6 @@
 #include <iostream>
 #include <cassert>
 #include <stdexcept>
-
-namespace blue {
 
 class Shader
 {
@@ -29,13 +27,13 @@ public:
     Shader(Shader&& rhs);
     Shader& operator=(Shader&& rhs);
 
-    Shader(std::string const& vertexPath,
-           std::string const& fragmentPath,
-           std::string const& geometryPath = std::string());
+    Shader(std::string const& vertex,
+           std::string const& fragment,
+           std::string const& geometry = std::string());
 
-    bool init(std::string const& vertexPath,
-              std::string const& fragmentPath,
-              std::string const& geometryPath = std::string());
+    bool init(std::string const& vertex,
+              std::string const& fragment,
+              std::string const& geometry = std::string());
 
     GLuint program() const { return program_; }
     void use() const { glUseProgram(program()); }
@@ -129,25 +127,22 @@ private:
     bool initialized_ = false;
 };
 
-inline
-Shader::Shader(std::string const& vertexPath,
-               std::string const& fragmentPath,
-               std::string const& geometryPath)
+inline Shader::Shader(std::string const& vertex,
+                      std::string const& fragment,
+                      std::string const& geometry)
     : program_(0)
 {
-    if (!init(vertexPath, fragmentPath, geometryPath)) {
+    if (!init(vertex, fragment, geometry)) {
         throw std::runtime_error("shader initialization failed");
     }
 }
 
-inline
-Shader::~Shader()
+inline Shader::~Shader()
 {
     cleanup();
 }
 
-inline
-Shader::Shader(Shader&& rhs)
+inline Shader::Shader(Shader&& rhs)
 {
     program_ = rhs.program_;
     initialized_ = rhs.initialized_;
@@ -156,8 +151,7 @@ Shader::Shader(Shader&& rhs)
     rhs.initialized_ = false;
 }
 
-inline
-Shader& Shader::operator=(Shader&& rhs)
+inline Shader& Shader::operator=(Shader&& rhs)
 {
     if (this != &rhs) {
         cleanup();
@@ -171,8 +165,7 @@ Shader& Shader::operator=(Shader&& rhs)
     return *this;
 }
 
-inline
-void Shader::cleanup()
+inline void Shader::cleanup()
 {
     if (initialized_) {
         glDeleteProgram(program_);
@@ -180,45 +173,45 @@ void Shader::cleanup()
     }
 }
 
-inline
-bool Shader::init(std::string const& vertexPath,
-                  std::string const& fragmentPath,
-                  std::string const& geometryPath)
+inline bool Shader::init(std::string const& vertex,
+                         std::string const& fragment,
+                         std::string const& geometry)
 {
-    if (vertexPath.empty()) {
+    if (vertex.empty()) {
         std::cerr << "shader vertex path cannot be empty" << '\n';
         return false;
     }
-    if (fragmentPath.empty()) {
+
+    if (fragment.empty()) {
         std::cerr << "shader fragment path cannot be empty" << '\n';
         return false;
     }
 
     program_ = glCreateProgram();
 
-    GLuint vertex, fragment, geometry;
+    GLuint vertex_id, fragment_id, geometry_id;
 
-    if (!compile_shader(GL_VERTEX_SHADER, vertexPath.c_str(), vertex)) {
+    if (!compile_shader(GL_VERTEX_SHADER, vertex.c_str(), vertex_id)) {
         std::cerr << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n";
         return false;
     }
 
-    glAttachShader(program_, vertex);
+    glAttachShader(program_, vertex_id);
 
-    if (!compile_shader(GL_FRAGMENT_SHADER, fragmentPath.c_str(), fragment)) {
+    if (!compile_shader(GL_FRAGMENT_SHADER, fragment.c_str(), fragment_id)) {
         std::cerr << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n";
         return false;
     }
 
-    glAttachShader(program_, fragment);
+    glAttachShader(program_, fragment_id);
 
-    if (!geometryPath.empty()) {
-        if (!compile_shader(GL_GEOMETRY_SHADER, geometryPath.c_str(), geometry)) {
+    if (!geometry.empty()) {
+        if (!compile_shader(GL_GEOMETRY_SHADER, geometry.c_str(), geometry_id)) {
             std::cerr << "ERROR::SHADER::GEOMETRY::COMPILATION_FAILED\n";
             return false;
         }
 
-        glAttachShader(program_, geometry);
+        glAttachShader(program_, geometry_id);
     }
 
     if (!link_program()) {
@@ -226,19 +219,18 @@ bool Shader::init(std::string const& vertexPath,
         return false;
     }
 
-    glDeleteShader(vertex);
-    glDeleteShader(fragment);
+    glDeleteShader(vertex_id);
+    glDeleteShader(fragment_id);
 
-    if (!geometryPath.empty()) {
-        glDeleteShader(geometry);
+    if (!geometry.empty()) {
+        glDeleteShader(geometry_id);
     }
 
     initialized_ = true;
     return true;
 }
 
-inline
-bool Shader::compile_shader(GLenum shader_type, char const * path, GLuint& handle)
+inline bool Shader::compile_shader(GLenum shader_type, char const * path, GLuint& handle)
 {
     assert(path);
 
@@ -261,7 +253,8 @@ bool Shader::compile_shader(GLenum shader_type, char const * path, GLuint& handl
         istream << infile.rdbuf();
         infile.close();
         code = istream.str();
-    } catch (std::ifstream::failure const& e) {
+    }
+    catch (std::ifstream::failure const& e) {
         std::cerr << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ: " << path << '\n';
         return false;
     }
@@ -284,8 +277,7 @@ bool Shader::compile_shader(GLenum shader_type, char const * path, GLuint& handl
     return true;
 }
 
-inline
-bool Shader::link_program()
+inline bool Shader::link_program()
 {
     GLint success;
     glLinkProgram(program_);
@@ -302,67 +294,55 @@ bool Shader::link_program()
     return true;
 }
 
-inline
-GLint Shader::uniform_location(GLchar const * name) const
+inline GLint Shader::uniform_location(GLchar const * name) const
 {
     assert(name);
     return glGetUniformLocation(program(), name);
 }
 
 
-inline
-void Shader::set_uniform_block_binding(char const * block, GLuint binding_point)
+inline void Shader::set_uniform_block_binding(char const * block, GLuint binding_point)
 {
     GLuint index = glGetUniformBlockIndex(program(), block);
     glUniformBlockBinding(program(), index, binding_point);
 }
 
-inline
-void Shader::set_uniform(GLint location, glm::vec3 const& v)
+inline void Shader::set_uniform(GLint location, glm::vec3 const& v)
 {
     glUniform3fv(location, 1, &v[0]);
 }
 
-inline
-void Shader::set_uniform(GLint location, glm::vec2 const& v)
+inline void Shader::set_uniform(GLint location, glm::vec2 const& v)
 {
     glUniform2fv(location, 1, &v[0]);
 }
 
-inline
-void Shader::set_uniform(GLint location, glm::vec4 const& v)
+inline void Shader::set_uniform(GLint location, glm::vec4 const& v)
 {
     glUniform4fv(location, 1, &v[0]);
 }
 
-inline
-void Shader::set_uniform(GLint location, GLboolean b)
+inline void Shader::set_uniform(GLint location, GLboolean b)
 {
     glUniform1i(location, b);
 }
 
-inline
-void Shader::set_uniform(GLint location, glm::mat4 const& m)
+inline void Shader::set_uniform(GLint location, glm::mat4 const& m)
 {
     glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(m));
 }
 
-inline
-void Shader::set_uniform(GLint location, GLint i)
+inline void Shader::set_uniform(GLint location, GLint i)
 {
     glUniform1i(location, i);
 }
 
-inline
-void Shader::set_uniform(GLint location, GLuint i)
+inline void Shader::set_uniform(GLint location, GLuint i)
 {
     glUniform1ui(location, i);
 }
 
-inline
-void Shader::set_uniform(GLint location, GLfloat f)
+inline void Shader::set_uniform(GLint location, GLfloat f)
 {
     glUniform1f(location, f);
 }
-
-} // namespace blue

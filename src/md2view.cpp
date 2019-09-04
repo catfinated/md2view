@@ -8,8 +8,6 @@
 #include <algorithm>
 #include <memory>
 
-using namespace blue;
-
 class MD2View
 {
 public:
@@ -32,7 +30,7 @@ private:
     void load_current_texture(EngineBase&);
 
 private:
-    std::shared_ptr<blue::Shader> shader_;
+    std::shared_ptr<Shader> shader_;
     Camera camera_;
     boost::program_options::options_description options_;
     std::string models_dir_;

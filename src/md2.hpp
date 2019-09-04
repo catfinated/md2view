@@ -5,44 +5,23 @@ http://tfc.duke.free.fr/coding/md2-specs-en.html
 http://tfc.duke.free.fr/old/models/md2.htm
 */
 
-#include "shader.hpp"
-#include "pak.hpp"
+#include "gl.hpp"
 
 #include <glm/glm.hpp>
 
 #include <boost/algorithm/clamp.hpp>
 
+#include <array>
 #include <cstdint>
 #include <string>
 #include <iosfwd>
 #include <vector>
 #include <unordered_map>
 
-namespace blue { namespace md2 {
+class Shader;
+class PAK;
 
-struct Animation
-{
-    std::string name;
-    int start_frame;
-    int end_frame;
-    bool loop;
-
-    Animation()
-        : name()
-        , start_frame(-1)
-        , end_frame(-1)
-        , loop(true)
-    {}
-
-    explicit Animation(std::string const& id)
-        : name(id)
-        , start_frame(-1)
-        , end_frame(-1)
-        , loop(true)
-    {}
-};
-
-class Model
+class MD2
 {
 public:
     static int32_t const ident         = 844121161;
@@ -57,19 +36,15 @@ public:
     {
         int32_t ident;
         int32_t version;
-
         int32_t skinwidth;
         int32_t skinheight;
-
         int32_t framesize;
-
         int32_t num_skins;
         int32_t num_xyz;
         int32_t num_st;
         int32_t num_tris;
         int32_t num_glcmds;
         int32_t num_frames;
-
         int32_t offset_skins;
         int32_t offset_st;
         int32_t offset_tris;
@@ -80,7 +55,7 @@ public:
 
     struct Skin
     {
-        char name[64];
+        std::array<char, 64> name;
     };
 
     struct TexCoord
@@ -91,22 +66,44 @@ public:
 
     struct Triangle
     {
-        uint16_t vertex[3];
-        uint16_t st[3];
+        std::array<uint16_t, 3> vertex;
+        std::array<uint16_t, 3> st;
     };
 
     struct Vertex
     {
-        uint8_t v[3];
+        std::array<uint8_t, 3> v;
         uint8_t normal_index;
     };
 
     struct Frame
     {
-        float scale[3];
-        float translate[3];
-        char  name[16];
+        std::array<float, 3> scale;
+        std::array<float, 3> translate;
+        std::array<char, 16> name;
         std::vector<Vertex> vertices;
+    };
+
+    struct Animation
+    {
+        std::string name;
+        int start_frame;
+        int end_frame;
+        bool loop;
+
+        Animation()
+            : name()
+            , start_frame(-1)
+            , end_frame(-1)
+            , loop(true)
+        {}
+
+        explicit Animation(std::string const& id)
+            : name(id)
+            , start_frame(-1)
+            , end_frame(-1)
+            , loop(true)
+        {}
     };
 
     struct SkinData
@@ -120,14 +117,18 @@ public:
         {}
     };
 
+    MD2() = default;
+    explicit MD2(std::string const& filename, PAK const * pak = nullptr);
+
+    MD2(MD2 const&) = delete;
+    MD2& operator=(MD2 const&) = delete;
+    MD2(MD2&&) = delete;
+    MD2& operator=(MD2&&) = delete;
+
     // accessors
     Header const& header() const { return hdr_; }
 
-    // modifiers
-    bool load(std::string const& filename);
-    bool load(PakFile const&, std::string const& filename);
-
-    void draw(blue::Shader& shader);
+    void draw(Shader& shader);
     void update(float delta_time);
 
     std::vector<SkinData> const& skins() const { return skins_; }
@@ -138,6 +139,7 @@ public:
     size_t animation_index() const { return current_animation_index_; }
     size_t skin_index() const { return current_skin_index_; }
     void set_skin_index(size_t idx);
+
     SkinData const& current_skin() const
     {
         assert(current_skin_index_ >= 0 && current_skin_index_ < skins_.size());
@@ -152,6 +154,8 @@ public:
 private:
     bool validate_header(Header const& hdr);
     void setup_buffers();
+    bool load(std::string const& filename);
+    bool load(PAK const&, std::string const& filename);
     bool load(std::ifstream&, std::string const&, bool = false);
 
     struct InternalFrame
@@ -184,9 +188,5 @@ private:
     ssize_t current_skin_index_;
 };
 
-std::ostream& operator<<(std::ostream&, Model::Header const&);
-std::ostream& operator<<(std::ostream&, Animation const&);
-
-std::string path_for_skin(Model::Skin const& skin);
-
-}} // namespace blue::md2
+std::ostream& operator<<(std::ostream&, MD2::Header const&);
+std::ostream& operator<<(std::ostream&, MD2::Animation const&);

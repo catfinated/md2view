@@ -16,18 +16,18 @@ class ModelSelector
 public:
     ModelSelector() = default;
 
-    void init(std::string const& path, blue::EngineBase& eb);
+    void init(std::string const& path, EngineBase& eb);
 
     std::string model_name() const { if (selected_) { return selected_->name; } else { return std::string{}; } }
 
-    blue::md2::Model& model() { assert(model_); return *model_; }
+    MD2& model() { assert(model_); return *model_; }
 
     void draw_ui();
 
     template <typename RandEngine>
     void select_random_model(RandEngine& eng);
 
-    PakFile const * pak() const { return pak_.get(); }
+    PAK const * pak() const { return pak_.get(); }
 
 private:
     struct Node {
@@ -37,7 +37,7 @@ private:
         bool selected = false;
         Node * parent = nullptr;
         std::vector<std::unique_ptr<Node>> children;
-        std::unique_ptr<blue::md2::Model> model;
+        std::unique_ptr<MD2> model;
 
         Node const * find(std::string const& name) const
         {
@@ -74,12 +74,11 @@ private:
     void add_node(boost::filesystem::path const& path);
 
     std::string path_;
-    blue::md2::Model * model_ = nullptr;
+    MD2 * model_ = nullptr;
     Node root_;
     Node * selected_ = nullptr;
 
-    std::unique_ptr<PakFile> pak_;
-
+    std::unique_ptr<PAK> pak_;
 };
 
 inline void ModelSelector::add_node(boost::filesystem::path const& path)
@@ -107,7 +106,7 @@ inline void ModelSelector::add_node(boost::filesystem::path const& path)
     }
 }
 
-inline void ModelSelector::init(std::string const& path, blue::EngineBase& eb)
+inline void ModelSelector::init(std::string const& path, EngineBase& eb)
 {
     path_ = path;
     root_.path = path;
@@ -149,8 +148,8 @@ inline void ModelSelector::init(std::string const& path, blue::EngineBase& eb)
         }
     }
     else if (".pak" == p.extension()) {
-        pak_.reset(new PakFile{p.string()});
-        pak_->visit([this](PakFile::Node const * n) {
+        pak_.reset(new PAK{p.string()});
+        pak_->visit([this](PAK::Node const * n) {
                      //std::cout << n->path << '\n';
                      if (".md2" == boost::filesystem::path(n->path).extension()) {
                          std::cout << n->path << '\n';
@@ -210,23 +209,12 @@ inline bool ModelSelector::load_model_node(Node& node)
         return true;
     }
 
-    boost::filesystem::path p(node.path);
-    auto m = std::unique_ptr<blue::md2::Model>(new blue::md2::Model{});
-
-    std::cout << "loading model " << p << '\n';
-
-    if (pak_) {
-        BLUE_EXPECT(m->load(*pak_, p.string()));
-    }
-    else {
-        BLUE_EXPECT(m->load(p.string()));
-    }
-
-    m->set_animation(0);
+    std::cout << "loading model " << node.path << '\n';
+    auto m = std::unique_ptr<MD2>(new MD2{node.path, pak_.get()});
     node.model = std::move(m);
     model_ = node.model.get();
+    std::cout << "loaded model " << node.path << '\n';
 
-    std::cout << "loaded model " << p << '\n';
     return true;
 }
 
@@ -301,7 +289,7 @@ inline void ModelSelector::draw_ui()
 
     ImGui::Combo("Animation", &index,
                  [](void * data, int idx, char const ** out_text) -> bool {
-                     blue::md2::Model const * model = reinterpret_cast<blue::md2::Model const *>(data);
+                     MD2 const * model = reinterpret_cast<MD2 const *>(data);
                      assert(model);
                      if (idx < 0 || idx >= model->animations().size()) { return false; }
                      *out_text = model->animations()[idx].name.c_str();
@@ -316,7 +304,7 @@ inline void ModelSelector::draw_ui()
 
     ImGui::Combo("Skin", &sindex,
                  [](void * data, int idx, char const ** out_text) -> bool {
-                     blue::md2::Model const * model = reinterpret_cast<blue::md2::Model const *>(data);
+                     MD2 const * model = reinterpret_cast<MD2 const *>(data);
                      assert(model);
                      if (idx < 0 || idx >= model->skins().size()) { return false; }
                      *out_text = model->skins()[idx].name.c_str();

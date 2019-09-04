@@ -12,8 +12,6 @@
 #include <cassert>
 #include <random>
 
-namespace blue {
-
 class EngineBase
 {
 public:
@@ -314,6 +312,3 @@ void GLFWEngine<Game>::framebuffer_resize_callback(int x, int y)
     glViewport(0, 0, x, y);
     game_.on_framebuffer_resized(aspect_ratio());
 }
-
-
-} // namespace blue
