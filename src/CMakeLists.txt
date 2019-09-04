@@ -7,7 +7,7 @@ find_package(glew REQUIRED CONFIG)
 find_package(OpenGL REQUIRED)
 find_package(PkgConfig REQUIRED)
 
-SET(TOOLCHAIN_DIR /Users/nick/projects/toolchain/tc1)
+SET(TOOLCHAIN_DIR /opt/toolchain/latest)
 #find_library(SOIL_LIBRARY soil NO_DEFAULT_PATH PATHS ${TOOLCHAIN_DIR}/SOIL/lib)
 find_library(SOIL_LIBRARY soil)
 SET(SOIL_INCLUDE ${TOOLCHAIN_DIR}/SOIL/include)
