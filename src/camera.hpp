@@ -152,4 +152,5 @@ inline void Camera::draw_ui()
     ImGui::InputFloat3("Front", glm::value_ptr(front_), -1, ImGuiInputTextFlags_ReadOnly);
     ImGui::InputFloat3("Up", glm::value_ptr(up_), -1, ImGuiInputTextFlags_ReadOnly);
     ImGui::InputFloat3("Right", glm::value_ptr(right_), -1, ImGuiInputTextFlags_ReadOnly);
+    ImGui::SliderFloat("fov", &zoom_, 1.0f, 45.0f);
 }
