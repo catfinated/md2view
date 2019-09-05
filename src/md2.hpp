@@ -143,7 +143,7 @@ public:
 
     SkinData const& current_skin() const
     {
-        assert(current_skin_index_ >= 0 && current_skin_index_ < skins_.size());
+        assert(current_skin_index_ >= 0 && static_cast<size_t>(current_skin_index_) < skins_.size());
         return skins_[current_skin_index_];
     }
 

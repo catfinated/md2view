@@ -291,7 +291,7 @@ inline void ModelSelector::draw_ui()
                  [](void * data, int idx, char const ** out_text) -> bool {
                      MD2 const * model = reinterpret_cast<MD2 const *>(data);
                      assert(model);
-                     if (idx < 0 || idx >= model->animations().size()) { return false; }
+                     if (idx < 0 || static_cast<size_t>(idx) >= model->animations().size()) { return false; }
                      *out_text = model->animations()[idx].name.c_str();
                      return true;
                  },
@@ -306,7 +306,7 @@ inline void ModelSelector::draw_ui()
                  [](void * data, int idx, char const ** out_text) -> bool {
                      MD2 const * model = reinterpret_cast<MD2 const *>(data);
                      assert(model);
-                     if (idx < 0 || idx >= model->skins().size()) { return false; }
+                     if (idx < 0 || static_cast<size_t>(idx) >= model->skins().size()) { return false; }
                      *out_text = model->skins()[idx].name.c_str();
                      return true;
                  },

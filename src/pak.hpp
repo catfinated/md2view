@@ -1,11 +1,13 @@
 #pragma once
 
+#include <algorithm>
 #include <array>
+#include <cassert>
 #include <cstdint>
 #include <memory>
+#include <stack>
 #include <string>
 #include <vector>
-#include <stack>
 
 class PAK
 {

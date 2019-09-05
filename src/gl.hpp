@@ -8,6 +8,7 @@
 #include <GL/gl.h>
 #endif
 
+#include <cassert>
 #include <iostream>
 
 inline const char * glErrorToString(GLenum error)
