@@ -313,7 +313,7 @@ void MD2::set_animation(size_t index)
 {
     assert(index < animations_.size());
 
-    if (current_animation_index_ != index) {
+    if (current_animation_index_ != static_cast<ssize_t>(index)) {
         auto const& anim = animations_[index];
         next_frame_ = anim.start_frame;
         current_animation_index_ = index;

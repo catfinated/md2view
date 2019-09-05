@@ -1,5 +1,7 @@
 #include "pcx.hpp"
 
+#include <cassert>
+#include <cstring>
 #include <iostream>
 #include <iomanip>
 
@@ -57,8 +59,8 @@ PCX::ScanLine PCX::readScanLine(std::istream& ds, int32_t length)
     uint8_t runcount;
     uint8_t runvalue;
     uint32_t total(0);
-    bool runny{false};
-    bool alwaysrunny{true};
+    //bool runny{false};
+    //bool alwaysrunny{true};
     uint32_t bytecount(0);
 
     while (index < length) {
@@ -72,13 +74,13 @@ PCX::ScanLine PCX::readScanLine(std::istream& ds, int32_t length)
             //ds >> byte;
             ds.read((char*)&byte, 1);
             runvalue = byte;
-            runny = true;
+            //runny = true;
             ++bytecount;
         }
         else {
             runcount = 1;
             runvalue = byte;
-            alwaysrunny = false;
+            //alwaysrunny = false;
         }
 
         for (total += runcount; runcount && index < length; --runcount, ++index) {
@@ -87,7 +89,6 @@ PCX::ScanLine PCX::readScanLine(std::istream& ds, int32_t length)
     }
 
     return scan_line;
-    //qDebug() << "runny: " << runny << "alwaysrunny" << alwaysrunny << "bytes: " << bytecount << "total: " << total;
 }
 
 std::vector<PCX::Color> PCX::readPalette(std::istream& ds)
