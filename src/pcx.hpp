@@ -1,17 +1,13 @@
 #pragma once
 
-//#include <QString>
-//#include <QDataStream>
-//#include <QColor>
-//#include <QImage>
-
 #include <array>
 #include <cstdint>
 #include <cstddef>
 #include <vector>
 #include <memory>
 
-class PcxFile
+// https://www.fileformat.info/format/pcx/egff.htm
+class PCX
 {
 public:
 #pragma pack(push, 1)
@@ -50,8 +46,8 @@ public:
         {}
     };
 
-    PcxFile() = default;
-    PcxFile(std::istream&);
+    PCX() = default;
+    PCX(std::istream&);
 
     Header const& header() const { return header_; }
 
@@ -76,4 +72,4 @@ private:
     int height_ = 0;
 };
 
-std::ostream& operator<<(std::ostream&, PcxFile::Header const&);
+std::ostream& operator<<(std::ostream&, PCX::Header const&);

@@ -1,7 +1,6 @@
 #include "gui.hpp"
 #include "engine.hpp"
-
-namespace blue {
+#include "shader.hpp"
 
 Gui::Gui(EngineBase& engine)
     : engine_(engine)
@@ -255,6 +254,3 @@ void Gui::shutdown()
 {
     // TODO
 }
-
-
-} // namespace blue

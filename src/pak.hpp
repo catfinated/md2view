@@ -7,25 +7,25 @@
 #include <vector>
 #include <stack>
 
-#pragma pack(push, 1)
-struct PakHeader
-{
-    std::array<char, 4> id;
-    int32_t dirofs;
-    int32_t dirlen;
-};
-
-struct PakEntry
-{
-    std::array<char, 56> name;
-    int32_t filepos;
-    int32_t filelen;
-};
-#pragma pack(pop)
-
-class PakFile
+class PAK
 {
 public:
+    #pragma pack(push, 1)
+    struct Header
+    {
+        std::array<char, 4> id;
+        int32_t dirofs;
+        int32_t dirlen;
+    };
+
+    struct Entry
+    {
+        std::array<char, 56> name;
+        int32_t filepos;
+        int32_t filelen;
+    };
+    #pragma pack(pop)
+
     struct Node
     {
         Node * parent;
@@ -64,12 +64,9 @@ public:
         }
     };
 
-    PakFile(std::string const&);
+    explicit PAK(std::string const&);
 
     std::string const& filename() const { return filename_; }
-
-    //bool open(std::string const& filename);
-    //std::vector<uint8_t> read_file(std::string const& filename);
 
     Node const * find(std::string const&) const;
 

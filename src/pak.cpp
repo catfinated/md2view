@@ -6,15 +6,15 @@
 #include <iostream>
 #include <fstream>
 
-static_assert(sizeof(PakHeader) == 12, "unexpected PackHeader size");
-static_assert(sizeof(PakEntry) == 64, "unexpected PackFile size");
+static_assert(sizeof(PAK::Header) == 12, "unexpected PackHeader size");
+static_assert(sizeof(PAK::Entry) == 64, "unexpected PackFile size");
 
-PakFile::PakFile(std::string const& filename)
+PAK::PAK(std::string const& filename)
 {
     init(filename);
 }
 
-bool PakFile::init(std::string const& filename)
+bool PAK::init(std::string const& filename)
 {
     filename_ = filename;
 
@@ -25,7 +25,7 @@ bool PakFile::init(std::string const& filename)
         return false;
     }
 
-    PakHeader hdr;
+    Header hdr;
     inf.read(reinterpret_cast<char *>(&hdr), sizeof(hdr));
 
     std::cout << hdr.id[0] << hdr.id[1] << hdr.id[2] << hdr.id[3]
@@ -41,7 +41,7 @@ bool PakFile::init(std::string const& filename)
 
     //hdr.dirofs = hdr.dirofs; // le32toh
     //hdr.dirlen = hdr.dirlen; // le32toh
-    auto num_entries = static_cast<size_t>(hdr.dirlen) / sizeof(PakEntry);
+    auto num_entries = static_cast<size_t>(hdr.dirlen) / sizeof(Entry);
 
     std::cout << "loaded pak file: " << filename
               << " " << hdr.dirofs
@@ -52,7 +52,7 @@ bool PakFile::init(std::string const& filename)
     inf.seekg(hdr.dirofs);
 
     for (size_t i = 0; i < num_entries; ++ i) {
-        PakEntry entry;
+        Entry entry;
         inf.read(reinterpret_cast<char *>(&entry), sizeof(entry));
         // ltoh
         //packfile.filepos = qFromLittleEndian(packfile.filepos);
@@ -102,22 +102,7 @@ bool PakFile::init(std::string const& filename)
     return true;
 }
 
-/*
-QByteArray PakModel::extractFile(PakFileItem const& item) const
-{
-    if (item.filelen() < 1) {
-        return QByteArray();
-    }
-
-    QFile file(filename_);
-    qDebug() << item.filepos() << file.size();
-    file.open(QIODevice::ReadOnly);
-    file.seek(item.filepos());
-    return file.read(static_cast<qint64>(item.filelen()));
-}
-*/
-
-PakFile::Node const * PakFile::find(std::string const& name) const
+PAK::Node const * PAK::find(std::string const& name) const
 {
     if (name.empty()) {
         return nullptr;

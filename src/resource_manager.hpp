@@ -13,8 +13,6 @@
 #include <unordered_map>
 #include <memory>
 
-namespace blue {
-
 class ResourceManager
 {
 public:
@@ -45,7 +43,7 @@ public:
 
     Texture2D& load_texture2D(std::string const& path, std::string const& name = std::string(), bool alpha = false);
 
-    Texture2D& load_texture2D(PakFile const& pf, std::string const& path, std::string const& name = std::string());
+    Texture2D& load_texture2D(PAK const& pf, std::string const& path, std::string const& name = std::string());
 
     Texture2D& texture2D(std::string const& name) { return textures2D_.at(name); }
 
@@ -105,7 +103,7 @@ inline std::shared_ptr<Shader> ResourceManager::load_shader(char const * vertex,
     return result.first->second;
 }
 
-inline Texture2D& ResourceManager::load_texture2D(PakFile const& pf, std::string const& path, std::string const& name)
+inline Texture2D& ResourceManager::load_texture2D(PAK const& pf, std::string const& path, std::string const& name)
 {
     auto key = name.empty() ? path : name;
     auto iter = textures2D_.find(key);
@@ -126,7 +124,7 @@ inline Texture2D& ResourceManager::load_texture2D(PakFile const& pf, std::string
 
     inf.seekg(node->filepos);
 
-    PcxFile pcx(inf);
+    PCX pcx(inf);
     inf.close();
 
     Texture2D texture;
@@ -183,7 +181,7 @@ inline Texture2D& ResourceManager::load_texture2D(std::string const& file, std::
     }
     else {
         std::ifstream inf(p.string().c_str(), std::ios_base::in | std::ios_base::binary);
-        PcxFile pcx(inf);
+        PCX pcx(inf);
         texture.set_alpha(false);
         texture.init(pcx.width(), pcx.height(), pcx.image().data());
         inf.close();
@@ -197,5 +195,3 @@ inline Texture2D& ResourceManager::load_texture2D(std::string const& file, std::
 
     return result.first->second;
 }
-
-} // namespace blue

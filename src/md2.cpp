@@ -1,4 +1,6 @@
 #include "md2.hpp"
+#include "pak.hpp"
+#include "shader.hpp"
 #include "common.hpp"
 
 #include <boost/filesystem.hpp>
@@ -8,7 +10,12 @@
 #include <vector>
 #include <cctype>
 
-namespace blue { namespace md2 {
+template <size_t N>
+std::ostream& operator<<(std::ostream& os, std::array<char, N> const& a)
+{
+    os << a.data();
+    return os;
+}
 
 std::string animation_id_from_frame_name(std::string const& name)
 {
@@ -25,7 +32,18 @@ std::string animation_id_from_frame_name(std::string const& name)
     return id;
 }
 
-bool Model::load(PakFile const& pf, std::string const& filename)
+MD2::MD2(std::string const& filename, PAK const * pak)
+{
+    bool status = pak ? load(*pak, filename) : load(filename);
+
+    if (!status) {
+        throw std::runtime_error("failed to load MD2 model " + filename);
+    }
+
+    set_animation(0);
+}
+
+bool MD2::load(PAK const& pf, std::string const& filename)
 {
     if (filename.empty()) { return false; }
     std::cout << filename << '\n';
@@ -43,7 +61,7 @@ bool Model::load(PakFile const& pf, std::string const& filename)
     return result;
 }
 
-bool Model::load(std::string const& filename)
+bool MD2::load(std::string const& filename)
 {
     if (filename.empty()) { return false; }
 
@@ -58,7 +76,7 @@ bool Model::load(std::string const& filename)
     return result;
 }
 
-bool Model::load(std::ifstream& infile, std::string const& filename, bool ispak)
+bool MD2::load(std::ifstream& infile, std::string const& filename, bool ispak)
 {
     next_frame_ = 1;
     current_frame_ = 0;
@@ -88,7 +106,7 @@ bool Model::load(std::ifstream& infile, std::string const& filename, bool ispak)
 
     for (auto const& skin : skins) {
         std::cout << "'" << skin.name << "'\n";
-        boost::filesystem::path f(std::string(skin.name));
+        boost::filesystem::path f(std::string(skin.name.data()));
 
         if (ispak) {
             skins_.emplace_back(f.string(), f.stem().string());
@@ -165,12 +183,12 @@ bool Model::load(std::ifstream& infile, std::string const& filename, bool ispak)
 
         frame.vertices.resize(hdr_.num_xyz); // same # of vertices for each keyframe
 
-        infile.read(reinterpret_cast<char *>(frame.scale), sizeof(frame.scale));
-        infile.read(reinterpret_cast<char *>(frame.translate), sizeof(frame.translate));
-        infile.read(reinterpret_cast<char *>(frame.name), sizeof(frame.name));
+        infile.read(reinterpret_cast<char *>(frame.scale.data()), sizeof(frame.scale));
+        infile.read(reinterpret_cast<char *>(frame.translate.data()), sizeof(frame.translate));
+        infile.read(reinterpret_cast<char *>(frame.name.data()), sizeof(frame.name));
         infile.read(reinterpret_cast<char *>(frame.vertices.data()), sizeof(Vertex) * hdr_.num_xyz);
 
-        std::string anim_id = animation_id_from_frame_name(frame.name);
+        std::string anim_id = animation_id_from_frame_name(std::string(frame.name.data()));
 
         if (current_anim.name == anim_id) {
             current_anim.end_frame = i;
@@ -243,7 +261,7 @@ bool Model::load(std::ifstream& infile, std::string const& filename, bool ispak)
     return true;
 }
 
-void Model::setup_buffers()
+void MD2::setup_buffers()
 {
    glGenVertexArrays(1, &vao_);
    glGenBuffers(2, vbo_);
@@ -275,7 +293,7 @@ void Model::setup_buffers()
    glCheckError();
 }
 
-void Model::set_animation(std::string const& id)
+void MD2::set_animation(std::string const& id)
 {
     auto iter = animation_index_map_.find(id);
 
@@ -285,7 +303,7 @@ void Model::set_animation(std::string const& id)
     }
 }
 
-void Model::set_animation(size_t index)
+void MD2::set_animation(size_t index)
 {
     assert(index < animations_.size());
 
@@ -296,14 +314,14 @@ void Model::set_animation(size_t index)
     }
 }
 
-void Model::set_skin_index(size_t index)
+void MD2::set_skin_index(size_t index)
 {
     assert(index < skins_.size());
 
     current_skin_index_ = index;
 }
 
-void Model::update(float dt)
+void MD2::update(float dt)
 {
     if (current_animation_index_ < 0) {
         return;
@@ -355,47 +373,47 @@ void Model::update(float dt)
                    &interpolated_vertices_[0]);
 }
 
-void Model::draw(blue::Shader& shader)
+void MD2::draw(Shader& shader)
 {
    glBindVertexArray(vao_);
    glDrawArrays(GL_TRIANGLES, 0, interpolated_vertices_.size());
    glCheckError();
 }
 
-bool Model::validate_header(Header const& hdr)
+bool MD2::validate_header(Header const& hdr)
 {
-    if (hdr.ident != Model::version) {
+    if (hdr.ident != MD2::version) {
       return false;
     }
 
-    if (hdr.version != Model::ident) {
+    if (hdr.version != MD2::ident) {
         return false;
     }
 
-    if (hdr.num_tris > Model::max_tris) {
+    if (hdr.num_tris > MD2::max_tris) {
         return false;
     }
 
-    if (hdr.num_xyz > Model::max_vertices) {
+    if (hdr.num_xyz > MD2::max_vertices) {
         return false;
     }
 
-    if (hdr.num_st > Model::max_texcoords) {
+    if (hdr.num_st > MD2::max_texcoords) {
         return false;
     }
 
-    if (hdr.num_frames > Model::max_frames) {
+    if (hdr.num_frames > MD2::max_frames) {
         return false;
     }
 
-    if (hdr.num_skins > Model::max_skins) {
+    if (hdr.num_skins > MD2::max_skins) {
         return false;
     }
 
     return true;
 }
 
-std::ostream& operator<<(std::ostream& os, Animation const& anim)
+std::ostream& operator<<(std::ostream& os, MD2::Animation const& anim)
 {
     os << "id:    " << anim.name        << '\n'
        << "start: " << anim.start_frame << '\n'
@@ -405,7 +423,7 @@ std::ostream& operator<<(std::ostream& os, Animation const& anim)
     return os;
 }
 
-std::ostream& operator<<(std::ostream& os, Model::Header const& hdr)
+std::ostream& operator<<(std::ostream& os, MD2::Header const& hdr)
 {
     os << "ident:         " << hdr.ident         << '\n'
        << "version:       " << hdr.version       << '\n'
@@ -427,5 +445,3 @@ std::ostream& operator<<(std::ostream& os, Model::Header const& hdr)
 
     return os;
 }
-
-}} // namespace blue::md2

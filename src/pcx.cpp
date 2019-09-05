@@ -1,31 +1,13 @@
 #include "pcx.hpp"
 
-//#include <QtEndian>
-//#include <QDataStream>
-//#include <QDebug>
-
 #include <iostream>
 #include <iomanip>
 
-PcxFile::PcxFile(std::istream& ds)
+PCX::PCX(std::istream& ds)
 {
     std::cout << "hdr size " << sizeof(header_) << '\n';
-
     auto header_ptr = std::addressof(header_);
     memset(header_ptr, 0, sizeof(header_));
-
-    /*
-    auto i = 0u;
-    header_.identifier = qFromLittleEndian<decltype(header_.identifier)>(qba.data() + i);
-    i += sizeof(header_.identifier);
-    header_.version = qFromLittleEndian<decltype(header_.version)>(qba.data() + i);
-    i += sizeof(header_.version);
-    header_.encoding = qFromLittleEndian<decltype(header_.encoding)>(qba.data() + i);
-    i += sizeof(header_.encoding);
-    header_.bits_per_pixel = qFromLittleEndian<decltype(header_.bits_per_pixel)>(qba.data() + i);
-    i += sizeof(header_.bits_per_pixel);
-    */
-    // QDataStream ds(qba);
     ds.read(reinterpret_cast<char *>(header_ptr), sizeof(header_));
 
     auto width = header_.xend - header_.xstart + 1;
@@ -41,7 +23,6 @@ PcxFile::PcxFile(std::istream& ds)
     std::vector<ScanLine> scan_lines;
 
     for (auto i = 0; i < length; ++i) {
-        //qDebug() << i;
         scan_lines.push_back(readScanLine(ds, scan_line_length));
     }
     std::cout << "done reading scan lines " << scan_lines.size() << '\n';
@@ -56,7 +37,6 @@ PcxFile::PcxFile(std::istream& ds)
     for (auto i = 0; i < length; ++i) {
         for (auto j = 0; j < width; ++j) {
             auto index = scan_lines[i][j];
-            //std::cout << "index=" << (int)index << '\n';
             assert(index < colors_.size());
             auto loc = (j + (i * width)) * 3;
             auto& color = colors_[index];
@@ -65,40 +45,9 @@ PcxFile::PcxFile(std::istream& ds)
             image_[loc + 2] = color.b;
         }
     }
-
-    /*
-    image_.reset(new QImage(width, length, QImage::Format_RGB32));
-
-    qDebug() << "generating qimage";
-    for (auto i = 0; i < length; ++i) {
-        for (auto j = 0; j < width; ++j) {
-            auto index = scan_lines[i][j];
-            assert(index < colors_.size());
-            image_->setPixelColor(j, i, colors_[index]);
-        }
-    }
-
-    qDebug() << "qimage generated";
-    */
-
-    //for (auto const& color : colors) {
-     //   qDebug() << color;
-    //}
-
-    /*
-    quint64 count(0);
-
-    while (!ds.atEnd()) {
-        qint8 byte;
-        ds >> byte;
-        count++;
-    }
-
-    qDebug() << "leftover bytes: " << count;
-    */
 }
 
-PcxFile::ScanLine PcxFile::readScanLine(std::istream& ds, int32_t length)
+PCX::ScanLine PCX::readScanLine(std::istream& ds, int32_t length)
 {
     ScanLine scan_line;
     scan_line.resize(static_cast<size_t>(length));
@@ -141,9 +90,9 @@ PcxFile::ScanLine PcxFile::readScanLine(std::istream& ds, int32_t length)
     //qDebug() << "runny: " << runny << "alwaysrunny" << alwaysrunny << "bytes: " << bytecount << "total: " << total;
 }
 
-std::vector<PcxFile::Color> PcxFile::readPalette(std::istream& ds)
+std::vector<PCX::Color> PCX::readPalette(std::istream& ds)
 {
-    std::vector<PcxFile::Color> colors;
+    std::vector<PCX::Color> colors;
 
     if (ds.eof()) {
         return colors;
@@ -194,7 +143,7 @@ std::ostream& operator<<(std::ostream& os, std::array<uint8_t, N> const& ary)
     return os;
 }
 
-std::ostream& operator<<(std::ostream& os, PcxFile::Header const& hdr)
+std::ostream& operator<<(std::ostream& os, PCX::Header const& hdr)
 {
     os << "identifier:\t " << static_cast<uint32_t>(hdr.identifier)
        << "\nversion:\t" << static_cast<uint32_t>(hdr.version)

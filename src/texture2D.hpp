@@ -2,8 +2,6 @@
 
 #include "common.hpp"
 
-namespace blue {
-
 class Texture2D
 {
 public:
@@ -51,22 +49,19 @@ private:
 
 }; // class Texture2D
 
-inline
-Texture2D::Texture2D(GLuint width, GLuint height, unsigned char * data)
+inline Texture2D::Texture2D(GLuint width, GLuint height, unsigned char * data)
 {
     if (!init(width, height, data)) {
         throw std::runtime_error("failed to init Texture2D");
     }
 }
 
-inline
-Texture2D::~Texture2D()
+inline Texture2D::~Texture2D()
 {
     cleanup();
 }
 
-inline
-Texture2D::Texture2D(Texture2D&& rhs)
+inline Texture2D::Texture2D(Texture2D&& rhs)
 {
     attr_ = rhs.attr_;
     id_ = rhs.id_;
@@ -78,8 +73,7 @@ Texture2D::Texture2D(Texture2D&& rhs)
     rhs.initialized_ = false;
 }
 
-inline
-Texture2D& Texture2D::operator=(Texture2D&& rhs)
+inline Texture2D& Texture2D::operator=(Texture2D&& rhs)
 {
     if (this != &rhs) {
         cleanup();
@@ -96,8 +90,7 @@ Texture2D& Texture2D::operator=(Texture2D&& rhs)
     return *this;
 }
 
-inline
-void Texture2D::cleanup()
+inline void Texture2D::cleanup()
 {
     if (initialized_) {
         glDeleteTextures(1, &id_);
@@ -105,8 +98,7 @@ void Texture2D::cleanup()
     }
 }
 
-inline
-bool Texture2D::init(GLuint width, GLuint height, unsigned char const * data)
+inline bool Texture2D::init(GLuint width, GLuint height, unsigned char const * data)
 {
     if (initialized_) {
         return false;
@@ -147,15 +139,13 @@ bool Texture2D::init(GLuint width, GLuint height, unsigned char const * data)
     return true;
 }
 
-inline
-void Texture2D::bind() const
+inline void Texture2D::bind() const
 {
     BLUE_EXPECT(initialized_);
     glBindTexture(GL_TEXTURE_2D, id_);
 }
 
-inline
-void Texture2D::set_alpha(bool alpha)
+inline void Texture2D::set_alpha(bool alpha)
 {
     if (alpha) {
         attr_.internal_format = GL_RGBA;
@@ -166,5 +156,3 @@ void Texture2D::set_alpha(bool alpha)
         attr_.image_format = GL_RGB;
     }
 }
-
-} // namespace blue

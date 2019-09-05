@@ -1,13 +1,9 @@
 #pragma once
 
-#include "common.hpp"
+#include "gl.hpp"
 
 #include <imgui.h>
 #include <GLFW/glfw3.h>
-
-#include "shader.hpp"
-
-namespace blue {
 
 class EngineBase;
 
@@ -49,5 +45,3 @@ private:
     unsigned int  vao_ = 0;
     unsigned int  glbuffers_[num_buffers];
 };
-
-}
