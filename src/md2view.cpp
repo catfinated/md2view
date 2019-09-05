@@ -6,6 +6,7 @@
 #include "glm/gtx/string_cast.hpp"
 
 #include <algorithm>
+#include <cstdlib>
 #include <memory>
 
 class MD2View
@@ -255,8 +256,13 @@ void MD2View::on_mouse_movement(GLfloat xoffset, GLfloat yoffset)
 
 int main(int argc, char const * argv[])
 {
-    GLFWEngine<MD2View> game;
-    if (game.init(argc, argv)) {
-        game.run();
+    Engine<MD2View> engine;
+
+    if (!engine.init(argc, argv)) {
+        return EXIT_FAILURE;
     }
+
+    engine.run_game();
+
+    return EXIT_SUCCESS;
 }

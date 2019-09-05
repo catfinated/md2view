@@ -119,6 +119,7 @@ public:
 
     MD2() = default;
     explicit MD2(std::string const& filename, PAK const * pak = nullptr);
+    ~MD2();
 
     MD2(MD2 const&) = delete;
     MD2& operator=(MD2 const&) = delete;

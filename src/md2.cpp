@@ -43,6 +43,12 @@ MD2::MD2(std::string const& filename, PAK const * pak)
     set_animation(0);
 }
 
+MD2::~MD2()
+{
+    glDeleteVertexArrays(1, &vao_);
+    glDeleteBuffers(2, vbo_);
+}
+
 bool MD2::load(PAK const& pf, std::string const& filename)
 {
     if (filename.empty()) { return false; }

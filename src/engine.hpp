@@ -71,17 +71,16 @@ bool EngineBase::check_key_pressed(unsigned int key)
 }
 
 template <typename Game>
-class GLFWEngine : public EngineBase
+class Engine : public EngineBase
 {
 public:
-    GLFWEngine()
+    Engine()
         : EngineBase()
         , gui_(*this)
     {}
 
-    //bool init(int width, int height);
     bool init(int argc, char const * argv[]);
-    void run();
+    void run_game();
 
 protected:
     GLfloat delta_time() const { return delta_time_; }
@@ -107,7 +106,7 @@ private:
 };
 
 template <typename Game>
-bool GLFWEngine<Game>::parse_args(int argc, char const * argv[])
+bool Engine<Game>::parse_args(int argc, char const * argv[])
 {
     boost::program_options::options_description engine("Engine options");
     engine.add_options()
@@ -130,8 +129,8 @@ bool GLFWEngine<Game>::parse_args(int argc, char const * argv[])
 }
 
 template <typename Game>
-//bool GLFWEngine<Game>::init(int width, int height)
-bool GLFWEngine<Game>::init(int argc, char const * argv[])
+//bool Engine<Game>::init(int width, int height)
+bool Engine<Game>::init(int argc, char const * argv[])
 {
     if (!parse_args(argc, argv)) {
         return false;
@@ -160,7 +159,7 @@ bool GLFWEngine<Game>::init(int argc, char const * argv[])
 
     // define the callbacks here as lambdas so they are not accessible to outside code
     auto key_callback = [](GLFWwindow * window, int key, int scancode, int action, int mode) {
-        using EngineType = GLFWEngine<Game>;
+        using EngineType = Engine<Game>;
         EngineType * engine = static_cast<EngineType *>(glfwGetWindowUserPointer(window));
         assert(engine);
         engine->key_callback(key, action);
@@ -169,7 +168,7 @@ bool GLFWEngine<Game>::init(int argc, char const * argv[])
     glfwSetKeyCallback(window_, key_callback);
 
     auto mouse_callback = [](GLFWwindow * window, double xpos, double ypos) {
-        using EngineType = GLFWEngine<Game>;
+        using EngineType = Engine<Game>;
         EngineType * engine = static_cast<EngineType *>(glfwGetWindowUserPointer(window));
         assert(engine);
         engine->mouse_callback(xpos, ypos);
@@ -178,7 +177,7 @@ bool GLFWEngine<Game>::init(int argc, char const * argv[])
     glfwSetCursorPosCallback(window_, mouse_callback);
 
     auto win_resize_callback = [](GLFWwindow * window, int width, int height) {
-        using EngineType = GLFWEngine<Game>;
+        using EngineType = Engine<Game>;
         EngineType * engine = static_cast<EngineType *>(glfwGetWindowUserPointer(window));
         assert(engine);
         engine->window_resize_callback(width, height);
@@ -187,7 +186,7 @@ bool GLFWEngine<Game>::init(int argc, char const * argv[])
     glfwSetWindowSizeCallback(window_, win_resize_callback);
 
     auto fb_resize_callback = [](GLFWwindow * window, int width, int height) {
-        using EngineType = GLFWEngine<Game>;
+        using EngineType = Engine<Game>;
         EngineType * engine = static_cast<EngineType *>(glfwGetWindowUserPointer(window));
         assert(engine);
         engine->framebuffer_resize_callback(width, height);
@@ -224,7 +223,7 @@ bool GLFWEngine<Game>::init(int argc, char const * argv[])
 }
 
 template <typename Game>
-void GLFWEngine<Game>::run()
+void Engine<Game>::run_game()
 {
     last_frame_ = glfwGetTime();
     //glfwSwapInterval(1);
@@ -257,7 +256,7 @@ void GLFWEngine<Game>::run()
 }
 
 template <typename Game>
-void GLFWEngine<Game>::key_callback(int key, int action)
+void Engine<Game>::key_callback(int key, int action)
 {
     if (action == GLFW_PRESS) {
         if (key == GLFW_KEY_ESCAPE) {
@@ -279,7 +278,7 @@ void GLFWEngine<Game>::key_callback(int key, int action)
 }
 
 template <typename Game>
-void GLFWEngine<Game>::mouse_callback(double xpos, double ypos)
+void Engine<Game>::mouse_callback(double xpos, double ypos)
 {
     if (first_mouse_) {
         last_x_ = xpos;
@@ -298,13 +297,13 @@ void GLFWEngine<Game>::mouse_callback(double xpos, double ypos)
 }
 
 template <typename Game>
-void GLFWEngine<Game>::window_resize_callback(int x, int y)
+void Engine<Game>::window_resize_callback(int x, int y)
 {
     std::cout << "window resize x=" << x << " y=" << y << '\n';
 }
 
 template <typename Game>
-void GLFWEngine<Game>::framebuffer_resize_callback(int x, int y)
+void Engine<Game>::framebuffer_resize_callback(int x, int y)
 {
     std::cout << "framebuffer resize x=" << x << " y=" << y << '\n';
     width_ = x;
