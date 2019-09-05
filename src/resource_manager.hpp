@@ -85,9 +85,9 @@ inline std::shared_ptr<Shader> ResourceManager::load_shader(char const * vertex,
                                                             char const * geometry,
                                                             std::string const& name)
 {
-    BLUE_EXPECT(vertex != nullptr);
-    BLUE_EXPECT(fragment != nullptr);
-    BLUE_EXPECT(shaders_.find(name) == shaders_.end());
+    MD2V_EXPECT(vertex != nullptr);
+    MD2V_EXPECT(fragment != nullptr);
+    MD2V_EXPECT(shaders_.find(name) == shaders_.end());
 
     auto vertex_path = shaders_dir() + vertex;
     auto fragment_path = shaders_dir() + fragment;
@@ -96,9 +96,9 @@ inline std::shared_ptr<Shader> ResourceManager::load_shader(char const * vertex,
     std::shared_ptr<Shader> shader{new Shader{vertex_path, fragment_path, geometry_path}};
     auto result = shaders_.emplace(std::make_pair(name, shader));
 
-    BLUE_EXPECT(result.second);
-    BLUE_EXPECT(shader->initialized());
-    BLUE_EXPECT(result.first->second->initialized());
+    MD2V_EXPECT(result.second);
+    MD2V_EXPECT(shader->initialized());
+    MD2V_EXPECT(result.first->second->initialized());
 
     return result.first->second;
 }
@@ -114,13 +114,13 @@ inline Texture2D& ResourceManager::load_texture2D(PAK const& pf, std::string con
 
     std::cout << "loading 2D texture " << path << " from PAK " << pf.filename() << '\n';
 
-    BLUE_EXPECT(".pcx" == boost::filesystem::path(path).extension());
+    MD2V_EXPECT(".pcx" == boost::filesystem::path(path).extension());
 
     auto node = pf.find(path);
-    BLUE_EXPECT(node);
+    MD2V_EXPECT(node);
 
     std::ifstream inf(pf.filename().c_str(), std::ios_base::in | std::ios_base::binary);
-    BLUE_EXPECT(inf);
+    MD2V_EXPECT(inf);
 
     inf.seekg(node->filepos);
 
@@ -135,9 +135,9 @@ inline Texture2D& ResourceManager::load_texture2D(PAK const& pf, std::string con
 
     auto result = textures2D_.emplace(std::make_pair(key, std::move(texture)));
 
-    BLUE_EXPECT(result.second);
-    BLUE_EXPECT(!texture.initialized());
-    BLUE_EXPECT(result.first->second.initialized());
+    MD2V_EXPECT(result.second);
+    MD2V_EXPECT(!texture.initialized());
+    MD2V_EXPECT(result.first->second.initialized());
 
     return result.first->second;
 }
@@ -173,8 +173,8 @@ inline Texture2D& ResourceManager::load_texture2D(std::string const& file, std::
                                                 0,
                                                 alpha ? SOIL_LOAD_RGBA : SOIL_LOAD_RGB);
 
-        BLUE_EXPECT(image);
-        BLUE_EXPECT(texture.init(width, height, image));
+        MD2V_EXPECT(image);
+        MD2V_EXPECT(texture.init(width, height, image));
         std::cout << "loaded 2D texture " << texture_path << " width: " << width << " height: " << height << "\n";
 
         SOIL_free_image_data(image);
@@ -189,9 +189,9 @@ inline Texture2D& ResourceManager::load_texture2D(std::string const& file, std::
 
     auto result = textures2D_.emplace(std::make_pair(key, std::move(texture)));
 
-    BLUE_EXPECT(result.second);
-    BLUE_EXPECT(!texture.initialized());
-    BLUE_EXPECT(result.first->second.initialized());
+    MD2V_EXPECT(result.second);
+    MD2V_EXPECT(!texture.initialized());
+    MD2V_EXPECT(result.first->second.initialized());
 
     return result.first->second;
 }

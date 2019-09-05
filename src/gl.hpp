@@ -49,4 +49,4 @@ inline GLenum glCheckError(char const * file, int line)
 
 #define glCheckError() glCheckError(__FILE__, __LINE__)
 
-#define BLUE_GL_BUFFER_OFFSET(offset) (reinterpret_cast<void *>(offset))
+#define GL_BUFFER_OFFSET(offset) (reinterpret_cast<void *>(offset))

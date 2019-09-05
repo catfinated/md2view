@@ -60,13 +60,13 @@ void Gui::init(GLFWwindow * window)
     glCheckError();
 
     glVertexAttribPointer(attrib_location_position_, 2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert),
-                          BLUE_GL_BUFFER_OFFSET(offsetof(ImDrawVert, pos)));
+                          GL_BUFFER_OFFSET(offsetof(ImDrawVert, pos)));
     glCheckError();
     glVertexAttribPointer(attrib_location_uv_, 2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert),
-                          BLUE_GL_BUFFER_OFFSET(offsetof(ImDrawVert, uv)));
+                          GL_BUFFER_OFFSET(offsetof(ImDrawVert, uv)));
     glCheckError();
     glVertexAttribPointer(attrib_location_color_, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ImDrawVert),
-                          BLUE_GL_BUFFER_OFFSET(offsetof(ImDrawVert, col)));
+                          GL_BUFFER_OFFSET(offsetof(ImDrawVert, col)));
     glCheckError();
 
 
