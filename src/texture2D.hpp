@@ -36,6 +36,9 @@ public:
     bool initialized() const { return initialized_; }
     GLuint id() const { return id_; }
 
+    GLuint width() const { return width_; }
+    GLuint height() const { return height_; }
+
     static void unbind() { glBindTexture(GL_TEXTURE_2D, 0); }
 
 private:

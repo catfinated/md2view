@@ -150,7 +150,7 @@ public:
     std::vector<Animation> const& animations() const { return animations_; }
 
     float frames_per_second() const { return frames_per_second_; }
-    void set_frames_per_second(float f) { frames_per_second_ = boost::algorithm::clamp(f, 1.0f, 60.0f); }
+    void set_frames_per_second(float f) { frames_per_second_ = boost::algorithm::clamp(f, 0.0f, 60.0f); }
 
 private:
     bool validate_header(Header const& hdr);
