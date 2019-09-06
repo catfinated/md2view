@@ -150,7 +150,7 @@ bool Engine<Game>::init(int argc, char const * argv[])
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
     window_ = glfwCreateWindow(width, height, game_.title(), nullptr, nullptr);
-    BLUE_EXPECT(window_);
+    MD2V_EXPECT(window_);
     glfwMakeContextCurrent(window_);
 
     glfwSetWindowUserPointer(window_, this);
@@ -198,7 +198,7 @@ bool Engine<Game>::init(int argc, char const * argv[])
     glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     glewExperimental = GL_TRUE;
-    BLUE_EXPECT(glewInit() == GLEW_OK);
+    MD2V_EXPECT(glewInit() == GLEW_OK);
     glGetError(); // glewInit is known to cause invalid enum error
 
     glfwGetFramebufferSize(window_, &width_, &height_);
@@ -210,7 +210,7 @@ bool Engine<Game>::init(int argc, char const * argv[])
     glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &nrAttributes);
     std::cout << "Maximum # of vertex attributes supported: " << nrAttributes << '\n';
 
-    BLUE_EXPECT(game_.on_engine_initialized(*this));
+    MD2V_EXPECT(game_.on_engine_initialized(*this));
     glCheckError();
 
     last_x_ = width / 2.0;

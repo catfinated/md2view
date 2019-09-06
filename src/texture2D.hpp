@@ -1,5 +1,6 @@
 #pragma once
 
+#include "gl.hpp"
 #include "common.hpp"
 
 class Texture2D
@@ -34,6 +35,9 @@ public:
     void set_alpha(bool alpha);
     bool initialized() const { return initialized_; }
     GLuint id() const { return id_; }
+
+    GLuint width() const { return width_; }
+    GLuint height() const { return height_; }
 
     static void unbind() { glBindTexture(GL_TEXTURE_2D, 0); }
 
@@ -141,7 +145,7 @@ inline bool Texture2D::init(GLuint width, GLuint height, unsigned char const * d
 
 inline void Texture2D::bind() const
 {
-    BLUE_EXPECT(initialized_);
+    MD2V_EXPECT(initialized_);
     glBindTexture(GL_TEXTURE_2D, id_);
 }
 

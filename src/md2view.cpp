@@ -155,14 +155,10 @@ void MD2View::render(EngineBase& engine)
     glCheckError();
 
     // draw gui
-    ImGui::Begin("Model");
-    ImGui::Text("Camera");
+    ImGui::Begin("Scene");
 
-    camera_.draw_ui();
-
-    if (ImGui::Button("Reset Camera")) {
-        reset_camera();
-    }
+    //ImGui::ColorEdit3("clear color", (float*)&clear_color);
+    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
     bool vsync = vsync_enabled_;
     ImGui::Checkbox("V-sync", &vsync);
@@ -172,19 +168,12 @@ void MD2View::render(EngineBase& engine)
         glfwSwapInterval(vsync ? 1 : 0);
     }
 
-    if (ImGui::Button("Random Model")) {
-        ms_.select_random_model(engine.random_engine());
+    ImGui::Text("Camera");
+    camera_.draw_ui();
+
+    if (ImGui::Button("Reset Camera")) {
+        reset_camera();
     }
-
-    ms_.draw_ui();
-
-    //ImGui::ColorEdit3("clear color", (float*)&clear_color);
-    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-    ImGui::End();
-
-    load_current_texture(engine);
-
-    ImGui::Begin("Matrices");
 
     static float const vec4width = 275;
     static int const precision = 5;
@@ -205,6 +194,18 @@ void MD2View::render(EngineBase& engine)
     ImGui::InputFloat4("", glm::value_ptr(projection[3]), precision, ImGuiInputTextFlags_ReadOnly);
     ImGui::PopItemWidth();
 
+    ImGui::End();
+
+    ImGui::Begin("Model");
+
+    if (ImGui::Button("Random Model")) {
+        ms_.select_random_model(engine.random_engine());
+    }
+
+    ms_.draw_ui();
+
+    load_current_texture(engine);
+
     ImGui::Text("Model");
     ImGui::PushItemWidth(vec4width);
     ImGui::InputFloat4("", glm::value_ptr(model[0]), precision, ImGuiInputTextFlags_ReadOnly);
@@ -214,6 +215,7 @@ void MD2View::render(EngineBase& engine)
     ImGui::PopItemWidth();
 
     ImGui::InputFloat("Scale Factor", &scale_, 1.0f, 5.0f, 1);
+    scale_ = std::max(1.0f, std::min(scale_, 256.0f));
     ImGui::SliderFloat("X-Position", &pos_[0], -7.0f, 7.0f);
     ImGui::SliderFloat("Y-Position", &pos_[1], -7.0f, 7.0f);
     ImGui::SliderFloat("Z-Position", &pos_[2], -7.0f, 7.0f);
@@ -224,6 +226,13 @@ void MD2View::render(EngineBase& engine)
     if (ImGui::Button("Reset Model")) {
         reset_model_matrix();
     }
+
+    ImGui::End();
+
+    ImGui::Begin("Texture");
+
+    ImGui::Image(reinterpret_cast<void*>(texture.id()), ImVec2(texture.width(), texture.height()),
+                 ImVec2(0,0), ImVec2(1,1), ImColor(255,255,255,255), ImColor(255,255,255,128));
 
     ImGui::End();
 }
