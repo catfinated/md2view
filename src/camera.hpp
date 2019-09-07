@@ -1,11 +1,15 @@
 #pragma once
 
 #include "common.hpp"
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
+#include "imgui/imgui.h"
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <vector>
 
+// based on camera tutorial from https://learnopengl.com/
 class Camera
 {
 public:
@@ -16,10 +20,8 @@ public:
         RIGHT
     };
 
-    static constexpr float YAW =  -90.0f;
+    static constexpr float YAW = -90.0f;
     static constexpr float PITCH = 0.0f;
-    static constexpr float SPEED = 3.0f;
-    static constexpr float SENSITIVITY = 0.25f;
     static constexpr float ZOOM = 45.0f;
 
     Camera(glm::vec3 const& position = glm::vec3(0.0f, 0.0f, 0.0f),
@@ -63,8 +65,8 @@ inline Camera::Camera(glm::vec3 const& position,
     , world_up_(up)
     , yaw_(yaw)
     , pitch_(pitch)
-    , movement_speed_(SPEED)
-    , mouse_sensitivity_(SENSITIVITY)
+    , movement_speed_(3.0f)
+    , mouse_sensitivity_(0.25)
     , zoom_(ZOOM)
 {
     update_vectors();
@@ -77,8 +79,6 @@ inline void Camera::reset(glm::vec3 const& position)
     world_up_ = glm::vec3(0.0f, 1.0f, 0.0f);
     yaw_ = YAW;
     pitch_ = PITCH;
-    movement_speed_ = SPEED;
-    mouse_sensitivity_ = SENSITIVITY;
     zoom_ = ZOOM;
 
     update_vectors();

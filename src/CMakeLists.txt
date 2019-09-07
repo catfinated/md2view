@@ -8,8 +8,7 @@ find_package(OpenGL REQUIRED)
 find_package(PkgConfig REQUIRED)
 
 SET(TOOLCHAIN_DIR /opt/toolchain/latest)
-#find_library(SOIL_LIBRARY soil NO_DEFAULT_PATH PATHS ${TOOLCHAIN_DIR}/SOIL/lib)
-find_library(SOIL_LIBRARY soil)
+find_library(SOIL_LIBRARY soil NO_DEFAULT_PATH PATHS ${TOOLCHAIN_DIR}/SOIL/lib)
 SET(SOIL_INCLUDE ${TOOLCHAIN_DIR}/SOIL/include)
 
 find_package(Boost COMPONENTS system filesystem program_options REQUIRED)
@@ -41,9 +40,6 @@ list (SORT _variableNames)
 foreach (_variableName ${_variableNames})
     message(STATUS "${_variableName}=${${_variableName}}")
 endforeach()
-
-include_directories(".")
-include_directories("imgui")
 
 add_executable(md2view
   md2view.cpp

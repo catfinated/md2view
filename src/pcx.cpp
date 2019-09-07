@@ -7,7 +7,7 @@
 
 PCX::PCX(std::istream& ds)
 {
-    std::cout << "hdr size " << sizeof(header_) << '\n';
+    //std::cout << "hdr size " << sizeof(header_) << '\n';
     auto header_ptr = std::addressof(header_);
     memset(header_ptr, 0, sizeof(header_));
     ds.read(reinterpret_cast<char *>(header_ptr), sizeof(header_));
@@ -15,13 +15,13 @@ PCX::PCX(std::istream& ds)
     auto width = header_.xend - header_.xstart + 1;
     auto length = header_.yend - header_.ystart + 1;
     auto scan_line_length = header_.num_bit_planes * header_.bytes_per_line;
-    auto line_padding_size = (scan_line_length * (8 / header_.bits_per_pixel)) - width;
+    //auto line_padding_size = (scan_line_length * (8 / header_.bits_per_pixel)) - width;
 
-    std::cout << "width: " << width << " length: " << length << '\n';
-    std::cout << "scan line length: " << scan_line_length << '\n';
-    std::cout << "line padding size: " << line_padding_size << '\n';
+    //std::cout << "width: " << width << " length: " << length << '\n';
+    //std::cout << "scan line length: " << scan_line_length << '\n';
+    //std::cout << "line padding size: " << line_padding_size << '\n';
 
-    std::cout << "reading scan lines\n";
+    //std::cout << "reading scan lines\n";
     std::vector<ScanLine> scan_lines;
 
     for (auto i = 0; i < length; ++i) {
@@ -101,23 +101,18 @@ std::vector<PCX::Color> PCX::readPalette(std::istream& ds)
 
     uint64_t count(1);
     uint8_t byte;
-    //ds >> byte;
-    ds.read((char *)&byte, 1);
+    ds.read(reinterpret_cast<char *>(&byte), 1);
 
-    std::cout << "palette byte:  " << static_cast<int>(byte) << '\n';
+    //std::cout << "palette byte:  " << static_cast<int>(byte) << '\n';
 
     while (!ds.eof()) {
         uint8_t rgb[3];
-        //ds >> r >> g >> b;
-        ds.read((char*)rgb, 3);
+        ds.read(reinterpret_cast<char *>(rgb), 3);
         count += 3;
-        //qDebug() << r << g << b;
-
         colors.emplace_back(rgb[0], rgb[1], rgb[2]);
-        //qDebug() << colors.back();
     }
 
-    std::cout << "leftover bytes: " << count << '\n';
+    //std::cout << "leftover bytes: " << count << '\n';
     return colors;
 }
 
@@ -128,8 +123,6 @@ std::ostream& operator<<(std::ostream& os, std::array<uint8_t, N> const& ary)
     auto col = 0u;
 
     std::ios_base::fmtflags flags(os.flags());
-
-    //os << std::hex << std::setfill('0');
 
     for (auto x : ary) {
         os << std::hex << std::setfill('0') << std::setw(2) << +x;

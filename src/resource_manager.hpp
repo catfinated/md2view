@@ -27,12 +27,9 @@ public:
     ResourceManager& operator=(ResourceManager&&) = delete;
 
     // accessors
-    std::string const& root_dir()     const { return root_dir_;     }
-    std::string const& models_dir()   const { return models_dir_;   }
-    std::string const& textures_dir() const { return textures_dir_; }
-    std::string const& shaders_dir()  const { return shaders_dir_;  }
-    std::string const& audio_dir()    const { return audio_dir_;    }
-    std::string const& fonts_dir()    const { return fonts_dir_;    }
+    std::string const& root_dir() const { return root_dir_; }
+    std::string const& models_dir() const { return models_dir_; }
+    std::string const& shaders_dir() const { return shaders_dir_; }
 
     std::shared_ptr<Shader> load_shader(char const * vertex,
                                         char const * fragment,
@@ -50,10 +47,7 @@ public:
 private:
     std::string root_dir_;
     std::string models_dir_;
-    std::string textures_dir_;
     std::string shaders_dir_;
-    std::string audio_dir_;
-    std::string fonts_dir_;
 
     std::unordered_map<std::string, std::shared_ptr<Shader>> shaders_;
     std::unordered_map<std::string, Texture2D> textures2D_;
@@ -62,10 +56,7 @@ private:
 inline ResourceManager::ResourceManager(std::string const& rootdir)
     : root_dir_(rootdir)
     , models_dir_("models/")
-    , textures_dir_("textures/")
     , shaders_dir_("shaders/")
-    , audio_dir_("audio/")
-    , fonts_dir_("fonts/")
 {
     if (!root_dir_.empty()) {
         if (root_dir_.back() != '/') {
@@ -73,10 +64,7 @@ inline ResourceManager::ResourceManager(std::string const& rootdir)
         }
 
         models_dir_   = root_dir_ + models_dir_;
-        textures_dir_ = root_dir_ + textures_dir_;
         shaders_dir_  = root_dir_ + shaders_dir_;
-        audio_dir_    = root_dir_ + audio_dir_;
-        fonts_dir_    = root_dir_ + fonts_dir_;
     }
 }
 
@@ -154,10 +142,7 @@ inline Texture2D& ResourceManager::load_texture2D(std::string const& file, std::
     boost::filesystem::path p(file);
     auto texture_path = p.string();
 
-    if (!boost::filesystem::exists(p)) {
-        p = boost::filesystem::path(textures_dir()) / p;
-        texture_path = p.string();
-    }
+    MD2V_EXPECT(boost::filesystem::exists(p));
 
     std::cout << "loading 2D texture " << texture_path << " (alpha: " << std::boolalpha << alpha << ")\n";
 
