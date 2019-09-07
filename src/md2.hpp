@@ -158,13 +158,17 @@ private:
     bool load(std::string const& filename);
     bool load(PAK const&, std::string const& filename);
     bool load(std::ifstream&, std::string const&, bool = false);
+    bool load_skins(std::ifstream&, size_t, std::string const&, bool ispak);
+    bool load_triangles(std::ifstream&, size_t);
+    bool load_texcoords(std::ifstream&, size_t);
+    bool load_frames(std::ifstream&, size_t);
 
+private:
     struct InternalFrame
     {
         std::vector<glm::vec3> vertices;
     };
 
-private:
     Header hdr_;
     std::vector<Triangle> triangles_;
     std::vector<TexCoord> texcoords_;
