@@ -13,11 +13,11 @@ Here is an example:
 
 ![Example](docs/screenshot.png)
 
-I use a locally managed toolchain for build dependnencies. These dependencies are:
+I use a locally managed toolchain for build dependencies. These dependencies are:
 
 * Boost (filesystem, system, program_options)
 * GLFW
 * GLEW
 * GLM
 * SOIL
-* Dear Imgui (bundled)
+* Dear ImGui (bundled)
