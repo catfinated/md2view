@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+// https://quakewiki.org/wiki/.pak
 class PAK
 {
 public:

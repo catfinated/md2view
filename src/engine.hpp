@@ -129,7 +129,6 @@ bool Engine<Game>::parse_args(int argc, char const * argv[])
 }
 
 template <typename Game>
-//bool Engine<Game>::init(int width, int height)
 bool Engine<Game>::init(int argc, char const * argv[])
 {
     if (!parse_args(argc, argv)) {
@@ -146,7 +145,6 @@ bool Engine<Game>::init(int argc, char const * argv[])
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    //glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
     window_ = glfwCreateWindow(width, height, game_.title(), nullptr, nullptr);

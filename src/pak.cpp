@@ -1,4 +1,5 @@
 #include "pak.hpp"
+#include "common.hpp"
 
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
@@ -39,8 +40,7 @@ bool PAK::init(std::string const& filename)
         throw std::runtime_error("not a valid pak file");
     }
 
-    //hdr.dirofs = hdr.dirofs; // le32toh
-    //hdr.dirlen = hdr.dirlen; // le32toh
+    // TODO: ensure dirofs/dirlen converted from little endian to host
     auto num_entries = static_cast<size_t>(hdr.dirlen) / sizeof(Entry);
 
     std::cout << "loaded pak file: " << filename
@@ -52,13 +52,10 @@ bool PAK::init(std::string const& filename)
     inf.seekg(hdr.dirofs);
 
     for (size_t i = 0; i < num_entries; ++ i) {
+        MD2V_EXPECT(inf);
         Entry entry;
         inf.read(reinterpret_cast<char *>(&entry), sizeof(entry));
-        // ltoh
-        //packfile.filepos = qFromLittleEndian(packfile.filepos);
-        //packfile.filelen = qFromLittleEndian(packfile.filelen);
-
-        //asser(entry.filepos <= file_.size());
+        // TODO: ensure filepos/filelen converted from little endian to host
 
         auto fullname = std::string(entry.name.data());
 

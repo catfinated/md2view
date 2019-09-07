@@ -51,7 +51,6 @@ public:
 
     Header const& header() const { return header_; }
 
-    //QImage const& image() const { assert(image_); return *image_; }
     std::vector<unsigned char> const& image() const { return image_; }
 
     std::vector<Color> const& colors() const { return colors_; }

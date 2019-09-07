@@ -1,8 +1,8 @@
 #pragma once
 
 #include "gl.hpp"
+#include "imgui/imgui.h"
 
-#include <imgui.h>
 #include <GLFW/glfw3.h>
 
 class EngineBase;
