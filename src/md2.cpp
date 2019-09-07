@@ -92,19 +92,32 @@ bool MD2::load(std::ifstream& infile, std::string const& filename, bool ispak)
 
     static_assert(sizeof(hdr_) == (17 * sizeof(int32_t)), "md2 header has padding");
 
-    size_t offset = infile.tellg();
-
+    size_t offset = infile.tellg(); // header offset
     infile.read(reinterpret_cast<char * >(&hdr_), sizeof(hdr_));
-
     std::cout << hdr_ << '\n';
+
+    MD2V_EXPECT(load_skins(infile, offset, filename, ispak));
+    MD2V_EXPECT(load_triangles(infile, offset));
+    MD2V_EXPECT(load_texcoords(infile, offset));
+    MD2V_EXPECT(load_frames(infile, offset));
+
+    setup_buffers();
+    set_animation(0);
+    set_skin_index(0);
+
+    return true;
+}
+
+bool MD2::load_skins(std::ifstream& infile, size_t offset, std::string const& filename, bool ispak)
+{
+    MD2V_EXPECT(infile);
 
     // read skins
     static_assert(sizeof(Skin) == 64, "md2 skin has padding");
     std::vector<Skin> skins;
     skins.resize(hdr_.num_skins); // need resize so we actually push elements
     infile.seekg(offset + hdr_.offset_skins);
-    infile.read(reinterpret_cast<char * >(skins.data()),
-                sizeof(Skin) * skins.size());
+    infile.read(reinterpret_cast<char * >(skins.data()), sizeof(Skin) * skins.size());
     assert(skins.size() == static_cast<size_t>(hdr_.num_skins));
     std::cout << "num skins=" << skins.size() << '\n';
 
@@ -134,6 +147,7 @@ bool MD2::load(std::ifstream& infile, std::string const& filename, bool ispak)
         }
     }
 
+    // for drfreak model
     if (!ispak && skins_.empty()) {
         auto base = root.filename();
         auto p =  root / base;
@@ -141,21 +155,30 @@ bool MD2::load(std::ifstream& infile, std::string const& filename, bool ispak)
         std::cout << skins_.back().fpath << '\n';
     }
 
-    // read triangles
+    return infile.good();
+}
+
+bool MD2::load_triangles(std::ifstream& infile, size_t offset)
+{
+    MD2V_EXPECT(infile);
     static_assert(sizeof(Triangle) == 6 * sizeof(uint16_t), "md2 triangle has padding");
     triangles_.resize(hdr_.num_tris);
     infile.seekg(offset + hdr_.offset_tris);
-    infile.read(reinterpret_cast<char *>(triangles_.data()),
-                sizeof(Triangle) * triangles_.size());
-    assert(triangles_.size() == static_cast<size_t>(hdr_.num_tris));
+    infile.read(reinterpret_cast<char *>(triangles_.data()), sizeof(Triangle) * triangles_.size());
+
+    return infile.good();
+}
+
+bool MD2::load_texcoords(std::ifstream& infile, size_t offset)
+{
+    MD2V_EXPECT(infile);
+    MD2V_EXPECT(!triangles_.empty());
 
     // read texcoords
     static_assert(sizeof(TexCoord) == 2 * sizeof(int16_t), "md2 texcoord has padding");
     texcoords_.resize(hdr_.num_st);
     infile.seekg(offset + hdr_.offset_st);
-    infile.read(reinterpret_cast<char *>(texcoords_.data()),
-                sizeof(TexCoord) * texcoords_.size());
-    assert(texcoords_.size() == static_cast<size_t>(hdr_.num_st));
+    infile.read(reinterpret_cast<char *>(texcoords_.data()), sizeof(TexCoord) * texcoords_.size());
 
     // we must scale the texcoords and unpack the triangles
     // into a flat vector to better work gith glDrawArrays
@@ -169,14 +192,17 @@ bool MD2::load(std::ifstream& infile, std::string const& filename, bool ispak)
           glm::vec2 scaled;
           scaled.s = static_cast<float>(st.s) / static_cast<float>(hdr_.skinwidth);
           scaled.t = static_cast<float>(st.t) / static_cast<float>(hdr_.skinheight);
-          //std::cout << scaled.s << ' ' << scaled.t << '\n';
           internal_texcoords_.push_back(scaled);
       }
     }
-    assert(internal_texcoords_.size() == static_cast<size_t>(hdr_.num_tris * 3));
-    //std::cout << "num st: " << internal_texcoords_.size() << '\n';
 
-    // read frames
+    return infile.good();
+}
+
+bool MD2::load_frames(std::ifstream& infile, size_t offset)
+{
+    MD2V_EXPECT(infile);
+
     frames_.resize(hdr_.num_frames);
     internal_frames_.resize(hdr_.num_frames);
     infile.seekg(offset + hdr_.offset_frames);
@@ -236,8 +262,6 @@ bool MD2::load(std::ifstream& infile, std::string const& filename, bool ispak)
             }
         }
         assert(internal_frame.vertices.size() == static_cast<size_t>(hdr_.num_tris * 3));
-
-        //std::cout << "Frame; " << i << " name: " << frame.name << '\n';
     }
 
     assert(internal_frames_.size() == frames_.size());
@@ -248,23 +272,13 @@ bool MD2::load(std::ifstream& infile, std::string const& filename, bool ispak)
         animations_.push_back(current_anim);
     }
 
-    //std::cout << "num xyz: " << internal_frames_[0].vertices.size() << '\n';
-    //for (auto const& v : internal_frames_[0].vertices) {
-    //    std::cout << v.x << ' ' << v.y << ' ' << v.z << '\n';
-    //}
-
     for (auto const& anim : animations_) {
         std::cout << anim << '\n';
     }
 
     interpolated_vertices_ = internal_frames_[0].vertices;
 
-    setup_buffers();
-
-    set_animation(0);
-    set_skin_index(0);
-
-    return true;
+    return infile.good();
 }
 
 void MD2::setup_buffers()
