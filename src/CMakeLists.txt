@@ -66,9 +66,9 @@ target_link_libraries(md2view
 )
 
 target_include_directories(md2view
-   PUBLIC include ${Boost_INCLUDE_DIR} ${SOIL_INCLUDE}
+   PUBLIC ${SOIL_INCLUDE}
 )
 
 target_compile_options(md2view
-   PUBLIC -Wall -pedantic -Wno-unused-function -Wno-unused-local-typedefs -Wno-missing-braces -Wmissing-field-initializers -DGLM_ENABLE_EXPERIMENTAL -DGLEW_NO_GLU -DBOOST_ERROR_CODE_HEADER_ONLY -g
+   PUBLIC -Wall -pedantic -Wno-unused-function -Wno-unused-local-typedefs -Wno-missing-braces -Wmissing-field-initializers -DGLM_ENABLE_EXPERIMENTAL -DGLEW_NO_GLU -g
 )
