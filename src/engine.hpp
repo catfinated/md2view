@@ -18,7 +18,7 @@ public:
     static size_t const max_keys = 1024;
 
     EngineBase()
-        : resource_manager_("../src") // up from build dir
+        : resource_manager_("../data") // up from build dir
         , mt_(std::random_device{}()/*1729*/)
     {}
 
