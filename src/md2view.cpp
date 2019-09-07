@@ -56,7 +56,7 @@ MD2View::MD2View()
 bool MD2View::parse_args(EngineBase& engine)
 {
     if (models_dir_.empty()) {
-        models_dir_ = "../src/models";
+        models_dir_ = "../data/models";
     }
 
     return true;
