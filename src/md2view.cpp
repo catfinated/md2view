@@ -40,6 +40,7 @@ private:
     float scale_ = 64.0f;
     std::array<float, 3> rot_;
     glm::vec3 pos_;
+    std::array<float, 3> clear_color_;
 };
 
 MD2View::MD2View()
@@ -93,7 +94,8 @@ bool MD2View::on_engine_initialized(EngineBase& engine)
 {
     ms_.init(models_dir_, engine);
 
-    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+    clear_color_ = { 0.2f, 0.2f, 0.2f };
+    glClearColor(clear_color_[0], clear_color_[1], clear_color_[2], 1.0f);
 
     shader_ = engine.resource_manager().load_shader("md2.vert", "md2.frag", nullptr, "md2");
     std::cout << ms_.model_name() << '\n';
@@ -157,8 +159,14 @@ void MD2View::render(EngineBase& engine)
     // draw gui
     ImGui::Begin("Scene");
 
-    //ImGui::ColorEdit3("clear color", (float*)&clear_color);
+    std::array<float, 3> clear = clear_color_;
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+    ImGui::ColorEdit3("Clear color", clear.data());
+
+    if (clear != clear_color_) {
+        clear_color_ = clear;
+        glClearColor(clear_color_[0], clear_color_[1], clear_color_[2], 1.0f);
+    }
 
     bool vsync = vsync_enabled_;
     ImGui::Checkbox("V-sync", &vsync);
