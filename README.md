@@ -22,16 +22,16 @@ You can control the camera by pressing F1. The camera controls are:
 The FOV can also be adjusted with the GUI. The curret view and projection matrices
 will be displayed in the GUI when you manipulate the camera.
 
-I have tested this on the following systems:
+md2view has been tested this on the following systems:
 
     * Mac OS X Mojave (10.14.6) - AMD Radeon R9 M370X
     * Ubuntu 18.04.3 LTS - NVIDIA GeForce GTX 1050 Ti
 
-I use a locally managed toolchain for build dependencies. These dependencies are:
+md2view is built using a locally managed toolchain for build dependencies. These dependencies are:
 
-    * Boost (filesystem, system, program_options)
-    * GLFW
-    * GLEW
-    * GLM
-    * SOIL
-    * Dear ImGui (bundled)
+    * Boost (1.69.0 filesystem, system, program_options)
+    * GLFW (3.3)
+    * GLEW (2.1.0)
+    * GLM (0.9.9.0)
+    * SOIL (20080707)
+    * Dear ImGui (1.50, bundled with md2view)
