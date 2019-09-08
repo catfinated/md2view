@@ -22,7 +22,7 @@ public:
 
     static constexpr float YAW = -90.0f;
     static constexpr float PITCH = 0.0f;
-    static constexpr float ZOOM = 45.0f;
+    static constexpr float FOV = 45.0f;
 
     Camera(glm::vec3 const& position = glm::vec3(0.0f, 0.0f, 0.0f),
            glm::vec3 const& up = glm::vec3(0.0f, 1.0f, 0.0f),
@@ -30,7 +30,7 @@ public:
            float pitch = PITCH);
 
     glm::mat4 view_matrix() const;
-    float zoom() const { return zoom_; }
+    float fov() const { return fov_; }
 
     void move(Direction direction, float delta_time);
     void process_mouse_movement(float xoffset, float yoffset, bool constrain_pitch = true);
@@ -38,6 +38,12 @@ public:
     void reset(glm::vec3 const&);
     void set_position(glm::vec3 const& pos) { position_ = pos; }
     void draw_ui();
+
+    bool view_dirty() { return view_dirty_; }
+    void set_view_clean() { view_dirty_ = false; }
+
+    bool fov_dirty() { return fov_dirty_; }
+    void set_fov_clean() { fov_dirty_ = false; }
 
 private:
     void update_vectors();
@@ -53,7 +59,10 @@ private:
     float pitch_;
     float movement_speed_;
     float mouse_sensitivity_;
-    float zoom_;
+    float fov_;
+
+    bool view_dirty_ = true;
+    bool fov_dirty_ = true;
 };
 
 inline Camera::Camera(glm::vec3 const& position,
@@ -67,7 +76,7 @@ inline Camera::Camera(glm::vec3 const& position,
     , pitch_(pitch)
     , movement_speed_(3.0f)
     , mouse_sensitivity_(0.25)
-    , zoom_(ZOOM)
+    , fov_(FOV)
 {
     update_vectors();
 }
@@ -79,7 +88,7 @@ inline void Camera::reset(glm::vec3 const& position)
     world_up_ = glm::vec3(0.0f, 1.0f, 0.0f);
     yaw_ = YAW;
     pitch_ = PITCH;
-    zoom_ = ZOOM;
+    fov_ = FOV;
 
     update_vectors();
 }
@@ -109,6 +118,8 @@ inline void Camera::move(Direction direction, float delta_time)
     default:
         break;
     }
+
+    view_dirty_ = true;
 }
 
 inline void Camera::process_mouse_movement(float xoffset, float yoffset, bool constrain_pitch)
@@ -128,11 +139,12 @@ inline void Camera::process_mouse_movement(float xoffset, float yoffset, bool co
 
 inline void Camera::process_mouse_scroll(float yoffset)
 {
-    if (zoom_ >= 1.0f && zoom_ <= 45.0f) {
-        zoom_ -= yoffset;
+    if (fov_ >= 1.0f && fov_ <= 45.0f) {
+        fov_ -= yoffset;
     }
 
-    zoom_ = std::min(45.0f, std::max(1.0f, zoom_));
+    fov_ = std::min(45.0f, std::max(1.0f, fov_));
+    fov_dirty_ = true;
 }
 
 inline void Camera::update_vectors()
@@ -144,6 +156,7 @@ inline void Camera::update_vectors()
     front_ = glm::normalize(front);
     right_ = glm::normalize(glm::cross(front_, world_up_));
     up_ = glm::normalize(glm::cross(right_, front_));
+    view_dirty_ = true;
 }
 
 inline void Camera::draw_ui()
@@ -152,7 +165,9 @@ inline void Camera::draw_ui()
     ImGui::InputFloat3("Front", glm::value_ptr(front_), -1, ImGuiInputTextFlags_ReadOnly);
     ImGui::InputFloat3("Up", glm::value_ptr(up_), -1, ImGuiInputTextFlags_ReadOnly);
     ImGui::InputFloat3("Right", glm::value_ptr(right_), -1, ImGuiInputTextFlags_ReadOnly);
-    ImGui::SliderFloat("fov", &zoom_, 1.0f, 45.0f);
+    if (ImGui::SliderFloat("fov", &fov_, 1.0f, 60.0f)) {
+        fov_dirty_ = true;
+    }
     ImGui::InputFloat("Pitch", &pitch_, 0.0, 0.0, 4, ImGuiInputTextFlags_ReadOnly);
     ImGui::InputFloat("Yaw", &yaw_, 0.0, 0.0, 4, ImGuiInputTextFlags_ReadOnly);
 }

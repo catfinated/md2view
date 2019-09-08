@@ -298,6 +298,8 @@ template <typename Game>
 void Engine<Game>::window_resize_callback(int x, int y)
 {
     std::cout << "window resize x=" << x << " y=" << y << '\n';
+    screen_width_ = x;
+    screen_height_ = y;
 }
 
 template <typename Game>
@@ -307,5 +309,5 @@ void Engine<Game>::framebuffer_resize_callback(int x, int y)
     width_ = x;
     height_ = y;
     glViewport(0, 0, x, y);
-    game_.on_framebuffer_resized(aspect_ratio());
+    game_.on_framebuffer_resized(x, y);
 }
