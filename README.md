@@ -5,9 +5,10 @@ The purpose of this project is to be able to load, render, texture, and animate
 MD2 models that are stored in Quake2 PAK files or which have been extracted into
 a directory structure. The rendering is currently done in OpenGL.
 
-Here is a screenshot of md2view in action:
+Here are some screenshots of md2view in action:
 
-![Example](docs/screenshot.png)
+![Example 1](docs/screenshot1.png)
+![Example 2](docs/screenshot2.png)
 
 Using the GUI you can manipulate the model transform and observe the updated matrix.
 You can control the camera by pressing F1. The camera controls are:
