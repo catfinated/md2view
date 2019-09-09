@@ -51,9 +51,8 @@ private:
     glm::mat4 view_;
     glm::mat4 projection_;
     std::array<float, 3> clear_color_;
-    std::unique_ptr<FrameBufferT> fb_;
     std::unique_ptr<FrameBufferT> fb2_;
-    std::unique_ptr<FrameBufferT> fb3_;
+    std::unique_ptr<FrameBuffer<2>> fb3_;
     ScreenQuad screen_quad_;
     GLint pass_loc_;
     GLint disable_blur_loc_;
@@ -112,9 +111,8 @@ bool MD2View::on_engine_initialized(EngineBase& engine)
 {
     // init objects which needed an opengl context to initialize
     ms_.init(models_dir_, engine);
-    fb_.reset(new FrameBufferT(engine.width(), engine.height()));
     fb2_.reset(new FrameBufferT(engine.width(), engine.height(), true));
-    fb3_.reset(new FrameBufferT(engine.width(), engine.height()));
+    fb3_.reset(new FrameBuffer<2>(engine.width(), engine.height()));
     screen_quad_.init();
 
     clear_color_ = { 0.2f, 0.2f, 0.2f };
@@ -144,12 +142,6 @@ bool MD2View::on_engine_initialized(EngineBase& engine)
 
     camera_.set_position(glm::vec3(0.0f, 0.0f, 3.0f));
 
-    fb_->bind();
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glDepthFunc(GL_LEQUAL);
-    //glDisable(GL_BLEND);
-
     fb3_->bind();
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -171,11 +163,11 @@ void MD2View::on_framebuffer_resized(int width, int height)
     shader_->use();
     shader_->set_projection(projection);
 
-    fb_->bind_default();
-    fb_.reset(new FrameBufferT(width, height));
-    fb_->bind();
+    fb3_->bind_default();
+    fb3_.reset(new FrameBuffer<2>(width, height));
+    fb3_->bind();
     glViewport(0, 0, width, height);
-    fb_->bind_default();
+    fb3_->bind_default();
 }
 
 void MD2View::update_model()
@@ -221,50 +213,55 @@ void MD2View::render(EngineBase& engine)
     // render normal frame
     shader_->set_uniform(pass_loc_, 2);
     fb3_->bind();
+    GLenum draw_buffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+    glDrawBuffers(2, draw_buffers);
+    glCheckError();
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     ms_.model().draw(*shader_);
 
-    if (glow_) {
-        // generate solid color image
-        shader_->set_uniform(pass_loc_, 1);
-        fb_->bind();
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        ms_.model().draw(*shader_);
+    glCheckError();
 
+    if (glow_) {
         // blur solid image
         fb2_->bind();
         glClear(GL_COLOR_BUFFER_BIT);
+
         blur_shader_->use();
         blur_shader_->set_uniform(disable_blur_loc_, 0);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, fb_->color_buffer(0));
+        glBindTexture(GL_TEXTURE_2D, fb3_->color_buffer(1));
         glClear(GL_COLOR_BUFFER_BIT);
         screen_quad_.draw(*screen_shader_);
 
-        fb_->bind_default();
+        fb2_->bind_default();
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // right now double blur
         screen_shader_->use();
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, fb3_->color_buffer(0));
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, fb_->color_buffer(0));
+        glBindTexture(GL_TEXTURE_2D, fb3_->color_buffer(1));
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, fb2_->color_buffer(0));
-
         screen_quad_.draw(*screen_shader_);
     }
     else {
-        fb_->bind_default();
+        fb3_->bind_default();
+        //glDrawBuffer(GL_COLOR_ATTACHMENT0);
+        glCheckError();
         glClear(GL_COLOR_BUFFER_BIT);
         blur_shader_->use();
+        glCheckError();
         blur_shader_->set_uniform(disable_blur_loc_, 1);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, fb3_->color_buffer(0));
         glClear(GL_COLOR_BUFFER_BIT);
         screen_quad_.draw(*screen_shader_);
+        glCheckError();
     }
+
+    glCheckError();
 
     // draw gui
     ImGui::Begin("Scene");

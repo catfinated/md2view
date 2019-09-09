@@ -3,16 +3,12 @@
 uniform sampler2D texture0;
 
 in vec2 TexCoord;
-flat in int pass;
 
-out vec4 color;
+layout(location = 0) out vec4 color;
+layout(location = 1) out vec4 glow;
 
 void main(void) {
 
-  if (1 == pass) {
-    color = vec4(1.0, 0.0, 0.0, 1.0);
-  }
-  else {
-    color = texture(texture0, TexCoord);
-  }
+  glow = vec4(1.0, 0.0, 0.0, 1.0);
+  color = texture(texture0, TexCoord);
 }
