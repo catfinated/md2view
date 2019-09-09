@@ -346,6 +346,11 @@ void MD2::update(float dt)
     if (current_animation_index_ < 0) {
         return;
     }
+
+    if (frames_per_second_ == 0.0f) {
+        return;
+    }
+
     assert(static_cast<size_t>(current_animation_index_) < animations_.size());
 
     auto const& anim = animations_[current_animation_index_];
