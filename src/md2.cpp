@@ -3,6 +3,7 @@
 #include "shader.hpp"
 #include "common.hpp"
 
+#include <glm/gtx/compatibility.hpp>
 #include <boost/filesystem.hpp>
 
 #include <fstream>
@@ -257,7 +258,6 @@ bool MD2::load_frames(std::ifstream& infile, size_t offset)
                 scaled.x = (frame.scale[0] * vertex.v[0]) + frame.translate[0];
                 scaled.z = (frame.scale[1] * vertex.v[1]) + frame.translate[1];
                 scaled.y = (frame.scale[2] * vertex.v[2]) + frame.translate[2];
-                //scaled /= 64.0;
                 internal_frame.vertices.push_back(scaled);
             }
         }
@@ -364,7 +364,8 @@ void MD2::update(float dt)
         if (next_frame_ > anim.end_frame) {
             if (anim.loop) {
                 next_frame_ = anim.start_frame;
-            } else {
+            }
+            else {
                 next_frame_  = anim.end_frame;
                 current_frame_ = anim.end_frame;
             }
@@ -377,18 +378,9 @@ void MD2::update(float dt)
     int i = 0;
 
     for (auto& vertex : interpolated_vertices_) {
-        float x1 = internal_frames_[current_frame_].vertices[i].x;
-        float x2 = internal_frames_[next_frame_].vertices[i].x;
-        vertex.x = x1 + t * (x2 - x1);
-
-        float y1 = internal_frames_[current_frame_].vertices[i].y;
-        float y2 = internal_frames_[next_frame_].vertices[i].y;
-        vertex.y = y1 + t * (y2 - y1);
-
-        float z1 = internal_frames_[current_frame_].vertices[i].z;
-        float z2 = internal_frames_[next_frame_].vertices[i].z;
-        vertex.z = z1 + t * (z2 - z1);
-
+        auto const& v1 = internal_frames_[current_frame_].vertices[i];
+        auto const& v2 = internal_frames_[next_frame_].vertices[i];
+        vertex = lerp(v1, v2, glm::vec3(t, t, t));
         ++i;
    }
 

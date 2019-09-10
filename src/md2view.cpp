@@ -5,7 +5,7 @@
 #include "frame_buffer.hpp"
 #include "screen_quad.hpp"
 
-#include "glm/gtx/string_cast.hpp"
+#include <glm/gtx/string_cast.hpp>
 
 #include <algorithm>
 #include <cstdlib>
@@ -50,14 +50,15 @@ private:
     glm::mat4 model_;
     glm::mat4 view_;
     glm::mat4 projection_;
-    std::array<float, 3> clear_color_;
+    std::array<float, 4> clear_color_;
     std::unique_ptr<FrameBufferT> fb2_;
     std::unique_ptr<FrameBuffer<2>> fb3_;
     ScreenQuad screen_quad_;
-    GLint pass_loc_;
     GLint disable_blur_loc_;
     Texture2D * texture_ = nullptr;
     bool glow_ = false;
+    glm::vec3 glow_color_;
+    GLint glow_loc_;
 };
 
 MD2View::MD2View()
@@ -115,15 +116,16 @@ bool MD2View::on_engine_initialized(EngineBase& engine)
     fb3_.reset(new FrameBuffer<2>(engine.width(), engine.height()));
     screen_quad_.init();
 
-    clear_color_ = { 0.2f, 0.2f, 0.2f };
+    clear_color_ = { 0.2f, 0.2f, 0.2f, 1.0f };
     glClearColor(clear_color_[0], clear_color_[1], clear_color_[2], 1.0f);
 
     shader_ = engine.resource_manager().load_shader("md2.vert", "md2.frag", nullptr, "md2");
     shader_->use();
     update_model();
     load_current_texture(engine);
-    pass_loc_ = shader_->uniform_location("render_pass");
-    shader_->set_uniform(pass_loc_, 2);
+    glow_loc_ = shader_->uniform_location("glow_color");
+    glow_color_ = glm::vec3(1.0f, 0.0f, 0.0f);
+    shader_->set_uniform(glow_loc_, glow_color_);
 
     blur_shader_ = engine.resource_manager().load_shader("blur.vert", "blur.frag", nullptr, "blur");
     blur_shader_->use();
@@ -207,17 +209,23 @@ void MD2View::render(EngineBase& engine)
         camera_.set_fov_clean();
     }
 
+    glCheckError();
+
     glActiveTexture(GL_TEXTURE0);
     texture_->bind();
 
     // render normal frame
-    shader_->set_uniform(pass_loc_, 2);
     fb3_->bind();
     GLenum draw_buffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
     glDrawBuffers(2, draw_buffers);
     glCheckError();
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClearBufferfv(GL_COLOR, 0, clear_color_.data());
+    static const std::array<float, 4> black = { 0.0f, 0.0f, 0.0f, 0.0f };
+    glClearBufferfv(GL_COLOR, 1, black.data());
+    glCheckError();
+
+    glClear(GL_DEPTH_BUFFER_BIT);
     ms_.model().draw(*shader_);
 
     glCheckError();
@@ -248,7 +256,6 @@ void MD2View::render(EngineBase& engine)
     }
     else {
         fb3_->bind_default();
-        //glDrawBuffer(GL_COLOR_ATTACHMENT0);
         glCheckError();
         glClear(GL_COLOR_BUFFER_BIT);
         blur_shader_->use();
@@ -323,6 +330,10 @@ void MD2View::render(EngineBase& engine)
     ImGui::PopItemWidth();
 
     ImGui::Checkbox("Glow", &glow_);
+    if (ImGui::ColorEdit3("Glow color", glm::value_ptr(glow_color_))) {
+        shader_->use();
+        shader_->set_uniform(glow_loc_, glow_color_);
+    }
 
     bool model_changed = ImGui::SliderInt("Scale Factor", &scale_, 1, 256);
     model_changed |= ImGui::SliderFloat("X-Position", &pos_[0], -7.0f, 7.0f);
