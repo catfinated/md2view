@@ -88,6 +88,7 @@ protected:
     // consider using attorney so these callbacks don't have to be public
     void key_callback(int key, int action);
     void mouse_callback(double xpos, double ypos);
+    void scroll_callback(double xoffset, double yoffset);
     bool parse_args(int argc, char const * argv[]);
 
     void window_resize_callback(int x, int y);
@@ -174,6 +175,15 @@ bool Engine<Game>::init(int argc, char const * argv[])
 
     glfwSetCursorPosCallback(window_, mouse_callback);
 
+    auto scroll_callback = [](GLFWwindow * window, double xoffset, double yoffset) {
+        using EngineType = Engine<Game>;
+        EngineType * engine = static_cast<EngineType *>(glfwGetWindowUserPointer(window));
+        assert(engine);
+        engine->scroll_callback(xoffset, yoffset);
+     };
+
+    glfwSetScrollCallback(window_, scroll_callback);
+
     auto win_resize_callback = [](GLFWwindow * window, int width, int height) {
         using EngineType = Engine<Game>;
         EngineType * engine = static_cast<EngineType *>(glfwGetWindowUserPointer(window));
@@ -191,7 +201,6 @@ bool Engine<Game>::init(int argc, char const * argv[])
     };
 
     glfwSetFramebufferSizeCallback(window_, fb_resize_callback);
-
 
     glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
@@ -291,6 +300,14 @@ void Engine<Game>::mouse_callback(double xpos, double ypos)
 
     if (input_goes_to_game_) {
         game_.on_mouse_movement(xoffset, yoffset);
+    }
+}
+
+template <typename Game>
+void Engine<Game>::scroll_callback(double xoffset, double yoffset)
+{
+    if (input_goes_to_game_) {
+        game_.on_mouse_scroll(xoffset, yoffset);
     }
 }
 

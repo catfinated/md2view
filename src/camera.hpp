@@ -9,7 +9,7 @@
 
 #include <vector>
 
-// based on camera tutorial from https://learnopengl.com/
+// based on camera tutorial from https://learnopengl.com/Getting-started/Camera
 class Camera
 {
 public:
@@ -33,8 +33,8 @@ public:
     float fov() const { return fov_; }
 
     void move(Direction direction, float delta_time);
-    void process_mouse_movement(float xoffset, float yoffset, bool constrain_pitch = true);
-    void process_mouse_scroll(float yoffset);
+    void on_mouse_movement(float xoffset, float yoffset, bool constrain_pitch = true);
+    void on_mouse_scroll(double xoffset, double yoffset);
     void reset(glm::vec3 const&);
     void set_position(glm::vec3 const& pos) { position_ = pos; }
     void draw_ui();
@@ -122,7 +122,7 @@ inline void Camera::move(Direction direction, float delta_time)
     view_dirty_ = true;
 }
 
-inline void Camera::process_mouse_movement(float xoffset, float yoffset, bool constrain_pitch)
+inline void Camera::on_mouse_movement(float xoffset, float yoffset, bool constrain_pitch)
 {
     xoffset *= mouse_sensitivity_;
     yoffset *= mouse_sensitivity_;
@@ -137,7 +137,7 @@ inline void Camera::process_mouse_movement(float xoffset, float yoffset, bool co
     update_vectors();
 }
 
-inline void Camera::process_mouse_scroll(float yoffset)
+inline void Camera::on_mouse_scroll(double, double yoffset)
 {
     if (fov_ >= 1.0f && fov_ <= 45.0f) {
         fov_ -= yoffset;

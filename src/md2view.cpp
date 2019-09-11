@@ -21,6 +21,7 @@ public:
     bool on_engine_initialized(EngineBase& engine);
     void process_input(EngineBase& engine, GLfloat delta_time);
     void on_mouse_movement(GLfloat xoffset, GLfloat yoffset);
+    void on_mouse_scroll(double xoffset, double yoffset);
     void on_framebuffer_resized(int, int);
     void update(EngineBase& engine, GLfloat delta_time);
     void render(EngineBase& engine);
@@ -384,7 +385,12 @@ void MD2View::process_input(EngineBase& engine, GLfloat delta_time)
 
 void MD2View::on_mouse_movement(GLfloat xoffset, GLfloat yoffset)
 {
-    camera_.process_mouse_movement(xoffset, yoffset);
+    camera_.on_mouse_movement(xoffset, yoffset);
+}
+
+void MD2View::on_mouse_scroll(double xoffset, double yoffset)
+{
+    camera_.on_mouse_scroll(xoffset, yoffset);
 }
 
 int main(int argc, char const * argv[])
