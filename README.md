@@ -39,12 +39,19 @@ md2view has been tested this on the following systems:
 
 md2view is built using a locally managed toolchain for build dependencies. These dependencies are:
 
-    * Boost (1.69.0 filesystem, system, program_options)
-    * GLFW (3.3)
-    * GLEW (2.1.0)
-    * GLM (0.9.9.0)
-    * SOIL (20080707)
-    * Dear ImGui (1.50, bundled with md2view)
+[Boost](https://www.boost.org/) (Version 1.69.0 filesystem, system, program_options)
+
+[GLFW](https://www.glfw.org/) (Version 3.3)
+
+[GLEW](http://glew.sourceforge.net/) (Version 2.1.0)
+
+[GLM](https://glm.g-truc.net/0.9.9/index.html) (Version 0.9.9.0)
+
+[SOIL](https://www.lonesock.net/soil.html) (Version 20080707, for loading png's)
+
+The GUI is made using the [Dear ImGui](https://github.com/ocornut/imgui) library
+authored by Omar Cornut et al. Version 1.5.0 of Dear ImGui is bundled with md2view.
+Dear ImGui is licensed under the [MIT license](src/imgui/LICENSE).
 
 ## Attributions
 

@@ -7,7 +7,6 @@
 
 PCX::PCX(std::istream& ds)
 {
-    //std::cout << "hdr size " << sizeof(header_) << '\n';
     auto header_ptr = std::addressof(header_);
     memset(header_ptr, 0, sizeof(header_));
     ds.read(reinterpret_cast<char *>(header_ptr), sizeof(header_));
@@ -17,19 +16,14 @@ PCX::PCX(std::istream& ds)
     auto scan_line_length = header_.num_bit_planes * header_.bytes_per_line;
     //auto line_padding_size = (scan_line_length * (8 / header_.bits_per_pixel)) - width;
 
-    //std::cout << "width: " << width << " length: " << length << '\n';
-    //std::cout << "scan line length: " << scan_line_length << '\n';
-    //std::cout << "line padding size: " << line_padding_size << '\n';
-
-    //std::cout << "reading scan lines\n";
     std::vector<ScanLine> scan_lines;
 
     for (auto i = 0; i < length; ++i) {
-        scan_lines.push_back(readScanLine(ds, scan_line_length));
+        scan_lines.push_back(read_scan_line(ds, scan_line_length));
     }
     std::cout << "done reading scan lines " << scan_lines.size() << '\n';
 
-    colors_ = readPalette(ds);
+    colors_ = read_palette(ds);
     std::cout << "num colors in palette: " << colors_.size() << '\n';
 
     width_ = width;
@@ -49,7 +43,7 @@ PCX::PCX(std::istream& ds)
     }
 }
 
-PCX::ScanLine PCX::readScanLine(std::istream& ds, int32_t length)
+PCX::ScanLine PCX::read_scan_line(std::istream& ds, int32_t length)
 {
     ScanLine scan_line;
     scan_line.resize(static_cast<size_t>(length));
@@ -91,7 +85,7 @@ PCX::ScanLine PCX::readScanLine(std::istream& ds, int32_t length)
     return scan_line;
 }
 
-std::vector<PCX::Color> PCX::readPalette(std::istream& ds)
+std::vector<PCX::Color> PCX::read_palette(std::istream& ds)
 {
     std::vector<PCX::Color> colors;
 
@@ -103,8 +97,6 @@ std::vector<PCX::Color> PCX::readPalette(std::istream& ds)
     uint8_t byte;
     ds.read(reinterpret_cast<char *>(&byte), 1);
 
-    //std::cout << "palette byte:  " << static_cast<int>(byte) << '\n';
-
     while (!ds.eof()) {
         uint8_t rgb[3];
         ds.read(reinterpret_cast<char *>(rgb), 3);
@@ -112,7 +104,6 @@ std::vector<PCX::Color> PCX::readPalette(std::istream& ds)
         colors.emplace_back(rgb[0], rgb[1], rgb[2]);
     }
 
-    //std::cout << "leftover bytes: " << count << '\n';
     return colors;
 }
 

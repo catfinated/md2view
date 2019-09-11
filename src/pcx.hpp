@@ -39,7 +39,7 @@ public:
         uint8_t g;
         uint8_t b;
 
-        Color(int32_t _r, int32_t _g, int32_t _b)
+        Color(uint8_t _r, uint8_t _g, uint8_t _b)
             : r(_r)
             , g(_g)
             , b(_b)
@@ -60,8 +60,8 @@ public:
 
 private:
     using ScanLine = std::vector<uint8_t>;
-    ScanLine readScanLine(std::istream& ds, int32_t length);
-    std::vector<Color> readPalette(std::istream&);
+    ScanLine read_scan_line(std::istream& ds, int32_t length);
+    std::vector<Color> read_palette(std::istream&);
 
 private:
     Header header_;
