@@ -56,5 +56,7 @@ Code for the camera and the blur shader is derived from those tutorials with mod
 For learning to read and work with the various file formats I used the following sources:
 
 PCX - <https://www.fileformat.info/format/pcx/egff.htm>
+
 PAK - <https://quakewiki.org/wiki/.pak>
+
 MD2 - <http://www.mbsoftworks.sk/tutorials/opengl3/24-animation-pt1-keyframe-md2/> and <http://tfc.duke.free.fr/coding/md2-specs-en.html>
