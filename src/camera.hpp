@@ -9,7 +9,7 @@
 
 #include <vector>
 
-// based on camera tutorial from https://learnopengl.com/
+// based on camera tutorial from https://learnopengl.com/Getting-started/Camera
 class Camera
 {
 public:
