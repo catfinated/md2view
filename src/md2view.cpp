@@ -38,7 +38,7 @@ private:
 private:
     std::shared_ptr<Shader> shader_;
     std::shared_ptr<Shader> blur_shader_;
-    std::shared_ptr<Shader> screen_shader_;
+    std::shared_ptr<Shader> glow_shader_;
     Camera camera_;
     boost::program_options::options_description options_;
     std::string models_dir_;
@@ -124,23 +124,23 @@ bool MD2View::on_engine_initialized(EngineBase& engine)
     update_model();
     load_current_texture(engine);
     glow_loc_ = shader_->uniform_location("glow_color");
-    glow_color_ = glm::vec3(1.0f, 0.0f, 0.0f);
+    glow_color_ = glm::vec3(0.0f, 1.0f, 0.0f);
     shader_->set_uniform(glow_loc_, glow_color_);
 
-    blur_shader_ = engine.resource_manager().load_shader("blur.vert", "blur.frag", nullptr, "blur");
+    blur_shader_ = engine.resource_manager().load_shader("screen.vert", "blur.frag", nullptr, "blur");
     blur_shader_->use();
     disable_blur_loc_ = blur_shader_->uniform_location("disable_blur");
     blur_shader_->set_uniform(disable_blur_loc_, 1);
 
-    screen_shader_ = engine.resource_manager().load_shader("screen.vert", "screen.frag", nullptr, "screen");
-    screen_shader_->use();
+    glow_shader_ = engine.resource_manager().load_shader("screen.vert", "glow.frag", nullptr, "glow");
+    glow_shader_->use();
 
-    auto loc = screen_shader_->uniform_location("screenTexture");
-    screen_shader_->set_uniform(loc, 0);
-    loc = screen_shader_->uniform_location("prepassTexture");
-    screen_shader_->set_uniform(loc, 1);
-    loc = screen_shader_->uniform_location("blurredTexture");
-    screen_shader_->set_uniform(loc, 2);
+    auto loc = glow_shader_->uniform_location("screenTexture");
+    glow_shader_->set_uniform(loc, 0);
+    loc = glow_shader_->uniform_location("prepassTexture");
+    glow_shader_->set_uniform(loc, 1);
+    loc = glow_shader_->uniform_location("blurredTexture");
+    glow_shader_->set_uniform(loc, 2);
 
     camera_.set_position(glm::vec3(0.0f, 0.0f, 3.0f));
 
@@ -149,6 +149,7 @@ bool MD2View::on_engine_initialized(EngineBase& engine)
     glEnable(GL_CULL_FACE);
     glDepthFunc(GL_LEQUAL);
     //glDisable(GL_BLEND);
+    //glEnable(GL_BLEND);
     FrameBufferT::bind_default();
 
     std::cout << "done on engine init\n";
@@ -240,19 +241,19 @@ void MD2View::render(EngineBase& engine)
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, fb3_->color_buffer(1));
         glClear(GL_COLOR_BUFFER_BIT);
-        screen_quad_.draw(*screen_shader_);
+        screen_quad_.draw(*glow_shader_);
 
         fb2_->bind_default();
         glClear(GL_COLOR_BUFFER_BIT);
 
-        screen_shader_->use();
+        glow_shader_->use();
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, fb3_->color_buffer(0));
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, fb3_->color_buffer(1));
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, fb2_->color_buffer(0));
-        screen_quad_.draw(*screen_shader_);
+        screen_quad_.draw(*glow_shader_);
     }
     else {
         fb3_->bind_default();
@@ -264,7 +265,7 @@ void MD2View::render(EngineBase& engine)
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, fb3_->color_buffer(0));
         glClear(GL_COLOR_BUFFER_BIT);
-        screen_quad_.draw(*screen_shader_);
+        screen_quad_.draw(*glow_shader_);
         glCheckError();
     }
 
