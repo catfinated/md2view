@@ -47,15 +47,15 @@ md2view is built using a locally managed toolchain for build dependencies. These
 
 While I have used many resources for learning OpenGL the one I personally like best is:
 
-[learnopengl](https://www.learnopengl.com "learnopengl.com")
+[learnopengl.com](https://www.learnopengl.com)
 
-Which is written by Joey de Vries [jdvtwitter](https://twitter.com/JoeyDeVriez)
-The code for those tutorials is licensed under [learnopengl_license](https://creativecommons.org/licenses/by-nc/4.0/legalcode "CC BY 4.0").
+Which is authored by [Joey de Vries](https://twitter.com/JoeyDeVriez)
+The code for those tutorials is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by-nc/4.0/legalcode).
 Code for the camera and the blur shader is derived from those tutorials with modifications/customizations.
 
 For learning to read and work with the various file formats I used the following sources:
 
-    * PCX [pcxfiles](https://www.fileformat.info/format/pcx/egff.htm)
-    * PAK [pakfiles](https://quakewiki.org/wiki/.pak)
-    * MD2 [md2files1](http://www.mbsoftworks.sk/tutorials/opengl3/24-animation-pt1-keyframe-md2/) and
-          [md2files2](http://tfc.duke.free.fr/coding/md2-specs-en.html)
+    * PCX https://www.fileformat.info/format/pcx/egff.htm
+    * PAK https://quakewiki.org/wiki/.pak
+    * MD2 http://www.mbsoftworks.sk/tutorials/opengl3/24-animation-pt1-keyframe-md2/ and
+          http://tfc.duke.free.fr/coding/md2-specs-en.html
