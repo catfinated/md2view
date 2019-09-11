@@ -25,6 +25,9 @@ You can control the camera by pressing F1. The camera controls are:
 The FOV can also be adjusted with the GUI. The curret view and projection matrices
 will be displayed in the GUI when you manipulate the camera.
 
+You can use the GUI to enable an optional post-processing "glow" effect around the
+model. You can set the color to use as well.
+
 ## Testing
 
 md2view has been tested this on the following systems:
@@ -52,6 +55,8 @@ While I have used many resources for learning OpenGL the one I personally like b
 Which is authored by [Joey de Vries](https://twitter.com/JoeyDeVriez).
 The code for those tutorials is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by-nc/4.0/legalcode).
 Code for the camera and the blur shader is derived from those tutorials with modifications/customizations.
+
+The inspiration for the glow post-processing effect came from [Makin' Stuff Look Good](https://www.youtube.com/watch?v=SMLbbi8oaO8)
 
 For learning to read and work with the various file formats I used the following sources:
 
