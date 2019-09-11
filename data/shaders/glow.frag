@@ -9,7 +9,6 @@ uniform sampler2D blurredTexture;
 
 void main()
 {
-  // no effects
   vec4 col = texture(screenTexture, TexCoords);
   vec4 blurred = texture(blurredTexture, TexCoords);
   vec4 prepass = texture(prepassTexture, TexCoords);
