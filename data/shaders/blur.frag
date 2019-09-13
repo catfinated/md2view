@@ -24,16 +24,17 @@ vec4 blur()
                             2.0 / 16, 4.0 / 16, 2.0 / 16,
                             1.0 / 16, 2.0 / 16, 1.0 / 16);
 
-  const float offset = 1.0 / 256;
-  vec2 offsets[9] = vec2[](vec2(-offset, offset),
-                           vec2(0.0f, offset),
-                           vec2(offset, offset),
-                           vec2(-offset, 0.0f),
+  const float xoffset = 1.0 / 256;
+  const float yoffset = 1.0 / 256;
+  vec2 offsets[9] = vec2[](vec2(-xoffset, yoffset),
+                           vec2(0.0f, yoffset),
+                           vec2(xoffset, yoffset),
+                           vec2(-xoffset, 0.0f),
                            vec2(0.0f, 0.0f),
-                           vec2(offset, 0.0f),
-                           vec2(-offset, -offset),
-                           vec2(0.0f, -offset),
-                           vec2(offset, -offset));
+                           vec2(xoffset, 0.0f),
+                           vec2(-xoffset, -yoffset),
+                           vec2(0.0f, -yoffset),
+                           vec2(xoffset, -yoffset));
 
   vec3 col = vec3(0.0);
   for (int i = 0; i < 9; ++i) {

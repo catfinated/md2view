@@ -325,6 +325,5 @@ void Engine<Game>::framebuffer_resize_callback(int x, int y)
     std::cout << "framebuffer resize x=" << x << " y=" << y << '\n';
     width_ = x;
     height_ = y;
-    glViewport(0, 0, x, y);
     game_.on_framebuffer_resized(x, y);
 }

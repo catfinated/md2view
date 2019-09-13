@@ -164,18 +164,18 @@ private:
     bool load_frames(std::ifstream&, size_t);
 
 private:
-    struct InternalFrame
+    struct KeyFrame
     {
         std::vector<glm::vec3> vertices;
     };
 
     Header hdr_;
-    std::vector<Triangle> triangles_;
-    std::vector<TexCoord> texcoords_;
-    std::vector<Frame>    frames_;
-    std::vector<InternalFrame> internal_frames_;
-    std::vector<glm::vec2> internal_texcoords_;
-    std::vector<SkinData> skins_;
+    std::vector<Triangle>  triangles_;
+    std::vector<TexCoord>  texcoords_;
+    std::vector<Frame>     frames_;
+    std::vector<KeyFrame>  key_frames_;
+    std::vector<glm::vec2> scaled_texcoords_;
+    std::vector<SkinData>  skins_;
     std::vector<Animation> animations_;
     std::unordered_map<std::string, size_t> animation_index_map_;
     std::vector<glm::vec3> interpolated_vertices_;

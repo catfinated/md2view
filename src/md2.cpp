@@ -183,7 +183,7 @@ bool MD2::load_texcoords(std::ifstream& infile, size_t offset)
 
     // we must scale the texcoords and unpack the triangles
     // into a flat vector to better work gith glDrawArrays
-    internal_texcoords_.reserve(hdr_.num_tris * 3);
+    scaled_texcoords_.reserve(hdr_.num_tris * 3);
 
     for (auto const& triangle : triangles_) {
         for (size_t i = 0; i < 3; ++i) {
@@ -193,7 +193,7 @@ bool MD2::load_texcoords(std::ifstream& infile, size_t offset)
           glm::vec2 scaled;
           scaled.s = static_cast<float>(st.s) / static_cast<float>(hdr_.skinwidth);
           scaled.t = static_cast<float>(st.t) / static_cast<float>(hdr_.skinheight);
-          internal_texcoords_.push_back(scaled);
+          scaled_texcoords_.push_back(scaled);
       }
     }
 
@@ -205,7 +205,7 @@ bool MD2::load_frames(std::ifstream& infile, size_t offset)
     MD2V_EXPECT(infile);
 
     frames_.resize(hdr_.num_frames);
-    internal_frames_.resize(hdr_.num_frames);
+    key_frames_.resize(hdr_.num_frames);
     infile.seekg(offset + hdr_.offset_frames);
 
     Animation current_anim;
@@ -242,12 +242,12 @@ bool MD2::load_frames(std::ifstream& infile, size_t offset)
         // into a flat vector. this is because md2 allows
         // the same vertex to have a different tex coord in two
         // different triangles which makes it difficult to use with
-        // glDrawElements / glDrawArrays. so our InternalFrame
+        // glDrawElements / glDrawArrays. so our KeyFrame
         // has num_tris * 3 entries and our tex coord
         // buffer ends up with num_tris * 3 entires but
         // that data is shared by all frames
-        auto& internal_frame = internal_frames_[i];
-        internal_frame.vertices.reserve(hdr_.num_tris * 3);
+        auto& key_frame = key_frames_[i];
+        key_frame.vertices.reserve(hdr_.num_tris * 3);
 
         for (auto const& triangle : triangles_) {
             for (size_t i = 0; i < 3; ++i) {
@@ -258,13 +258,13 @@ bool MD2::load_frames(std::ifstream& infile, size_t offset)
                 scaled.x = (frame.scale[0] * vertex.v[0]) + frame.translate[0];
                 scaled.z = (frame.scale[1] * vertex.v[1]) + frame.translate[1];
                 scaled.y = (frame.scale[2] * vertex.v[2]) + frame.translate[2];
-                internal_frame.vertices.push_back(scaled);
+                key_frame.vertices.push_back(scaled);
             }
         }
-        assert(internal_frame.vertices.size() == static_cast<size_t>(hdr_.num_tris * 3));
+        assert(key_frame.vertices.size() == static_cast<size_t>(hdr_.num_tris * 3));
     }
 
-    assert(internal_frames_.size() == frames_.size());
+    assert(key_frames_.size() == frames_.size());
     assert(frames_.size() == static_cast<size_t>(hdr_.num_frames));
 
     if (current_anim.start_frame != -1) {
@@ -276,7 +276,7 @@ bool MD2::load_frames(std::ifstream& infile, size_t offset)
         std::cout << anim << '\n';
     }
 
-    interpolated_vertices_ = internal_frames_[0].vertices;
+    interpolated_vertices_ = key_frames_[0].vertices;
 
     return infile.good();
 }
@@ -303,7 +303,7 @@ void MD2::setup_buffers()
    static_assert(sizeof(glm::vec2) == 8, "bad vec2 size");
 
    glBindBuffer(GL_ARRAY_BUFFER, vbo_[1]);
-   glBufferData(GL_ARRAY_BUFFER, internal_texcoords_.size() * sizeof(glm::vec2), &internal_texcoords_[0], GL_STATIC_DRAW);
+   glBufferData(GL_ARRAY_BUFFER, scaled_texcoords_.size() * sizeof(glm::vec2), &scaled_texcoords_[0], GL_STATIC_DRAW);
 
    glEnableVertexAttribArray(1);
    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
@@ -378,8 +378,8 @@ void MD2::update(float dt)
     int i = 0;
 
     for (auto& vertex : interpolated_vertices_) {
-        auto const& v1 = internal_frames_[current_frame_].vertices[i];
-        auto const& v2 = internal_frames_[next_frame_].vertices[i];
+        auto const& v1 = key_frames_[current_frame_].vertices[i];
+        auto const& v2 = key_frames_[next_frame_].vertices[i];
         vertex = lerp(v1, v2, glm::vec3(t, t, t));
         ++i;
    }
