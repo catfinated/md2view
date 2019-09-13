@@ -111,9 +111,9 @@ bool Engine<Game>::parse_args(int argc, char const * argv[])
 {
     boost::program_options::options_description engine("Engine options");
     engine.add_options()
-        ("help", "Show this help message")
-        ("width,w", boost::program_options::value<int>(&width_)->default_value(1280), "Screen width")
-        ("height,h", boost::program_options::value<int>(&height_)->default_value(800), "Screen height");
+        ("help,h", "Show this help message")
+        ("width,W", boost::program_options::value<int>(&width_)->default_value(1280), "Screen width")
+        ("height,H", boost::program_options::value<int>(&height_)->default_value(800), "Screen height");
 
     options_desc().add(engine).add(game_.options());
 
