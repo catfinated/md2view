@@ -237,7 +237,7 @@ bool MD2::load_frames(std::ifstream& infile, size_t offset)
             current_anim.name = anim_id;
         }
 
-        // our 'internal frame' contains the scaled vertices
+        // our key frame contains the scaled vertices
         // it also unpacks all the vertices from the triangle
         // into a flat vector. this is because md2 allows
         // the same vertex to have a different tex coord in two
@@ -331,6 +331,7 @@ void MD2::set_animation(size_t index)
         auto const& anim = animations_[index];
         next_frame_ = anim.start_frame;
         current_animation_index_ = index;
+        interpolation_ = 0.0;
     }
 }
 
@@ -376,6 +377,8 @@ void MD2::update(float dt)
 
     float t = interpolation_;
     int i = 0;
+
+    if (next_frame_ == current_frame_) { return; }
 
     for (auto& vertex : interpolated_vertices_) {
         auto const& v1 = key_frames_[current_frame_].vertices[i];
