@@ -11,8 +11,6 @@
 #include <cstdlib>
 #include <memory>
 
-using FrameBufferT = FrameBuffer<1>;
-
 class MD2View
 {
 public:
@@ -52,8 +50,8 @@ private:
     glm::mat4 view_;
     glm::mat4 projection_;
     std::array<float, 4> clear_color_;
-    std::unique_ptr<FrameBufferT> fb2_;
-    std::unique_ptr<FrameBuffer<2>> fb3_;
+    std::unique_ptr<FrameBuffer<1, false>> blur_fb_;
+    std::unique_ptr<FrameBuffer<2, true>> main_fb_;
     ScreenQuad screen_quad_;
     GLint disable_blur_loc_;
     Texture2D * texture_ = nullptr;
@@ -113,8 +111,8 @@ bool MD2View::on_engine_initialized(EngineBase& engine)
 {
     // init objects which needed an opengl context to initialize
     ms_.init(models_dir_, engine);
-    fb2_.reset(new FrameBufferT(engine.width(), engine.height(), true));
-    fb3_.reset(new FrameBuffer<2>(engine.width(), engine.height()));
+    blur_fb_.reset(new FrameBuffer<1, false>(engine.width(), engine.height()));
+    main_fb_.reset(new FrameBuffer<2, true>(engine.width(), engine.height()));
     screen_quad_.init();
 
     clear_color_ = { 0.2f, 0.2f, 0.2f, 1.0f };
@@ -145,13 +143,13 @@ bool MD2View::on_engine_initialized(EngineBase& engine)
 
     camera_.set_position(glm::vec3(0.0f, 0.0f, 3.0f));
 
-    fb3_->bind();
+    main_fb_->bind();
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glDepthFunc(GL_LEQUAL);
     //glDisable(GL_BLEND);
     //glEnable(GL_BLEND);
-    FrameBufferT::bind_default();
+    FrameBuffer<>::bind_default();
 
     std::cout << "done on engine init\n";
     glCheckError();
@@ -167,11 +165,17 @@ void MD2View::on_framebuffer_resized(int width, int height)
     shader_->use();
     shader_->set_projection(projection);
 
-    fb3_->bind_default();
-    fb3_.reset(new FrameBuffer<2>(width, height));
-    fb3_->bind();
+    FrameBuffer<>::bind_default();
+    main_fb_.reset(new FrameBuffer<2, true>(width, height));
+    main_fb_->bind();
     glViewport(0, 0, width, height);
-    fb3_->bind_default();
+
+    blur_fb_.reset(new FrameBuffer<1, false>(width, height));
+    blur_fb_->bind();
+    glViewport(0, 0, width, height);
+    FrameBuffer<>::bind_default();
+
+    glViewport(0, 0, width, height);
 }
 
 void MD2View::update_model()
@@ -217,7 +221,7 @@ void MD2View::render(EngineBase& engine)
     texture_->bind();
 
     // render normal frame
-    fb3_->bind();
+    main_fb_->bind();
     GLenum draw_buffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
     glDrawBuffers(2, draw_buffers);
     glCheckError();
@@ -234,37 +238,37 @@ void MD2View::render(EngineBase& engine)
 
     if (glow_) {
         // blur solid image
-        fb2_->bind();
+        blur_fb_->bind();
         glClear(GL_COLOR_BUFFER_BIT);
 
         blur_shader_->use();
         blur_shader_->set_uniform(disable_blur_loc_, 0);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, fb3_->color_buffer(1));
+        glBindTexture(GL_TEXTURE_2D, main_fb_->color_buffer(1));
         glClear(GL_COLOR_BUFFER_BIT);
         screen_quad_.draw(*glow_shader_);
 
-        fb2_->bind_default();
+        blur_fb_->bind_default();
         glClear(GL_COLOR_BUFFER_BIT);
 
         glow_shader_->use();
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, fb3_->color_buffer(0));
+        glBindTexture(GL_TEXTURE_2D, main_fb_->color_buffer(0));
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, fb3_->color_buffer(1));
+        glBindTexture(GL_TEXTURE_2D, main_fb_->color_buffer(1));
         glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, fb2_->color_buffer(0));
+        glBindTexture(GL_TEXTURE_2D, blur_fb_->color_buffer(0));
         screen_quad_.draw(*glow_shader_);
     }
     else {
-        fb3_->bind_default();
+        main_fb_->bind_default();
         glCheckError();
         glClear(GL_COLOR_BUFFER_BIT);
         blur_shader_->use();
         glCheckError();
         blur_shader_->set_uniform(disable_blur_loc_, 1);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, fb3_->color_buffer(0));
+        glBindTexture(GL_TEXTURE_2D, main_fb_->color_buffer(0));
         glClear(GL_COLOR_BUFFER_BIT);
         screen_quad_.draw(*glow_shader_);
         glCheckError();

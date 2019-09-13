@@ -150,7 +150,6 @@ inline void ModelSelector::init(std::string const& path, EngineBase& eb)
     else if (".pak" == p.extension()) {
         pak_.reset(new PAK{p.string()});
         pak_->visit([this](PAK::Node const * n) {
-                     //std::cout << n->path << '\n';
                      if (".md2" == boost::filesystem::path(n->path).extension()) {
                          std::cout << n->path << '\n';
                          this->add_node(boost::filesystem::path(n->path));
