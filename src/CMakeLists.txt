@@ -7,10 +7,6 @@ find_package(glew REQUIRED CONFIG)
 find_package(OpenGL REQUIRED)
 find_package(PkgConfig REQUIRED)
 
-SET(TOOLCHAIN_DIR /opt/toolchain/latest)
-find_library(SOIL_LIBRARY SOIL NO_DEFAULT_PATH PATHS ${TOOLCHAIN_DIR}/SOIL/lib)
-SET(SOIL_INCLUDE ${TOOLCHAIN_DIR}/SOIL/include)
-
 find_package(Boost COMPONENTS system filesystem program_options REQUIRED)
 add_library(boost INTERFACE IMPORTED)
 set_property(TARGET boost PROPERTY
@@ -59,11 +55,7 @@ set_target_properties(md2view PROPERTIES
 )
 
 target_link_libraries(md2view
-   PUBLIC ${BOOST_LIBRARIES} boost-system boost-filesystem boost-program-options glfw GLEW::glew_s glm ${SOIL_LIBRARY} ${PLATFORM_LIBS}
-)
-
-target_include_directories(md2view
-   PUBLIC ${SOIL_INCLUDE}
+   PUBLIC ${BOOST_LIBRARIES} boost-system boost-filesystem boost-program-options glfw GLEW::glew_s glm ${PLATFORM_LIBS}
 )
 
 target_compile_options(md2view

@@ -1,8 +1,8 @@
 # md2view
-**This is a personal project used for learning. Issue reports or pull requests will mostly be ignored.**
+**This is a personal project used for learning. Pull requests will mostly be ignored.**
 
 The purpose of this project is to be able to load, render, texture, and animate
-MD2 models that are stored in Quake2 PAK files or which have been extracted into
+MD2 models that are stored in *Quake II* PAK files or which have been extracted into
 an equivalent directory structure. The rendering is currently done in OpenGL.
 
 Here are some screenshots of md2view in action:
@@ -49,11 +49,13 @@ md2view is built using a locally managed toolchain for build dependencies. These
 
 [GLM](https://glm.g-truc.net/0.9.9/index.html) (Version 0.9.9.0)
 
-[SOIL](https://www.lonesock.net/soil.html) (Version 20080707 - for loading png files)
-
 The GUI is made using the [Dear ImGui](https://github.com/ocornut/imgui) library
 authored by Omar Cornut et al. Version 1.5.0 of Dear ImGui is bundled with md2view.
 Dear ImGui is licensed under the [MIT license](src/imgui/LICENSE).
+
+For loading PNG image files (some non-Quake based models I've found use these) md2view
+uses the [stb_image](https://github.com/nothings/stb) library from
+[Sean T. Barrett](https://twitter.com/nothings) which is licensed in the public domain.
 
 ## Attributions
 
