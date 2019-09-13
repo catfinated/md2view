@@ -6,9 +6,9 @@
 #include "pcx.hpp"
 #include "pak.hpp"
 
-#include <boost/filesystem.hpp>
+#include "stb_image.h"
 
-#include <SOIL.h>
+#include <boost/filesystem.hpp>
 
 #include <unordered_map>
 #include <memory>
@@ -151,18 +151,12 @@ inline Texture2D& ResourceManager::load_texture2D(std::string const& file, std::
     if (".pcx" != p.extension()) {
         texture.set_alpha(alpha);
 
-        int width, height;
-        unsigned char * image = SOIL_load_image(texture_path.c_str(),
-                                                &width,
-                                                &height,
-                                                0,
-                                                alpha ? SOIL_LOAD_RGBA : SOIL_LOAD_RGB);
-
+        int width, height, n;
+        unsigned char * image = stbi_load(texture_path.c_str(), &width, &height, &n, 3);
         MD2V_EXPECT(image);
         MD2V_EXPECT(texture.init(width, height, image));
         std::cout << "loaded 2D texture " << texture_path << " width: " << width << " height: " << height << "\n";
-
-        SOIL_free_image_data(image);
+        stbi_image_free(image);
     }
     else {
         std::ifstream inf(p.string().c_str(), std::ios_base::in | std::ios_base::binary);
