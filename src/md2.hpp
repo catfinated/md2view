@@ -184,13 +184,13 @@ private:
     GLuint vbo_[2];
 
     // animation state
-    ssize_t current_animation_index_;
+    int32_t current_animation_index_;
     int next_frame_;
     int current_frame_;
     float interpolation_;
     float frames_per_second_ = 8.0f;
 
-    ssize_t current_skin_index_;
+    int32_t current_skin_index_;
 };
 
 std::ostream& operator<<(std::ostream&, MD2::Header const&);

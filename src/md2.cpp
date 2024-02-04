@@ -156,7 +156,7 @@ bool MD2::load_skins(std::ifstream& infile, size_t offset, std::string const& fi
         std::cout << skins_.back().fpath << '\n';
     }
 
-    return infile.good();
+        return infile.good();
 }
 
 bool MD2::load_triangles(std::ifstream& infile, size_t offset)
@@ -327,7 +327,7 @@ void MD2::set_animation(size_t index)
 {
     assert(index < animations_.size());
 
-    if (current_animation_index_ != static_cast<ssize_t>(index)) {
+    if (current_animation_index_ != static_cast<int32_t>(index)) {
         auto const& anim = animations_[index];
         next_frame_ = anim.start_frame;
         current_animation_index_ = index;

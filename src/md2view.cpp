@@ -223,7 +223,7 @@ void MD2View::render(EngineBase& engine)
     texture_->bind();
 
     // render normal frame
-    main_fb_->bind();
+    main_fb_->bind();  
     GLenum draw_buffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
     glDrawBuffers(2, draw_buffers);
     glCheckError();
@@ -241,18 +241,15 @@ void MD2View::render(EngineBase& engine)
     if (glow_) {
         // blur solid image
         blur_fb_->bind();
-        glClear(GL_COLOR_BUFFER_BIT);
-
         blur_shader_->use();
         blur_shader_->set_uniform(disable_blur_loc_, 0);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, main_fb_->color_buffer(1));
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         screen_quad_.draw(*glow_shader_);
 
         blur_fb_->bind_default();
         glClear(GL_COLOR_BUFFER_BIT);
-
         glow_shader_->use();
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, main_fb_->color_buffer(0));
@@ -261,19 +258,15 @@ void MD2View::render(EngineBase& engine)
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, blur_fb_->color_buffer(0));
         screen_quad_.draw(*glow_shader_);
-    }
+    } 
     else {
         main_fb_->bind_default();
-        glCheckError();
-        glClear(GL_COLOR_BUFFER_BIT);
         blur_shader_->use();
-        glCheckError();
-        blur_shader_->set_uniform(disable_blur_loc_, 1);
-        glActiveTexture(GL_TEXTURE0);
+        glActiveTexture(GL_TEXTURE0);;
         glBindTexture(GL_TEXTURE_2D, main_fb_->color_buffer(0));
-        glClear(GL_COLOR_BUFFER_BIT);
-        screen_quad_.draw(*glow_shader_);
-        glCheckError();
+        blur_shader_->set_uniform(disable_blur_loc_, 1);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        screen_quad_.draw(*blur_shader_);
     }
 
     glCheckError();

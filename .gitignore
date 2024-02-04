@@ -16,3 +16,7 @@
 *.dvi
 build
 data/models
+/CMakeFiles
+CMakeCache.txt
+imgui.ini
+.vscode
