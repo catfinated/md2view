@@ -30,7 +30,12 @@ model. You can set the color to use as well.
 
 ## Testing
 
-md2view has been tested this on the following systems:
+md2view is currently being tested on the following systems:
+
+    * Windows 10 (VS 2019) - NVIDIA GeForce RTX 3080 Ti
+    * Windows 11 (VS 2019) - NVIDIA Geforce RTX 4060 Laptop GPU
+
+md2view has previously been tested the following systems but may no longer work:
 
     * Mac OS X Mojave (10.14.6) - AMD Radeon R9 M370X
     * Ubuntu 18.04.3 LTS - NVIDIA GeForce GTX 1050 Ti
@@ -39,19 +44,18 @@ The screenshots above come from the Macbook which partly explains the low FPS.
 
 ## Dependencies
 
-md2view is built using a locally managed toolchain for build dependencies. These dependencies are:
+md2view is built using vcpkg to manage dependencies. These dependencies are:
 
-[Boost](https://www.boost.org/) (Version 1.69.0 - filesystem, system, program_options)
+[Boost](https://www.boost.org/)
 
-[GLFW](https://www.glfw.org/) (Version 3.3)
+[GLFW](https://www.glfw.org/) 
 
-[GLEW](http://glew.sourceforge.net/) (Version 2.1.0)
+[GLEW](http://glew.sourceforge.net/) 
 
-[GLM](https://glm.g-truc.net/0.9.9/index.html) (Version 0.9.9.0)
+[GLM](https://glm.g-truc.net/0.9.9/index.html) 
 
 The GUI is made using the [Dear ImGui](https://github.com/ocornut/imgui) library
-authored by Omar Cornut et al. Version 1.5.0 of Dear ImGui is bundled with md2view.
-Dear ImGui is licensed under the [MIT license](src/imgui/LICENSE).
+authored by Omar Cornut et al. Dear ImGui is licensed under the [MIT license](src/imgui/LICENSE).
 
 For loading PNG image files (some non-Quake based models I've found use these) md2view
 uses the [stb_image](https://github.com/nothings/stb) library from
