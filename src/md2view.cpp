@@ -1,5 +1,3 @@
-#define STB_IMAGE_IMPLEMENTATION
-
 #include "engine.hpp"
 #include "camera.hpp"
 #include "md2.hpp"

@@ -19,7 +19,8 @@ add_executable(md2view
   md2.cpp
   pcx.cpp
   pak.cpp
-  screen_quad.cpp)
+  screen_quad.cpp
+  resource_manager.cpp)
 
 set_target_properties(md2view PROPERTIES
     CXX_STANDARD 17

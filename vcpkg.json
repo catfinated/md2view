@@ -9,6 +9,7 @@
     "boost-program-options",
     "opengl",
     "imgui",
-    "spdlog"
+    "spdlog",
+    "stb"
   ]
 }
