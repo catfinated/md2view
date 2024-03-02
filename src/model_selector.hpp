@@ -3,11 +3,11 @@
 #include "md2.hpp"
 #include "pak.hpp"
 
-#include <boost/filesystem.hpp>
 #include <boost/range/iterator_range.hpp>
 #include <spdlog/spdlog.h>
 
 #include <exception>
+#include <filesystem>
 #include <iostream>
 #include <unordered_map>
 #include <stack>
@@ -72,7 +72,7 @@ private:
 
     bool load_model_node(Node& n);
 
-    void add_node(boost::filesystem::path const& path);
+    void add_node(std::filesystem::path const& path);
 
     std::string path_;
     MD2 * model_ = nullptr;
@@ -82,7 +82,7 @@ private:
     std::unique_ptr<PAK> pak_;
 };
 
-inline void ModelSelector::add_node(boost::filesystem::path const& path)
+inline void ModelSelector::add_node(std::filesystem::path const& path)
 {
     auto parent = &root_;
 
@@ -111,14 +111,14 @@ inline void ModelSelector::init(std::string const& path, EngineBase& eb)
 {
     path_ = path;
     root_.path = path;
-    boost::filesystem::path p(path_);
+    std::filesystem::path p(path_);
 
-    if (!boost::filesystem::exists(p)) {
+    if (!std::filesystem::exists(p)) {
         throw std::runtime_error("invalid models path: " + path_);
     }
 
-    if (boost::filesystem::is_directory(p)) {
-        boost::filesystem::recursive_directory_iterator iter(p), end;
+    if (std::filesystem::is_directory(p)) {
+        std::filesystem::recursive_directory_iterator iter(p), end;
 
         for (; iter != end; ++iter ) {
             if (".md2" == iter->path().extension().string()) {
@@ -151,9 +151,9 @@ inline void ModelSelector::init(std::string const& path, EngineBase& eb)
     else if (".pak" == p.extension()) {
         pak_.reset(new PAK{p.string()});
         pak_->visit([this](PAK::Node const * n) {
-                     if (".md2" == boost::filesystem::path(n->path).extension()) {
+                     if (".md2" == std::filesystem::path(n->path).extension()) {
                          spdlog::debug("{}", n->path);
-                         this->add_node(boost::filesystem::path(n->path));
+                         this->add_node(std::filesystem::path(n->path));
                      }
                  });
 

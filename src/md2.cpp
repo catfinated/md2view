@@ -4,12 +4,12 @@
 #include "common.hpp"
 
 #include <glm/gtx/compatibility.hpp>
-#include <boost/filesystem.hpp>
 #include <spdlog/spdlog.h>
 #include <fmt/ostream.h>
 
 #include <cctype>
 #include <fstream>
+#include <filesystem>
 #include <string_view>
 #include <vector>
 
@@ -120,11 +120,11 @@ bool MD2::load_skins(std::ifstream& infile, size_t offset, std::string const& fi
     assert(skins.size() == static_cast<size_t>(hdr_.num_skins));
     spdlog::info("num skins={}", skins.size());
 
-    auto root = boost::filesystem::path(filename).parent_path();
+    auto root = std::filesystem::path(filename).parent_path();
 
     for (auto const& skin : skins) {
         spdlog::info("skin: '{}'", std::string_view{skin.name.data(), skin.name.size()});
-        boost::filesystem::path f(std::string(skin.name.data()));
+        std::filesystem::path f(std::string(skin.name.data()));
 
         if (ispak) {
             skins_.emplace_back(f.string(), f.stem().string());
@@ -135,11 +135,11 @@ bool MD2::load_skins(std::ifstream& infile, size_t offset, std::string const& fi
             auto cp = p;
             p.replace_extension("png");
 
-            if (boost::filesystem::exists(cp)) {
+            if (std::filesystem::exists(cp)) {
                 skins_.emplace_back(cp.string(), cp.stem().string());
                 spdlog::debug("{}", skins_.back().fpath);
             }
-            else if (boost::filesystem::exists(p)) {
+            else if (std::filesystem::exists(p)) {
                 skins_.emplace_back(p.string(), cp.stem().string());
                 spdlog::debug("{}", skins_.back().fpath);
             }

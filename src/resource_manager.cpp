@@ -2,10 +2,11 @@
 #include "common.hpp"
 #include "pcx.hpp"
 
-#include <boost/filesystem.hpp>
 #include <spdlog/spdlog.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+
+#include <filesystem>
 
 ResourceManager::ResourceManager(std::string const& rootdir)
     : root_dir_(rootdir)
@@ -23,9 +24,9 @@ ResourceManager::ResourceManager(std::string const& rootdir)
 }
 
 std::shared_ptr<Shader> ResourceManager::load_shader(char const * vertex,
-                                                            char const * fragment,
-                                                            char const * geometry,
-                                                            std::string const& name)
+                                                    char const * fragment,
+                                                    char const * geometry,
+                                                    std::string const& name)
 {
     MD2V_EXPECT(vertex != nullptr);
     MD2V_EXPECT(fragment != nullptr);
@@ -56,7 +57,7 @@ Texture2D& ResourceManager::load_texture2D(PAK const& pf, std::string const& pat
 
     spdlog::info("loading 2D texture {} from PAK {}", path, pf.filename());
 
-    MD2V_EXPECT(".pcx" == boost::filesystem::path(path).extension());
+    MD2V_EXPECT(".pcx" == std::filesystem::path(path).extension());
 
     auto node = pf.find(path);
     MD2V_EXPECT(node);
@@ -93,10 +94,10 @@ Texture2D& ResourceManager::load_texture2D(std::string const& file, std::string 
         return iter->second;
     }
 
-    boost::filesystem::path p(file);
+    std::filesystem::path p(file);
     auto texture_path = p.string();
 
-    MD2V_EXPECT(boost::filesystem::exists(p));
+    MD2V_EXPECT(std::filesystem::exists(p));
 
     spdlog::info("loading 2D texture {} (alpha: {})", texture_path, alpha);
 

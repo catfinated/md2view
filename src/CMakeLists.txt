@@ -2,7 +2,7 @@ find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
 find_package(glew REQUIRED CONFIG)
 find_package(OpenGL REQUIRED)
-find_package(Boost COMPONENTS system filesystem program_options REQUIRED)
+find_package(Boost COMPONENTS system program_options REQUIRED)
 find_package(imgui REQUIRED)
 find_package(spdlog REQUIRED)
 
@@ -29,7 +29,7 @@ set_target_properties(md2view PROPERTIES
 )
 
 target_link_libraries(md2view
-   PUBLIC Boost::system Boost::filesystem Boost::program_options glfw GLEW::GLEW glm::glm OpenGL::GL imgui::imgui spdlog::spdlog
+   PUBLIC Boost::system Boost::program_options glfw GLEW::GLEW glm::glm OpenGL::GL imgui::imgui spdlog::spdlog
 )
 
 target_include_directories(md2view PRIVATE ${OPENGL_INCLUDE_DIR})
