@@ -13,9 +13,10 @@ void Gui::init(GLFWwindow * window)
 
     window_ = window;
 
+    ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
 
-    io.RenderDrawListsFn = nullptr; // why no user data callback?!?
+   // io.RenderDrawListsFn = nullptr; // why no user data callback?!?
 
     // Backup GL state
     GLint last_texture, last_array_buffer, last_vertex_array;

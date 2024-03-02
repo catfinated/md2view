@@ -3,6 +3,7 @@ find_package(glm REQUIRED)
 find_package(glew REQUIRED CONFIG)
 find_package(OpenGL REQUIRED)
 find_package(Boost COMPONENTS system filesystem program_options REQUIRED)
+find_package(imgui REQUIRED)
 
 #IF(APPLE)
 #   find_library(COCOA_LIBRARY Cocoa)
@@ -17,10 +18,7 @@ add_executable(md2view
   md2.cpp
   pcx.cpp
   pak.cpp
-  screen_quad.cpp
-  imgui/imgui.cpp
-  imgui/imgui_draw.cpp
-  imgui/imgui_demo.cpp)
+  screen_quad.cpp)
 
 set_target_properties(md2view PROPERTIES
     CXX_STANDARD 20
@@ -29,7 +27,7 @@ set_target_properties(md2view PROPERTIES
 )
 
 target_link_libraries(md2view
-   PUBLIC Boost::system Boost::filesystem Boost::program_options glfw GLEW::GLEW glm::glm OpenGL::GL
+   PUBLIC Boost::system Boost::filesystem Boost::program_options glfw GLEW::GLEW glm::glm OpenGL::GL imgui::imgui
 )
 
 target_include_directories(md2view PRIVATE ${OPENGL_INCLUDE_DIR})

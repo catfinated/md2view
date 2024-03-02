@@ -296,18 +296,18 @@ void MD2View::render(EngineBase& engine)
 
     ImGui::Text("View");
     ImGui::PushItemWidth(vec4width);
-    ImGui::InputFloat4("", glm::value_ptr(view_[0]), precision, ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat4("", glm::value_ptr(view_[1]), precision, ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat4("", glm::value_ptr(view_[2]), precision, ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat4("", glm::value_ptr(view_[3]), precision, ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputFloat4("", glm::value_ptr(view_[0]), "%.3f", ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputFloat4("", glm::value_ptr(view_[1]), "%.3f", ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputFloat4("", glm::value_ptr(view_[2]), "%.3f", ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputFloat4("", glm::value_ptr(view_[3]), "%.3f", ImGuiInputTextFlags_ReadOnly);
     ImGui::PopItemWidth();
 
     ImGui::Text("Projection");
     ImGui::PushItemWidth(vec4width);
-    ImGui::InputFloat4("", glm::value_ptr(projection_[0]), precision, ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat4("", glm::value_ptr(projection_[1]), precision, ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat4("", glm::value_ptr(projection_[2]), precision, ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat4("", glm::value_ptr(projection_[3]), precision, ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputFloat4("", glm::value_ptr(projection_[0]), "%.3f", ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputFloat4("", glm::value_ptr(projection_[1]), "%.3f", ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputFloat4("", glm::value_ptr(projection_[2]), "%.3f", ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputFloat4("", glm::value_ptr(projection_[3]), "%.3f", ImGuiInputTextFlags_ReadOnly);
     ImGui::PopItemWidth();
 
     ImGui::End();
@@ -324,10 +324,10 @@ void MD2View::render(EngineBase& engine)
 
     ImGui::Text("Model");
     ImGui::PushItemWidth(vec4width);
-    ImGui::InputFloat4("", glm::value_ptr(model_[0]), precision, ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat4("", glm::value_ptr(model_[1]), precision, ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat4("", glm::value_ptr(model_[2]), precision, ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat4("", glm::value_ptr(model_[3]), precision, ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputFloat4("", glm::value_ptr(model_[0]), "%.3f", ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputFloat4("", glm::value_ptr(model_[1]), "%.3f", ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputFloat4("", glm::value_ptr(model_[2]), "%.3f", ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputFloat4("", glm::value_ptr(model_[3]), "%.3f", ImGuiInputTextFlags_ReadOnly);
     ImGui::PopItemWidth();
 
     ImGui::Checkbox("Glow", &glow_);

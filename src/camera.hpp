@@ -1,8 +1,8 @@
 #pragma once
 
 #include "common.hpp"
-#include "imgui/imgui.h"
 
+#include <imgui.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -161,13 +161,13 @@ inline void Camera::update_vectors()
 
 inline void Camera::draw_ui()
 {
-    ImGui::InputFloat3("Position", glm::value_ptr(position_), -1, ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat3("Front", glm::value_ptr(front_), -1, ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat3("Up", glm::value_ptr(up_), -1, ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat3("Right", glm::value_ptr(right_), -1, ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputFloat3("Position", glm::value_ptr(position_), "%.3f", ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputFloat3("Front", glm::value_ptr(front_), "%.3f", ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputFloat3("Up", glm::value_ptr(up_), "%.3f", ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputFloat3("Right", glm::value_ptr(right_), "%.3f", ImGuiInputTextFlags_ReadOnly);
     if (ImGui::SliderFloat("fov", &fov_, 1.0f, 60.0f)) {
         fov_dirty_ = true;
     }
-    ImGui::InputFloat("Pitch", &pitch_, 0.0, 0.0, 4, ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat("Yaw", &yaw_, 0.0, 0.0, 4, ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputFloat("Pitch", &pitch_, 0.0, 0.0, "%.3f", ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputFloat("Yaw", &yaw_, 0.0, 0.0, "%.3f", ImGuiInputTextFlags_ReadOnly);
 }

@@ -315,6 +315,6 @@ inline void ModelSelector::draw_ui()
     model().set_skin_index(static_cast<size_t>(sindex));
 
     float fps = model().frames_per_second();
-    ImGui::InputFloat("Animation FPS", &fps, 1.0f, 5.0f, 1);
+    ImGui::InputFloat("Animation FPS", &fps, 1.0f, 5.0f, "%.3f");
     model().set_frames_per_second(fps);
 }

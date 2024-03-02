@@ -7,6 +7,7 @@
     "boost-system",
     "boost-filesystem",
     "boost-program-options",
-    "opengl"
+    "opengl",
+    "imgui"
   ]
 }
