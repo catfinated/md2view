@@ -20,3 +20,5 @@ data/models
 CMakeCache.txt
 imgui.ini
 .vscode
+CMakeUserPresets.json
+data/*.pak

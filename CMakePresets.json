@@ -2,10 +2,12 @@
     "version": 3,
     "configurePresets": [
         {
-            "name": "default",
-            "binaryDir": "${sourceDir}/build",
+            "name": "vcpkg",
             "cacheVariables": {
-                "CMAKE_TOOLCHAIN_FILE": "${workspaceRoot}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+                "CMAKE_TOOLCHAIN_FILE": {
+                   "value": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+                    "type": "FILEPATH"
+                }
             }
         }
     ]
