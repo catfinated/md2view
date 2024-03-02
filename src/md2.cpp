@@ -5,18 +5,16 @@
 
 #include <glm/gtx/compatibility.hpp>
 #include <boost/filesystem.hpp>
+#include <spdlog/spdlog.h>
+#include <fmt/ostream.h>
 
-#include <fstream>
-#include <iostream>
-#include <vector>
 #include <cctype>
+#include <fstream>
+#include <string_view>
+#include <vector>
 
-template <size_t N>
-std::ostream& operator<<(std::ostream& os, std::array<char, N> const& a)
-{
-    os << a.data();
-    return os;
-}
+template <> struct fmt::formatter<MD2::Header> : ostream_formatter {};
+template <> struct fmt::formatter<MD2::Animation> : ostream_formatter {};
 
 std::string animation_id_from_frame_name(std::string const& name)
 {
@@ -53,7 +51,7 @@ MD2::~MD2()
 bool MD2::load(PAK const& pf, std::string const& filename)
 {
     if (filename.empty()) { return false; }
-    std::cout << filename << '\n';
+    spdlog::info("loading model {} from pak {}", filename, pf.filename());
 
     auto node = pf.find(filename);
     if (!node) { return false; }
@@ -72,7 +70,7 @@ bool MD2::load(std::string const& filename)
 {
     if (filename.empty()) { return false; }
 
-    std::cout << filename << '\n';
+    spdlog::info("loading model from file {}", filename);
 
     std::ifstream inf(filename.c_str(), std::ios::binary);
 
@@ -95,7 +93,7 @@ bool MD2::load(std::ifstream& infile, std::string const& filename, bool ispak)
 
     size_t offset = infile.tellg(); // header offset
     infile.read(reinterpret_cast<char * >(&hdr_), sizeof(hdr_));
-    std::cout << hdr_ << '\n';
+    spdlog::info("md2 header: {}", hdr_);
 
     MD2V_EXPECT(load_skins(infile, offset, filename, ispak));
     MD2V_EXPECT(load_triangles(infile, offset));
@@ -120,17 +118,17 @@ bool MD2::load_skins(std::ifstream& infile, size_t offset, std::string const& fi
     infile.seekg(offset + hdr_.offset_skins);
     infile.read(reinterpret_cast<char * >(skins.data()), sizeof(Skin) * skins.size());
     assert(skins.size() == static_cast<size_t>(hdr_.num_skins));
-    std::cout << "num skins=" << skins.size() << '\n';
+    spdlog::info("num skins={}", skins.size());
 
     auto root = boost::filesystem::path(filename).parent_path();
 
     for (auto const& skin : skins) {
-        std::cout << "'" << skin.name << "'\n";
+        spdlog::info("skin: '{}'", std::string_view{skin.name.data(), skin.name.size()});
         boost::filesystem::path f(std::string(skin.name.data()));
 
         if (ispak) {
             skins_.emplace_back(f.string(), f.stem().string());
-            std::cout << skins_.back().fpath << '\n';
+            spdlog::debug("{}", skins_.back().fpath);
         }
         else {
             auto p = root / f.filename();
@@ -139,11 +137,11 @@ bool MD2::load_skins(std::ifstream& infile, size_t offset, std::string const& fi
 
             if (boost::filesystem::exists(cp)) {
                 skins_.emplace_back(cp.string(), cp.stem().string());
-                std::cout << skins_.back().fpath << '\n';
+                spdlog::debug("{}", skins_.back().fpath);
             }
             else if (boost::filesystem::exists(p)) {
                 skins_.emplace_back(p.string(), cp.stem().string());
-                std::cout << skins_.back().fpath << '\n';
+                spdlog::debug("{}", skins_.back().fpath);
             }
         }
     }
@@ -153,10 +151,10 @@ bool MD2::load_skins(std::ifstream& infile, size_t offset, std::string const& fi
         auto base = root.filename();
         auto p =  root / base;
         skins_.emplace_back(p.string() + ".png", base.string());
-        std::cout << skins_.back().fpath << '\n';
+        spdlog::debug("{}", skins_.back().fpath);
     }
 
-        return infile.good();
+    return infile.good();
 }
 
 bool MD2::load_triangles(std::ifstream& infile, size_t offset)
@@ -273,7 +271,7 @@ bool MD2::load_frames(std::ifstream& infile, size_t offset)
     }
 
     for (auto const& anim : animations_) {
-        std::cout << anim << '\n';
+        spdlog::info("animation: {}", anim);
     }
 
     interpolated_vertices_ = key_frames_[0].vertices;
@@ -287,11 +285,11 @@ void MD2::setup_buffers()
    glGenBuffers(2, vbo_);
 
    glBindVertexArray(vao_);
-   std::cout << vbo_[0] << ' ' << vbo_[1] << '\n';
+   spdlog::debug("vertex buffers: {} {}", vbo_[0], vbo_[1]);
 
    auto const& vertices = interpolated_vertices_;
 
-   std::cout << "num xyz: " << vertices.size() << '\n';
+   spdlog::info("num xyz: {}", vertices.size());
    static_assert(sizeof(glm::vec3) == 12, "bad vec3 size");
 
    glBindBuffer(GL_ARRAY_BUFFER, vbo_[0]);
@@ -435,7 +433,8 @@ bool MD2::validate_header(Header const& hdr)
 
 std::ostream& operator<<(std::ostream& os, MD2::Animation const& anim)
 {
-    os << "id:    " << anim.name        << '\n'
+    os << '\n'
+       << "id:    " << anim.name        << '\n'
        << "start: " << anim.start_frame << '\n'
        << "end:   " << anim.end_frame   << '\n'
        << "loop:  " << std::boolalpha   << anim.loop << '\n';
@@ -445,7 +444,8 @@ std::ostream& operator<<(std::ostream& os, MD2::Animation const& anim)
 
 std::ostream& operator<<(std::ostream& os, MD2::Header const& hdr)
 {
-    os << "ident:         " << hdr.ident         << '\n'
+    os << '\n'
+       << "ident:         " << hdr.ident         << '\n'
        << "version:       " << hdr.version       << '\n'
        << "skinwidth:     " << hdr.skinwidth     << '\n'
        << "skinheight:    " << hdr.skinheight    << '\n'
@@ -465,3 +465,4 @@ std::ostream& operator<<(std::ostream& os, MD2::Header const& hdr)
 
     return os;
 }
+

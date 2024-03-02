@@ -8,9 +8,11 @@
 #include "screen_quad.hpp"
 
 #include <glm/gtx/string_cast.hpp>
+#include <spdlog/spdlog.h>
 
 #include <algorithm>
 #include <cstdlib>
+#include <cstdint>
 #include <memory>
 
 class MD2View
@@ -153,7 +155,7 @@ bool MD2View::on_engine_initialized(EngineBase& engine)
     //glEnable(GL_BLEND);
     FrameBuffer<>::bind_default();
 
-    std::cout << "done on engine init\n";
+    spdlog::info("done on engine init");
     glCheckError();
     return true;
 }
@@ -353,7 +355,7 @@ void MD2View::render(EngineBase& engine)
 
     ImGui::Begin("Texture");
 
-    ImGui::Image(reinterpret_cast<void*>(texture_->id()), ImVec2(texture_->width(), texture_->height()),
+    ImGui::Image(reinterpret_cast<void*>(std::uintptr_t(texture_->id())), ImVec2(texture_->width(), texture_->height()),
                  ImVec2(0,0), ImVec2(1,1), ImColor(255,255,255,255), ImColor(255,255,255,128));
 
     ImGui::End();

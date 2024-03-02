@@ -34,11 +34,11 @@ void Gui::init(GLFWwindow * window)
     attrib_location_uv_ = 1; //shader.uniform_location("uv");
     attrib_location_color_ = 2; //shader.uniform_location("color");
 
-    std::cout << "texture: " << attrib_location_tex_ << '\n';
-    std::cout << "projection: " << attrib_location_projection_ << '\n';
-    std::cout << "position: " << attrib_location_position_ << '\n';
-    std::cout << "uv: " << attrib_location_uv_ << '\n';
-    std::cout << "color: " << attrib_location_color_ << '\n';
+    spdlog::info("texture: {}", attrib_location_tex_);
+    spdlog::info("projection: {}", attrib_location_projection_);
+    spdlog::info("position: {}", attrib_location_position_);
+    spdlog::info("uv: {}", attrib_location_uv_);
+    spdlog::info("color: {}", attrib_location_color_);
 
     glCheckError();
 

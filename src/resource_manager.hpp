@@ -9,6 +9,7 @@
 #include "stb_image.h"
 
 #include <boost/filesystem.hpp>
+#include <spdlog/spdlog.h>
 
 #include <unordered_map>
 #include <memory>
@@ -100,7 +101,7 @@ inline Texture2D& ResourceManager::load_texture2D(PAK const& pf, std::string con
         return iter->second;
     }
 
-    std::cout << "loading 2D texture " << path << " from PAK " << pf.filename() << '\n';
+    spdlog::info("loading 2D texture {} from PAK {}", path, pf.filename());
 
     MD2V_EXPECT(".pcx" == boost::filesystem::path(path).extension());
 
@@ -119,7 +120,7 @@ inline Texture2D& ResourceManager::load_texture2D(PAK const& pf, std::string con
     texture.set_alpha(false);
     texture.init(pcx.width(), pcx.height(), pcx.image().data());
 
-    std::cout << "loaded 2D texture " << path << '\n';
+    spdlog::info("loaded 2D texture {}", path);
 
     auto result = textures2D_.emplace(std::make_pair(key, std::move(texture)));
 
@@ -144,7 +145,7 @@ inline Texture2D& ResourceManager::load_texture2D(std::string const& file, std::
 
     MD2V_EXPECT(boost::filesystem::exists(p));
 
-    std::cout << "loading 2D texture " << texture_path << " (alpha: " << std::boolalpha << alpha << ")\n";
+    spdlog::info("loading 2D texture {} (alpha: {})", texture_path, alpha);
 
     Texture2D texture;
 
@@ -155,7 +156,7 @@ inline Texture2D& ResourceManager::load_texture2D(std::string const& file, std::
         unsigned char * image = stbi_load(texture_path.c_str(), &width, &height, &n, 3);
         MD2V_EXPECT(image);
         MD2V_EXPECT(texture.init(width, height, image));
-        std::cout << "loaded 2D texture " << texture_path << " width: " << width << " height: " << height << "\n";
+        spdlog::info("loaded 2D texture {} width: {} height: {}", texture_path, width, height);
         stbi_image_free(image);
     }
     else {

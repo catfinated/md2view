@@ -5,6 +5,7 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/range/iterator_range.hpp>
+#include <spdlog/spdlog.h>
 
 #include <exception>
 #include <iostream>
@@ -121,7 +122,7 @@ inline void ModelSelector::init(std::string const& path, EngineBase& eb)
 
         for (; iter != end; ++iter ) {
             if (".md2" == iter->path().extension().string()) {
-                std::cout << iter->path() << ' ' << iter->path().extension() << '\n';
+                spdlog::info("{} {}", iter->path().string(), iter->path().extension().string());
 
                 auto parent = &root_;
 
@@ -151,7 +152,7 @@ inline void ModelSelector::init(std::string const& path, EngineBase& eb)
         pak_.reset(new PAK{p.string()});
         pak_->visit([this](PAK::Node const * n) {
                      if (".md2" == boost::filesystem::path(n->path).extension()) {
-                         std::cout << n->path << '\n';
+                         spdlog::debug("{}", n->path);
                          this->add_node(boost::filesystem::path(n->path));
                      }
                  });
@@ -167,7 +168,7 @@ inline void ModelSelector::init(std::string const& path, EngineBase& eb)
 template <typename RandEngine>
 void ModelSelector::select_random_model(RandEngine& eng)
 {
-    std::cout << "selecting random\n";
+    spdlog::info("selecting random model");
 
     auto last_selected = selected_;
 
@@ -191,13 +192,13 @@ void ModelSelector::select_random_model(RandEngine& eng)
                 if (load_model_node(*curr)) {
                     selected_ = curr;
                     curr->selected = true;
-                    std::cout << "selected random model=" << selected_->path << '\n';
+                    spdlog::info("selected random model={}", selected_->path);
                     break;
                 }
             }
         }
 
-        std::cout << " selected=" << selected_ << " curr=" << curr << " last= " << last_selected << '\n';
+        //spdlog::info("selected={} curr={} last={}", selected_, curr, last_selected);
     }
 }
 
@@ -208,11 +209,11 @@ inline bool ModelSelector::load_model_node(Node& node)
         return true;
     }
 
-    std::cout << "loading model " << node.path << '\n';
+    spdlog::info("loading model {}", node.path);
     auto m = std::unique_ptr<MD2>(new MD2{node.path, pak_.get()});
     node.model = std::move(m);
     model_ = node.model.get();
-    std::cout << "loaded model " << node.path << '\n';
+    spdlog::info("loaded model {}", node.path);
 
     return true;
 }
@@ -260,7 +261,7 @@ inline void ModelSelector::draw_ui()
                 ImGui::TreeNodeEx(curr->name.c_str(), flags);
 
                 if (ImGui::IsItemClicked()) {
-                    std::cout << "selected model=" << curr->name << ' ' << curr->path << '\n';
+                    spdlog::info("selected model={} {}", curr->name, curr->path);
 
                     if (load_model_node(*curr)) {
                         if (selected_) {

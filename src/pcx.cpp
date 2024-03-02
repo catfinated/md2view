@@ -1,5 +1,7 @@
 #include "pcx.hpp"
 
+#include <spdlog/spdlog.h>
+
 #include <cassert>
 #include <cstring>
 #include <iostream>
@@ -21,10 +23,10 @@ PCX::PCX(std::istream& ds)
     for (auto i = 0; i < length; ++i) {
         scan_lines.push_back(read_scan_line(ds, scan_line_length));
     }
-    std::cout << "done reading scan lines " << scan_lines.size() << '\n';
+    spdlog::info("done reading scan lines {}", scan_lines.size());
 
     colors_ = read_palette(ds);
-    std::cout << "num colors in palette: " << colors_.size() << '\n';
+    spdlog::info("num colors in palette: {}", colors_.size());
 
     width_ = width;
     height_ = length;

@@ -3,9 +3,10 @@
 
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
+#include <spdlog/spdlog.h>
 
-#include <iostream>
 #include <fstream>
+#include <vector>
 
 static_assert(sizeof(PAK::Header) == 12, "unexpected PackHeader size");
 static_assert(sizeof(PAK::Entry) == 64, "unexpected PackFile size");
@@ -22,17 +23,20 @@ bool PAK::init(std::string const& filename)
     std::ifstream inf(filename_.c_str(), std::ios_base::in | std::ios_base::binary);
 
     if (!inf) {
-        std::cout << "failed to open pak file: " << filename;
+        spdlog::info("failed to open pak file: {}", filename);
         return false;
     }
 
     Header hdr;
     inf.read(reinterpret_cast<char *>(&hdr), sizeof(hdr));
 
-    std::cout << hdr.id[0] << hdr.id[1] << hdr.id[2] << hdr.id[3]
-              << " " << hdr.dirofs
-              << " " << hdr.dirlen
-              << '\n';
+    spdlog::info("{}{}{}{} {} {}", 
+        hdr.id[0],
+        hdr.id[1],
+        hdr.id[2],
+        hdr.id[3],
+        hdr.dirofs,
+        hdr.dirlen);
 
     std::string magic(hdr.id.data(), hdr.id.size());
 
@@ -43,11 +47,11 @@ bool PAK::init(std::string const& filename)
     // TODO: ensure dirofs/dirlen converted from little endian to host
     auto num_entries = static_cast<size_t>(hdr.dirlen) / sizeof(Entry);
 
-    std::cout << "loaded pak file: " << filename
-              << " " << hdr.dirofs
-              << " " << hdr.dirlen
-              << " " << num_entries
-              << '\n';
+    spdlog::info("loaded pak file: {} {} {} {}", 
+        filename,
+        hdr.dirofs,
+        hdr.dirlen,
+        num_entries);
 
     inf.seekg(hdr.dirofs);
 
@@ -59,11 +63,10 @@ bool PAK::init(std::string const& filename)
 
         auto fullname = std::string(entry.name.data());
 
-        std::cout << "file: "
-                  << fullname
-                  << " " << entry.filepos
-                  << " " << entry.filelen
-                  << '\n';
+        spdlog::info("file: {} {} {}",
+            fullname,
+            entry.filepos,
+            entry.filelen);
 
         std::vector<std::string> parts;
         boost::algorithm::split(parts, fullname, boost::algorithm::is_any_of("/"));

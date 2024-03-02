@@ -4,9 +4,9 @@
 #include "resource_manager.hpp"
 #include "gui.hpp"
 
-#include <GLFW/glfw3.h>
-
 #include <boost/program_options.hpp>
+#include <GLFW/glfw3.h>
+#include <spdlog/spdlog.h>
 
 #include <bitset>
 #include <cassert>
@@ -211,11 +211,11 @@ bool Engine<Game>::init(int argc, char const * argv[])
     glfwGetFramebufferSize(window_, &width_, &height_);
     glViewport(0, 0, width_, height_);
 
-    std::cout << "Default frame buffer size " << width_ << "x" << height_ << '\n';
+    spdlog::info("Default frame buffer size {}x{}", width_, height_);
 
     GLint nrAttributes;
     glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &nrAttributes);
-    std::cout << "Maximum # of vertex attributes supported: " << nrAttributes << '\n';
+    spdlog::info("Maximum # of vertex attributes supported: {}", nrAttributes);
 
     MD2V_EXPECT(game_.on_engine_initialized(*this));
     glCheckError();
@@ -271,7 +271,7 @@ void Engine<Game>::key_callback(int key, int action)
         }
         else if (key == GLFW_KEY_F1) {
             input_goes_to_game_ = !input_goes_to_game_;
-            std::cout << "got F1. game input: " << std::boolalpha << input_goes_to_game_ << '\n';
+            spdlog::info("got F1. game input: {}", input_goes_to_game_);
         }
         else if (key >= 0 && static_cast<size_t>(key) < max_keys) {
             keys_[key] = true;
@@ -314,7 +314,7 @@ void Engine<Game>::scroll_callback(double xoffset, double yoffset)
 template <typename Game>
 void Engine<Game>::window_resize_callback(int x, int y)
 {
-    std::cout << "window resize x=" << x << " y=" << y << '\n';
+    spdlog::info("window resize x={} y={}", x, y);
     screen_width_ = x;
     screen_height_ = y;
 }
@@ -322,7 +322,7 @@ void Engine<Game>::window_resize_callback(int x, int y)
 template <typename Game>
 void Engine<Game>::framebuffer_resize_callback(int x, int y)
 {
-    std::cout << "framebuffer resize x=" << x << " y=" << y << '\n';
+    spdlog::info("framebuffer resize x={} y={}", x, y);
     width_ = x;
     height_ = y;
     game_.on_framebuffer_resized(x, y);

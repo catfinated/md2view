@@ -8,6 +8,7 @@
     "boost-filesystem",
     "boost-program-options",
     "opengl",
-    "imgui"
+    "imgui",
+    "spdlog"
   ]
 }

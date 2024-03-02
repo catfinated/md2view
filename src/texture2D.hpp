@@ -3,6 +3,8 @@
 #include "gl.hpp"
 #include "common.hpp"
 
+#include <spdlog/spdlog.h>
+
 class Texture2D
 {
 public:
@@ -121,7 +123,7 @@ inline bool Texture2D::init(GLuint width, GLuint height, unsigned char const * d
 
     bind();
 
-    std::cout << width_ <<  " x " << height_ << '\n';
+    spdlog::debug("init 2D texture {}x{}", width_, height_);
 
     glTexImage2D(GL_TEXTURE_2D, 0, attr_.internal_format,
                  width_, height_, 0, attr_.image_format,
@@ -134,7 +136,7 @@ inline bool Texture2D::init(GLuint width, GLuint height, unsigned char const * d
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, attr_.filter_min);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, attr_.filter_max);
 
-    std::cout << "initialized 2D texture\n";
+    spdlog::info("initialized 2D texture");
 
     unbind();
 

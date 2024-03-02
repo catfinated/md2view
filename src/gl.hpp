@@ -8,6 +8,8 @@
 #include <GL/gl.h>
 #endif
 
+#include <spdlog/spdlog.h>
+
 #include <cassert>
 #include <iostream>
 
@@ -40,7 +42,7 @@ inline GLenum glCheckError(char const * file, int line)
     GLenum error_code = glGetError();
 
     while (error_code != GL_NO_ERROR) {
-        std::cerr << "[" << file << ":" << line << "] " << glErrorToString(error_code) << '\n';
+        spdlog::error("[{}:{}] {}", file, line, glErrorToString(error_code));
         error_code = glGetError();
     }
 

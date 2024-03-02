@@ -2,14 +2,14 @@
 
 #include "gl.hpp"
 
-#include "glm/glm.hpp"
-#include "glm/gtc/type_ptr.hpp"
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <spdlog/spdlog.h>
 
 #include <array>
 #include <string>
 #include <fstream>
 #include <sstream>
-#include <iostream>
 #include <cassert>
 #include <stdexcept>
 
@@ -106,7 +106,6 @@ public:
             std::ostringstream oss;
             oss << name << "[" << std::to_string(i) << "]";
             std::string s = oss.str();
-            //std::cout << s << ' ' << uniform_location(s.c_str()) << '\n';
             set_uniform(s.c_str(), a[i]);
         }
     }
@@ -178,12 +177,12 @@ inline bool Shader::init(std::string const& vertex,
                          std::string const& geometry)
 {
     if (vertex.empty()) {
-        std::cerr << "shader vertex path cannot be empty" << '\n';
+        spdlog::error("shader vertex path cannot be empty");
         return false;
     }
 
     if (fragment.empty()) {
-        std::cerr << "shader fragment path cannot be empty" << '\n';
+        spdlog::error("shader fragment path cannot be empty");
         return false;
     }
 
@@ -192,14 +191,14 @@ inline bool Shader::init(std::string const& vertex,
     GLuint vertex_id, fragment_id, geometry_id;
 
     if (!compile_shader(GL_VERTEX_SHADER, vertex.c_str(), vertex_id)) {
-        std::cerr << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n";
+        spdlog::error("ERROR::SHADER::VERTEX::COMPILATION_FAILED");
         return false;
     }
 
     glAttachShader(program_, vertex_id);
 
     if (!compile_shader(GL_FRAGMENT_SHADER, fragment.c_str(), fragment_id)) {
-        std::cerr << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n";
+        spdlog::error("ERROR::SHADER::FRAGMENT::COMPILATION_FAILED");
         return false;
     }
 
@@ -207,7 +206,7 @@ inline bool Shader::init(std::string const& vertex,
 
     if (!geometry.empty()) {
         if (!compile_shader(GL_GEOMETRY_SHADER, geometry.c_str(), geometry_id)) {
-            std::cerr << "ERROR::SHADER::GEOMETRY::COMPILATION_FAILED\n";
+            spdlog::error("ERROR::SHADER::GEOMETRY::COMPILATION_FAILED");
             return false;
         }
 
@@ -215,7 +214,7 @@ inline bool Shader::init(std::string const& vertex,
     }
 
     if (!link_program()) {
-        std::cerr << "ERROR::PROGRAM::LINK_FAILED\n";
+        spdlog::error("ERROR::PROGRAM::LINK_FAILED");
         return false;
     }
 
@@ -234,7 +233,7 @@ inline bool Shader::compile_shader(GLenum shader_type, char const * path, GLuint
 {
     assert(path);
 
-    std::cout << "loading shader: " << path << '\n';
+    spdlog::info("loading shader: {}", path);
 
     std::string code;
     std::ifstream infile;
@@ -245,7 +244,7 @@ inline bool Shader::compile_shader(GLenum shader_type, char const * path, GLuint
         infile.open(path);
 
         if (!infile.is_open()) {
-            std::cerr << "ERROR::SHADER::FAILED_TO_OPEN_FILE: " << path << '\n';
+            spdlog::error("ERROR::SHADER::FAILED_TO_OPEN_FILE: {}", path);
             return false;
         }
 
@@ -255,7 +254,7 @@ inline bool Shader::compile_shader(GLenum shader_type, char const * path, GLuint
         code = istream.str();
     }
     catch (std::ifstream::failure const& e) {
-        std::cerr << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ: " << path << '\n';
+        spdlog::error("ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ: {}", path);
         return false;
     }
 
@@ -270,7 +269,7 @@ inline bool Shader::compile_shader(GLenum shader_type, char const * path, GLuint
     if (!success) {
         GLchar log[512];
         glGetShaderInfoLog(handle, sizeof(log), nullptr, log);
-        std::cerr << "ERROR::SHADER::COMPILATION_FAILED: (" << path << ") - \n" << log << '\n';
+        spdlog::error("ERROR::SHADER::COMPILATION_FAILED: ('{}') - \n{}", path, log);
         return false;
     }
 
@@ -287,7 +286,7 @@ inline bool Shader::link_program()
     if (!success) {
         GLchar log[512];
         glGetProgramInfoLog(program_, sizeof(log), NULL, log);
-        std::cerr << log << '\n';
+        spdlog::error("{}", log);
         return false;
     }
 
