@@ -16,7 +16,6 @@ public:
 
     EngineBase()
         : resource_manager_("data") // up from build dir
-        , mt_(std::random_device{}()/*1729*/)
     {}
 
     int width() const { return width_; }
@@ -29,8 +28,6 @@ public:
     std::bitset<max_keys> const& keys() const { return keys_; }
 
     bool check_key_pressed(unsigned int key);
-
-    std::mt19937& random_engine() { return mt_; }
 
     float aspect_ratio() const { return static_cast<float>(width_) / static_cast<float>(height_); }
 
@@ -48,8 +45,6 @@ protected:
 
     std::bitset<max_keys> keys_;
     std::bitset<max_keys> keys_pressed_;
-
-    std::mt19937 mt_;
 
     boost::program_options::options_description opt_desc_;
     boost::program_options::variables_map variables_map_;

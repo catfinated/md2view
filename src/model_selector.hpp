@@ -13,9 +13,11 @@ class EngineBase;
 class ModelSelector
 {
 public:
-    ModelSelector() = default;
+    ModelSelector()
+      : mt_(std::random_device{}())
+      {}
 
-    void init(std::string const& path, EngineBase& eb);
+    void init(std::string const& path);
 
     std::string model_name() const { if (selected_) { return selected_->name; } else { return std::string{}; } }
 
@@ -23,7 +25,7 @@ public:
 
     void draw_ui();
 
-    void select_random_model(std::mt19937& eng);
+    void select_random_model();
 
     PAK const * pak() const { return pak_.get(); }
 
@@ -49,6 +51,7 @@ private:
 
     void add_node(std::filesystem::path const& path);
 
+    std::mt19937 mt_;
     std::string path_;
     MD2 * model_ = nullptr;
     Node root_;

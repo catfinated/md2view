@@ -35,7 +35,7 @@ void ModelSelector::add_node(std::filesystem::path const& path)
     }
 }
 
-void ModelSelector::init(std::string const& path, EngineBase& eb)
+void ModelSelector::init(std::string const& path)
 {
     path_ = path;
     root_.path = path;
@@ -90,10 +90,10 @@ void ModelSelector::init(std::string const& path, EngineBase& eb)
         throw std::runtime_error("models must be in dir or a pak file");
     }
 
-    select_random_model(eb.random_engine());
+    select_random_model();
 }
 
-void ModelSelector::select_random_model(std::mt19937& eng)
+void ModelSelector::select_random_model()
 {
     spdlog::info("selecting random model");
 
@@ -112,7 +112,7 @@ void ModelSelector::select_random_model(std::mt19937& eng)
             }
 
             std::uniform_int_distribution<> dist(0, curr->children.size() - 1);
-            auto idx = dist(eng);
+            auto idx = dist(mt_);
             curr = curr->children[idx].get();
 
             if (curr->children.empty()) {

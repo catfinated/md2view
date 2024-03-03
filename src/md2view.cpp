@@ -43,7 +43,7 @@ private:
     Camera camera_;
     boost::program_options::options_description options_;
     std::string models_dir_;
-    ModelSelector ms_;
+    ModelSelector modelSelector_;
     bool vsync_enabled_ = false;
     int scale_ = 64.0f;
     std::array<float, 3> rot_;
@@ -99,10 +99,10 @@ void MD2View::reset_camera()
 
 void MD2View::load_current_texture(EngineBase& engine)
 {
-    auto const& path = ms_.model().current_skin().fpath;
+    auto const& path = modelSelector_.model().current_skin().fpath;
 
-    if (ms_.pak()) {
-        texture_ = std::addressof(engine.resource_manager().load_texture2D(*ms_.pak(), path));
+    if (modelSelector_.pak()) {
+        texture_ = std::addressof(engine.resource_manager().load_texture2D(*modelSelector_.pak(), path));
     }
     else {
         texture_ = std::addressof(engine.resource_manager().load_texture2D(path));
@@ -112,7 +112,7 @@ void MD2View::load_current_texture(EngineBase& engine)
 bool MD2View::on_engine_initialized(EngineBase& engine)
 {
     // init objects which needed an opengl context to initialize
-    ms_.init(models_dir_, engine);
+    modelSelector_.init(models_dir_);
     blur_fb_.reset(new FrameBuffer<1, false>(engine.width(), engine.height()));
     main_fb_.reset(new FrameBuffer<2, true>(engine.width(), engine.height()));
     screen_quad_.init();
@@ -234,7 +234,7 @@ void MD2View::render(EngineBase& engine)
     glCheckError();
 
     glClear(GL_DEPTH_BUFFER_BIT);
-    ms_.model().draw(*shader_);
+    modelSelector_.model().draw(*shader_);
 
     glCheckError();
 
@@ -315,10 +315,10 @@ void MD2View::render(EngineBase& engine)
     ImGui::Begin("Model");
 
     if (ImGui::Button("Random Model")) {
-        ms_.select_random_model(engine.random_engine());
+        modelSelector_.select_random_model();
     }
 
-    ms_.draw_ui();
+    modelSelector_.draw_ui();
 
     load_current_texture(engine);
 
@@ -363,7 +363,7 @@ void MD2View::render(EngineBase& engine)
 
 void MD2View::update(EngineBase& engine, GLfloat delta_time)
 {
-    ms_.model().update(delta_time);
+    modelSelector_.model().update(delta_time);
 }
 
 void MD2View::process_input(EngineBase& engine, GLfloat delta_time)
