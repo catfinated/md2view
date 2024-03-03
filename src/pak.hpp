@@ -1,14 +1,11 @@
 #pragma once
 
-#include <algorithm>
+#include <treehh/tree.hh>
+
 #include <array>
-#include <cassert>
 #include <cstdint>
 #include <filesystem>
-#include <memory>
-#include <stack>
 #include <string>
-#include <vector>
 
 // https://quakewiki.org/wiki/.pak
 class PAK
@@ -32,20 +29,10 @@ public:
 
     struct Node
     {
-        Node * parent;
-
         std::string name;
         std::string path;
         int32_t filepos;
         int32_t filelen;
-
-        std::vector<std::unique_ptr<Node>> children;
-
-        Node const * find(std::string const& name) const;
-
-        Node * find(std::string const& name);
-
-        void insert(Node * child);
     };
 
     explicit PAK(std::filesystem::path const& fpath);
@@ -55,19 +42,10 @@ public:
     Node const * find(std::string const&) const;
 
     template <typename Visitor>
-    void visit(Visitor const& v) // preorder
+    void visit(Visitor const& visit) // preorder
     {
-        std::stack<Node *> stack;
-        stack.push(&root_);
-
-        while (!stack.empty()) {
-            auto curr = stack.top();
-            stack.pop();
-            v(curr);
-
-            for (auto& child : curr->children) {
-                stack.push(child.get());
-            }
+        for (auto const& node : tree_) {
+            visit(node);
         }
     }
 
@@ -75,5 +53,5 @@ private:
     [[nodiscard]] bool init();
 
     std::filesystem::path fpath_;
-    Node root_;
+    tree<Node> tree_;
 };

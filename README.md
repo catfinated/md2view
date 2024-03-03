@@ -54,12 +54,13 @@ md2view is built using vcpkg to manage dependencies. These dependencies are:
 
 [GLM](https://glm.g-truc.net/0.9.9/index.html) 
 
-The GUI is made using the [Dear ImGui](https://github.com/ocornut/imgui) library
-authored by Omar Cornut et al. Dear ImGui is licensed under the [MIT license](src/imgui/LICENSE).
+[Dear ImGui](https://github.com/ocornut/imgui) 
 
-For loading PNG image files (some non-Quake based models I've found use these) md2view
-uses the [stb_image](https://github.com/nothings/stb) library from
-[Sean T. Barrett](https://twitter.com/nothings) which is licensed in the public domain.
+[stb](https://github.com/nothings/stb)
+
+[spdlog](https://github.com/gabime/spdlog)
+
+[treehh](https://github.com/kpeeters/tree.hh)
 
 ## Attributions
 

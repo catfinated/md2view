@@ -1,4 +1,5 @@
 #include "model_selector.hpp"
+#include "common.hpp"
 #include "engine.hpp"
 #include "md2.hpp"
 #include "pak.hpp"
@@ -6,82 +7,65 @@
 #include <imgui.h>
 #include <spdlog/spdlog.h>
 
+#include <algorithm>
 #include <cassert>
 #include <exception>
 #include <stack>
 
-void ModelSelector::add_node(std::filesystem::path const& path)
+void ModelSelector::add_node(std::filesystem::path const& path, std::filesystem::path const& root)
 {
-    auto parent = &root_;
+    auto parent = tree_.begin();
+    spdlog::debug("add node for {}", path.string());
+    MD2V_EXPECT(path.extension() == ".md2");
+    // pak seperator is always '/' but for windows it will be '\'
+    auto const sep = root.empty() ? "/" : "\\"; 
 
-    for (auto& part : path) {
-        auto child = parent->find(part.string());
+    std::string curr;
+    for (auto& part : path.lexically_relative(root)) {
+        if (!curr.empty()) curr.append(sep); 
+        curr += part.string();
+        auto fullpath = (root / curr).string();
+        auto child = std::find_if(parent, tree_.end(), [&](auto const& node) { return node.path == fullpath; });
 
-        if (!child) {
-            if (part.extension() == ".md2") {
-                child = new Node{};
-                child->name = part.string();
-                child->path = path.string();
-            }
-            else {
-                child = new Node{};
-                child->name = part.string();
-            }
-            parent->insert(child);
+        if (child == tree_.end()) {
+            Node newNode;
+            newNode.name = part.string();
+            newNode.path = fullpath;
+            spdlog::debug("new node {} {} {}", newNode.name, newNode.path, parent->name);
+            child = tree_.append_child(parent, std::move(newNode));
         }
-
         parent = child;
-        child = nullptr;
     }
 }
 
-void ModelSelector::init(std::string const& path)
+void ModelSelector::init(std::filesystem::path const& path)
 {
+    selected_ = tree_.end();
     path_ = path;
-    root_.path = path;
-    std::filesystem::path p(path_);
 
-    if (!std::filesystem::exists(p)) {
-        throw std::runtime_error("invalid models path: " + path_);
+    if (!std::filesystem::exists(path_)) {
+        throw std::runtime_error("invalid models path: " + path_.string());
     }
 
-    if (std::filesystem::is_directory(p)) {
-        std::filesystem::recursive_directory_iterator iter(p), end;
+    Node node;
+    node.path = path_.string();
+    tree_.insert(tree_.begin(), std::move(node));
+
+    if (std::filesystem::is_directory(path_)) {
+        std::filesystem::recursive_directory_iterator iter(path_), end;
 
         for (; iter != end; ++iter ) {
             if (".md2" == iter->path().extension().string()) {
-                spdlog::info("{} {}", iter->path().string(), iter->path().extension().string());
-
-                auto parent = &root_;
-
-                for (auto& part : iter->path().lexically_relative(p)) {
-                    auto child = parent->find(part.string());
-
-                    if (!child) {
-                        if (part.extension() == ".md2") {
-                            child = new Node{};
-                            child->name = part.string();
-                            child->path = iter->path().string();
-                        }
-                        else {
-                            child = new Node{};
-                            child->name = part.string();
-                        }
-                        parent->insert(child);
-                    }
-
-                    parent = child;
-                    child = nullptr;
-                }
+                spdlog::debug("{} {}", iter->path().string(), iter->path().extension().string());
+                add_node(iter->path(), path_);
             }
         }
     }
-    else if (".pak" == p.extension()) {
-        pak_.reset(new PAK{p.string()});
-        pak_->visit([this](PAK::Node const * n) {
-                     if (".md2" == std::filesystem::path(n->path).extension()) {
-                         spdlog::debug("{}", n->path);
-                         this->add_node(std::filesystem::path(n->path));
+    else if (".pak" == path_.extension()) {
+        pak_ = std::make_unique<PAK>(path_);
+        pak_->visit([this](PAK::Node const& pakNode) {
+                     if (".md2" == std::filesystem::path(pakNode.path).extension()) {
+                         this->add_node(std::filesystem::path(pakNode.path), {});
                      }
                  });
 
@@ -93,120 +77,107 @@ void ModelSelector::init(std::string const& path)
     select_random_model();
 }
 
+ std::string ModelSelector::model_name() const 
+ { 
+    if (selected_ == tree_.end()) {
+        return {};
+    } 
+    return selected_->name; 
+ }
+
+ MD2& ModelSelector::model() const
+ { 
+    assert(selected_ != tree_.end()); 
+    assert(selected_->model);
+    return *(selected_->model); 
+}
+
 void ModelSelector::select_random_model()
 {
     spdlog::info("selecting random model");
 
-    auto last_selected = selected_;
-
-    while (selected_ == last_selected) {
-        if (selected_) {
-            selected_->selected = false;
+    std::vector<tree<Node>::iterator> iters;
+    for (auto i = tree_.begin_leaf(); i != tree_.end_leaf(); ++i) {
+        if (i != selected_) {
+            iters.push_back(i);
         }
-
-        Node * curr = &root_;
-
-        while (curr) {
-            if (curr->children.empty()) {
-                throw std::runtime_error("no models available to select from");
-            }
-
-            std::uniform_int_distribution<> dist(0, curr->children.size() - 1);
-            auto idx = dist(mt_);
-            curr = curr->children[idx].get();
-
-            if (curr->children.empty()) {
-                if (load_model_node(*curr)) {
-                    selected_ = curr;
-                    curr->selected = true;
-                    spdlog::info("selected random model={}", selected_->path);
-                    break;
-                }
-            }
-        }
-
-        //spdlog::info("selected={} curr={} last={}", selected_, curr, last_selected);
-    }
-}
-
-bool ModelSelector::load_model_node(Node& node)
-{
-    if (node.model) {
-        model_ = node.model.get();
-        return true;
     }
 
-    spdlog::info("loading model {}", node.path);
-    auto m = std::unique_ptr<MD2>(new MD2{node.path, pak_.get()});
-    node.model = std::move(m);
-    model_ = node.model.get();
-    spdlog::info("loaded model {}", node.path);
+    if (iters.empty()) return;
 
-    return true;
+    std::uniform_int_distribution<> dist(0, iters.size() - 1);
+    auto idx = dist(mt_);
+    auto iter = iters[idx];
+    spdlog::info("selected random model='{}' '{}'", iter->path, iter->name);
+    load_model_node(*iter);
+    selected_ = iter;
 }
 
-template <typename Visitor>
-void ModelSelector::preorder(Visitor& v)
+void ModelSelector::load_model_node(Node& node)
 {
-    std::stack<Node *> stack;
-    stack.push(&root_);
-
-    while (!stack.empty()) {
-        auto curr = stack.top();
-        stack.pop();
-        v(curr);
-
-        for (auto& child : curr->children) {
-            stack.push(child.get());
-        }
+    if (!node.model) {
+        spdlog::debug("loading model {}", node.path);
+        node.model = std::make_unique<MD2>(node.path, pak_.get());
+        spdlog::info("loaded model {}", node.path);
     }
 }
 
 void ModelSelector::draw_ui()
 {
     if (ImGui::TreeNode("Select Model")) {
-        ImGui::Text("%s", path_.c_str());
-        std::stack<Node *> stack;
+        ImGui::Text("%s", path_.string().c_str());
+        std::stack<tree<Node>::iterator> stack;
 
-        for (auto& child : root_.children) {
-            stack.push(child.get());
-        }
+        auto top = tree_.begin();
 
+        // NB: treehh end_fixed does not seem to be working yet
+        // https://github.com/kpeeters/tree.hh/blob/master/src/tree.hh#L854
+        // we need to go down level be level but only push nodes to the stack
+        // if they are expanded in the UI
+
+         for (auto curr = tree_.begin(top); curr != tree_.end(top); ++curr) {
+            stack.push(curr);
+         }
+
+        unsigned int lastDepth{0};
         while (!stack.empty()) {
             auto curr = stack.top();
             stack.pop();
+            auto depth = tree_.depth(curr);
 
-            if (!curr) { ImGui::TreePop(); continue; }
+             while (depth < lastDepth && lastDepth > 1) {
+                 ImGui::TreePop();
+                --lastDepth;
+            }   
+            lastDepth = depth;
 
-            // if curr has no chidlren it is selectable leafat
+            // if curr has no children it is selectable leafat
+            ImGuiTreeNodeFlags flags{0};
+            auto const is_leaf = tree_.number_of_children(curr) == 0U;
 
-            if (curr->children.empty()) {
-                ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
-                if (curr->selected) {
-                    flags |=  ImGuiTreeNodeFlags_Selected;
-                }
-                ImGui::TreeNodeEx(curr->name.c_str(), flags);
-
-                if (ImGui::IsItemClicked()) {
-                    spdlog::info("selected model={} {}", curr->name, curr->path);
-
-                    if (load_model_node(*curr)) {
-                        if (selected_) {
-                            selected_->selected = false;
-                        }
-                        curr->selected = true;
-                        selected_ = curr;
-                    }
-                }
+            if (is_leaf) {
+                flags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+                if (curr == selected_) {
+                    flags |= ImGuiTreeNodeFlags_Selected;
+                }     
             }
-            else if (ImGui::TreeNode(curr->name.c_str())) {
-                stack.push(nullptr);
-                for (auto& child : curr->children) {
-                    stack.push(child.get());
+
+            if (ImGui::TreeNodeEx(curr->name.c_str(), flags)) {
+                if (!is_leaf) {
+                    for (auto iter = tree_.begin(curr); iter != tree_.end(curr); ++iter) {
+                        stack.push(iter);
+                    }
+                } else if (ImGui::IsItemClicked()) {
+                    spdlog::info("selected model={} {}", curr->name, curr->path);
+                    load_model_node(*curr);
+                    selected_ = curr;
                 }
             }
         }
-
+        while (lastDepth > 1) {
+            ImGui::TreePop();
+            --lastDepth;
+        }
         ImGui::TreePop();
     }
 
@@ -245,30 +216,4 @@ void ModelSelector::draw_ui()
     float fps = model().frames_per_second();
     ImGui::InputFloat("Animation FPS", &fps, 1.0f, 5.0f, "%.3f");
     model().set_frames_per_second(fps);
-}
-
-ModelSelector::Node const * ModelSelector::Node::find(std::string const& name) const
-{
-    auto citer = std::find_if(children.begin(), children.end(),
-                                [&name](std::unique_ptr<Node> const& child) {
-                                    return child->name == name; });
-
-    if (citer != children.end()) {
-        return citer->get();
-    }
-
-    return nullptr;
-}
-
-ModelSelector::Node * ModelSelector::Node::find(std::string const& name)
-{
-    auto cnode = const_cast<Node const *>(this)->find(name);
-    return const_cast<Node *>(cnode);
-}
-
-void ModelSelector::Node::insert(Node * child)
-{
-    assert(child);
-    child->parent = this;
-    children.emplace_back(child);
 }

@@ -50,11 +50,14 @@ MD2::~MD2()
 
 bool MD2::load(PAK const& pf, std::string const& filename)
 {
-    if (filename.empty()) { return false; }
     spdlog::info("loading model {} from pak {}", filename, pf.fpath().string());
-
+    if (filename.empty()) { return false; }
+    
     auto node = pf.find(filename);
-    if (!node) { return false; }
+    if (!node) { 
+        spdlog::error("model not found {}", filename);
+        return false; 
+    }
 
     std::ifstream inf(pf.fpath(), std::ios_base::binary);
     if (!inf) { return false; }
@@ -93,7 +96,7 @@ bool MD2::load(std::ifstream& infile, std::string const& filename, bool ispak)
 
     size_t offset = infile.tellg(); // header offset
     infile.read(reinterpret_cast<char * >(&hdr_), sizeof(hdr_));
-    spdlog::info("md2 header: {}", hdr_);
+    spdlog::debug("md2 header: {}", hdr_);
 
     MD2V_EXPECT(load_skins(infile, offset, filename, ispak));
     MD2V_EXPECT(load_triangles(infile, offset));
@@ -271,7 +274,7 @@ bool MD2::load_frames(std::ifstream& infile, size_t offset)
     }
 
     for (auto const& anim : animations_) {
-        spdlog::info("animation: {}", anim);
+        spdlog::debug("animation: {}", anim);
     }
 
     interpolated_vertices_ = key_frames_[0].vertices;

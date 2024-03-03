@@ -1,5 +1,7 @@
 #pragma once
 
+#include <treehh/tree.hh>
+
 #include <cassert>
 #include <filesystem>
 #include <memory>
@@ -17,11 +19,11 @@ public:
       : mt_(std::random_device{}())
       {}
 
-    void init(std::string const& path);
+    void init(std::filesystem::path const& path);
 
-    std::string model_name() const { if (selected_) { return selected_->name; } else { return std::string{}; } }
+    std::string model_name() const;
 
-    MD2& model() { assert(model_); return *model_; }
+    MD2& model() const;
 
     void draw_ui();
 
@@ -33,28 +35,17 @@ private:
     struct Node {
         std::string name;
         std::string path;
-
-        bool selected = false;
-        Node * parent = nullptr;
-        std::vector<std::unique_ptr<Node>> children;
         std::unique_ptr<MD2> model;
-
-        Node const * find(std::string const& name) const;
-        Node * find(std::string const& name);
-        void insert(Node * child);
     };
 
-    template <typename Visitor>
-    void preorder(Visitor& v);
+    void load_model_node(Node& n);
 
-    bool load_model_node(Node& n);
-
-    void add_node(std::filesystem::path const& path);
+    void add_node(std::filesystem::path const& path, std::filesystem::path const& root);
 
     std::mt19937 mt_;
-    std::string path_;
-    MD2 * model_ = nullptr;
-    Node root_;
-    Node * selected_ = nullptr;
+    std::filesystem::path path_;
     std::unique_ptr<PAK> pak_;
+    tree<Node> tree_;
+    tree<Node>::iterator selected_;
+
 };

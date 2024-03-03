@@ -55,7 +55,7 @@ public:
 
     struct Skin
     {
-        std::array<char, 64> name;
+        std::array<char, 64> name{};
     };
 
     struct TexCoord

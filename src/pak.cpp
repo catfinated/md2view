@@ -5,6 +5,7 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <spdlog/spdlog.h>
 
+#include <algorithm>
 #include <fstream>
 #include <vector>
 
@@ -56,6 +57,8 @@ bool PAK::init()
 
     inf.seekg(hdr.dirofs);
 
+    tree_.insert(tree_.begin(), Node{});
+
     for (size_t i = 0; i < num_entries; ++ i) {
         MD2V_EXPECT(inf);
         Entry entry;
@@ -72,30 +75,24 @@ bool PAK::init()
         std::vector<std::string> parts;
         boost::algorithm::split(parts, fullname, boost::algorithm::is_any_of("/"));
 
-        auto parent = &root_;
+        auto parent = tree_.begin();
+        std::string node_name;
         for (auto j = 0u; j < parts.size(); ++j) {
             auto const& part = parts.at(j);
-            auto child = parent->find(part);
+            if (!node_name.empty()) node_name.append("/");
+            node_name += part;
 
-            if (!child) {
-                if (j != parts.size() - 1) {
-                    child = new Node{};
-                    child->name = part;
-                    child->parent = parent;
-                    child->path = fullname;
-                }
-                else {
-                    child = new Node{};
-                    child->name = part;
-                    child->parent = parent;
-                    child->path = fullname;
-                    child->filepos = entry.filepos;
-                    child->filelen = entry.filelen;
-                }
-                parent->insert(child);
+            auto child = std::find_if(parent, tree_.end(), [&](auto const& node) { return node.path == node_name; });
+
+            if (child == tree_.end()) {
+                Node node;
+                node.name = part;
+                node.path = node_name;
+                node.filepos = entry.filepos;
+                node.filelen = entry.filelen;
+                child = tree_.append_child(parent, std::move(node));
             }
             parent = child;
-            child = nullptr;
         }
     }
 
@@ -104,50 +101,11 @@ bool PAK::init()
 
 PAK::Node const * PAK::find(std::string const& name) const
 {
-    if (name.empty()) {
+    auto iter = std::find_if(tree_.begin(), tree_.end(), [&](auto const& node) { return node.path == name; });
+
+    if (iter == tree_.end()) {
         return nullptr;
     }
-
-    std::vector<std::string> parts;
-    boost::algorithm::split(parts, name, boost::algorithm::is_any_of("/"));
-
-    Node const * current = std::addressof(root_);
-    auto iter = parts.begin();
-
-    while (current && (iter != parts.end())) {
-        current = current->find(*iter);
-        ++iter;
-    }
-
-    if (iter == parts.end()) {
-        return current;
-    }
-
-    return nullptr;
+    return std::addressof(*iter);
 }
 
-PAK::Node const * PAK::Node::find(std::string const& name) const
-{
-    auto citer = std::find_if(children.begin(), children.end(),
-                                [&name](std::unique_ptr<Node> const& child) {
-                                    return child->name == name; });
-
-    if (citer != children.end()) {
-        return citer->get();
-    }
-
-    return nullptr;
-}
-
-PAK::Node * PAK::Node::find(std::string const& name)
-{
-    auto cnode = const_cast<Node const *>(this)->find(name);
-    return const_cast<Node *>(cnode);
-}
-
-void PAK::Node::insert(Node * child)
-{
-    assert(child);
-    child->parent = this;
-    children.emplace_back(child);
-}

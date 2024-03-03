@@ -37,7 +37,7 @@ std::shared_ptr<Shader> ResourceManager::load_shader(std::string const& name,
     MD2V_EXPECT(result.second);
     MD2V_EXPECT(shader->initialized());
     MD2V_EXPECT(result.first->second->initialized());
-
+    spdlog::info("loaded shader {}", name);
     return result.first->second;
 }
 
