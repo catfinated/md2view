@@ -51,12 +51,12 @@ MD2::~MD2()
 bool MD2::load(PAK const& pf, std::string const& filename)
 {
     if (filename.empty()) { return false; }
-    spdlog::info("loading model {} from pak {}", filename, pf.filename());
+    spdlog::info("loading model {} from pak {}", filename, pf.fpath().string());
 
     auto node = pf.find(filename);
     if (!node) { return false; }
 
-    std::ifstream inf(pf.filename().c_str(), std::ios_base::binary);
+    std::ifstream inf(pf.fpath(), std::ios_base::binary);
     if (!inf) { return false; }
 
     inf.seekg(node->filepos);

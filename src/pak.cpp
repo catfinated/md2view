@@ -11,19 +11,20 @@
 static_assert(sizeof(PAK::Header) == 12, "unexpected PackHeader size");
 static_assert(sizeof(PAK::Entry) == 64, "unexpected PackFile size");
 
-PAK::PAK(std::string const& filename)
+PAK::PAK(std::filesystem::path const& fpath)
+    : fpath_(fpath)
 {
-    init(filename);
+    if (!init()) {
+        throw std::runtime_error("failed to load PAK file");
+    }
 }
 
-bool PAK::init(std::string const& filename)
+bool PAK::init()
 {
-    filename_ = filename;
-
-    std::ifstream inf(filename_.c_str(), std::ios_base::in | std::ios_base::binary);
+    std::ifstream inf(fpath_, std::ios_base::in | std::ios_base::binary);
 
     if (!inf) {
-        spdlog::info("failed to open pak file: {}", filename);
+        spdlog::info("failed to open pak file: {}", fpath_.string());
         return false;
     }
 
@@ -48,7 +49,7 @@ bool PAK::init(std::string const& filename)
     auto num_entries = static_cast<size_t>(hdr.dirlen) / sizeof(Entry);
 
     spdlog::info("loaded pak file: {} {} {} {}", 
-        filename,
+        fpath_.string(),
         hdr.dirofs,
         hdr.dirlen,
         num_entries);
@@ -63,7 +64,7 @@ bool PAK::init(std::string const& filename)
 
         auto fullname = std::string(entry.name.data());
 
-        spdlog::info("file: {} {} {}",
+        spdlog::debug("file: {} {} {}",
             fullname,
             entry.filepos,
             entry.filelen);
@@ -74,7 +75,6 @@ bool PAK::init(std::string const& filename)
         auto parent = &root_;
         for (auto j = 0u; j < parts.size(); ++j) {
             auto const& part = parts.at(j);
-            //qDebug() << part;
             auto child = parent->find(part);
 
             if (!child) {
@@ -124,4 +124,30 @@ PAK::Node const * PAK::find(std::string const& name) const
     }
 
     return nullptr;
+}
+
+PAK::Node const * PAK::Node::find(std::string const& name) const
+{
+    auto citer = std::find_if(children.begin(), children.end(),
+                                [&name](std::unique_ptr<Node> const& child) {
+                                    return child->name == name; });
+
+    if (citer != children.end()) {
+        return citer->get();
+    }
+
+    return nullptr;
+}
+
+PAK::Node * PAK::Node::find(std::string const& name)
+{
+    auto cnode = const_cast<Node const *>(this)->find(name);
+    return const_cast<Node *>(cnode);
+}
+
+void PAK::Node::insert(Node * child)
+{
+    assert(child);
+    child->parent = this;
+    children.emplace_back(child);
 }

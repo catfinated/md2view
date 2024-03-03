@@ -120,7 +120,8 @@ bool MD2View::on_engine_initialized(EngineBase& engine)
     clear_color_ = { 0.2f, 0.2f, 0.2f, 1.0f };
     glClearColor(clear_color_[0], clear_color_[1], clear_color_[2], 1.0f);
 
-    shader_ = engine.resource_manager().load_shader("md2.vert", "md2.frag", nullptr, "md2");
+    spdlog::info("begin load shaders");
+    shader_ = engine.resource_manager().load_shader("md2", "md2.vert", "md2.frag");
     shader_->use();
     update_model();
     load_current_texture(engine);
@@ -128,12 +129,12 @@ bool MD2View::on_engine_initialized(EngineBase& engine)
     glow_color_ = glm::vec3(0.0f, 1.0f, 0.0f);
     shader_->set_uniform(glow_loc_, glow_color_);
 
-    blur_shader_ = engine.resource_manager().load_shader("screen.vert", "blur.frag", nullptr, "blur");
+    blur_shader_ = engine.resource_manager().load_shader("blur", "screen.vert", "blur.frag");
     blur_shader_->use();
     disable_blur_loc_ = blur_shader_->uniform_location("disable_blur");
     blur_shader_->set_uniform(disable_blur_loc_, 1);
 
-    glow_shader_ = engine.resource_manager().load_shader("screen.vert", "glow.frag", nullptr, "glow");
+    glow_shader_ = engine.resource_manager().load_shader("glow", "screen.vert", "glow.frag");
     glow_shader_->use();
 
     auto loc = glow_shader_->uniform_location("screenTexture");

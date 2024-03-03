@@ -4,6 +4,7 @@
 #include <array>
 #include <cassert>
 #include <cstdint>
+#include <filesystem>
 #include <memory>
 #include <stack>
 #include <string>
@@ -40,36 +41,16 @@ public:
 
         std::vector<std::unique_ptr<Node>> children;
 
-        Node const * find(std::string const& name) const
-        {
-            auto citer = std::find_if(children.begin(), children.end(),
-                                      [&name](std::unique_ptr<Node> const& child) {
-                                          return child->name == name; });
+        Node const * find(std::string const& name) const;
 
-            if (citer != children.end()) {
-                return citer->get();
-            }
+        Node * find(std::string const& name);
 
-            return nullptr;
-        }
-
-        Node * find(std::string const& name)
-        {
-            auto cnode = const_cast<Node const *>(this)->find(name);
-            return const_cast<Node *>(cnode);
-        }
-
-        void insert(Node * child)
-        {
-            assert(child);
-            child->parent = this;
-            children.emplace_back(child);
-        }
+        void insert(Node * child);
     };
 
-    explicit PAK(std::string const&);
+    explicit PAK(std::filesystem::path const& fpath);
 
-    std::string const& filename() const { return filename_; }
+    std::filesystem::path const& fpath() const { return fpath_; }
 
     Node const * find(std::string const&) const;
 
@@ -91,8 +72,8 @@ public:
     }
 
 private:
-    bool init(std::string const& filename);
+    [[nodiscard]] bool init();
 
-    std::string filename_;
+    std::filesystem::path fpath_;
     Node root_;
 };

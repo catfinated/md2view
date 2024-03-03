@@ -7,9 +7,12 @@
 #include <spdlog/spdlog.h>
 
 #include <array>
-#include <string>
-#include <sstream>
 #include <cassert>
+#include <filesystem>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <sstream>
 
 class Shader
 {
@@ -25,13 +28,13 @@ public:
     Shader(Shader&& rhs);
     Shader& operator=(Shader&& rhs);
 
-    Shader(std::string const& vertex,
-           std::string const& fragment,
-           std::string const& geometry = std::string());
+    Shader(std::filesystem::path const& vertex,
+           std::filesystem::path const& fragment,
+           std::optional<std::filesystem::path> const& geometry = {});
 
-    bool init(std::string const& vertex,
-              std::string const& fragment,
-              std::string const& geometry = std::string());
+    bool init(std::filesystem::path const& vertex,
+              std::filesystem::path const& fragment,
+              std::optional<std::filesystem::path> const& geometry = {});
 
     GLuint program() const { return program_; }
     void use() const { glUseProgram(program()); }
@@ -115,8 +118,8 @@ public:
     void set_view_position(glm::vec3 const& v) { set_uniform(camera_position_location(), v); }
 
 private:
-    bool compile_shader(GLenum shader_type, char const * path, GLuint& handle);
-    bool link_program();
+    [[nodiscard]] bool compile_shader(GLenum shader_type, std::filesystem::path const& path, GLuint& handle);
+    [[nodiscard]] bool link_program();
     void cleanup();
 
 private:

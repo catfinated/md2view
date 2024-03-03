@@ -3,9 +3,9 @@
 #include <fstream>
 #include <stdexcept>
 
- Shader::Shader(std::string const& vertex,
-                std::string const& fragment,
-                std::string const& geometry)
+ Shader::Shader(std::filesystem::path const& vertex,
+                std::filesystem::path const& fragment,
+                std::optional<std::filesystem::path> const& geometry)
     : program_(0)
 {
     if (!init(vertex, fragment, geometry)) {
@@ -49,9 +49,9 @@
     }
 }
 
- bool Shader::init(std::string const& vertex,
-                   std::string const& fragment,
-                   std::string const& geometry)
+ bool Shader::init(std::filesystem::path const& vertex,
+                   std::filesystem::path const& fragment,
+                   std::optional<std::filesystem::path> const& geometry)
 {
     if (vertex.empty()) {
         spdlog::error("shader vertex path cannot be empty");
@@ -67,22 +67,22 @@
 
     GLuint vertex_id, fragment_id, geometry_id;
 
-    if (!compile_shader(GL_VERTEX_SHADER, vertex.c_str(), vertex_id)) {
+    if (!compile_shader(GL_VERTEX_SHADER, vertex, vertex_id)) {
         spdlog::error("ERROR::SHADER::VERTEX::COMPILATION_FAILED");
         return false;
     }
 
     glAttachShader(program_, vertex_id);
 
-    if (!compile_shader(GL_FRAGMENT_SHADER, fragment.c_str(), fragment_id)) {
+    if (!compile_shader(GL_FRAGMENT_SHADER, fragment, fragment_id)) {
         spdlog::error("ERROR::SHADER::FRAGMENT::COMPILATION_FAILED");
         return false;
     }
 
     glAttachShader(program_, fragment_id);
 
-    if (!geometry.empty()) {
-        if (!compile_shader(GL_GEOMETRY_SHADER, geometry.c_str(), geometry_id)) {
+    if (geometry) {
+        if (!compile_shader(GL_GEOMETRY_SHADER, geometry.value(), geometry_id)) {
             spdlog::error("ERROR::SHADER::GEOMETRY::COMPILATION_FAILED");
             return false;
         }
@@ -98,7 +98,7 @@
     glDeleteShader(vertex_id);
     glDeleteShader(fragment_id);
 
-    if (!geometry.empty()) {
+    if (geometry) {
         glDeleteShader(geometry_id);
     }
 
@@ -106,32 +106,21 @@
     return true;
 }
 
- bool Shader::compile_shader(GLenum shader_type, char const * path, GLuint& handle)
+ bool Shader::compile_shader(GLenum shader_type, std::filesystem::path const& path, GLuint& handle)
 {
-    assert(path);
-
-    spdlog::info("loading shader: {}", path);
-
+    spdlog::info("compiling '{}'", path.string());
     std::string code;
-    std::ifstream infile;
-
-    infile.exceptions(std::ifstream::badbit);
 
     try {
+        std::ifstream infile;
+        infile.exceptions(std::ifstream::badbit | std::ifstream::failbit);
         infile.open(path);
-
-        if (!infile.is_open()) {
-            spdlog::error("ERROR::SHADER::FAILED_TO_OPEN_FILE: {}", path);
-            return false;
-        }
-
         std::stringstream istream;
         istream << infile.rdbuf();
-        infile.close();
         code = istream.str();
     }
     catch (std::ifstream::failure const& e) {
-        spdlog::error("ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ: {}", path);
+        spdlog::error("failed to read shader file '{}': {}", path.string(), e.what());
         return false;
     }
 
@@ -146,7 +135,7 @@
     if (!success) {
         GLchar log[512];
         glGetShaderInfoLog(handle, sizeof(log), nullptr, log);
-        spdlog::error("ERROR::SHADER::COMPILATION_FAILED: ('{}') - \n{}", path, log);
+        spdlog::error("ERROR::SHADER::COMPILATION_FAILED: ('{}') - \n{}", path.string(), log);
         return false;
     }
 

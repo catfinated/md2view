@@ -26,7 +26,7 @@ void Gui::init(GLFWwindow * window)
 
     glCheckError();
 
-    auto shader = engine_.resource_manager().load_shader("imgui.vert", "imgui.frag", nullptr, "imgui");
+    auto shader = engine_.resource_manager().load_shader("imgui", "imgui.vert", "imgui.frag");
 
     attrib_location_tex_ = shader->uniform_location("texture0");
     attrib_location_projection_ = shader->uniform_location("projection");

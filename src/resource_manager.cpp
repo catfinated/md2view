@@ -9,33 +9,27 @@
 #include <filesystem>
 #include <fstream>
 
-ResourceManager::ResourceManager(std::string const& rootdir)
+ResourceManager::ResourceManager(std::filesystem::path const& rootdir)
     : root_dir_(rootdir)
-    , models_dir_("models/")
-    , shaders_dir_("shaders/")
+    , models_dir_(root_dir_ / "models")
+    , shaders_dir_(root_dir_ / "shaders")
 {
-    if (!root_dir_.empty()) {
-        if (root_dir_.back() != '/') {
-            root_dir_ += '/';
-        }
-
-        models_dir_   = root_dir_ + models_dir_;
-        shaders_dir_  = root_dir_ + shaders_dir_;
-    }
 }
 
-std::shared_ptr<Shader> ResourceManager::load_shader(char const * vertex,
-                                                    char const * fragment,
-                                                    char const * geometry,
-                                                    std::string const& name)
+std::shared_ptr<Shader> ResourceManager::load_shader(std::string const& name,
+                                                     std::string_view vertex,
+                                                     std::string_view fragment,
+                                                     std::optional<std::string_view> geometry)
 {
-    MD2V_EXPECT(vertex != nullptr);
-    MD2V_EXPECT(fragment != nullptr);
+    spdlog::info("loading shader {}", name);
     MD2V_EXPECT(shaders_.find(name) == shaders_.end());
 
-    auto vertex_path = shaders_dir() + vertex;
-    auto fragment_path = shaders_dir() + fragment;
-    auto geometry_path = geometry != nullptr ? shaders_dir() + geometry : std::string{};
+    auto vertex_path = shaders_dir() / std::string{vertex};
+    auto fragment_path = shaders_dir() / std::string{fragment};
+    std::optional<std::filesystem::path> geometry_path;
+    if (geometry) {
+        geometry_path = shaders_dir() / std::string{*geometry};
+    }
 
     std::shared_ptr<Shader> shader{new Shader{vertex_path, fragment_path, geometry_path}};
     auto result = shaders_.emplace(std::make_pair(name, shader));
@@ -47,23 +41,22 @@ std::shared_ptr<Shader> ResourceManager::load_shader(char const * vertex,
     return result.first->second;
 }
 
-Texture2D& ResourceManager::load_texture2D(PAK const& pf, std::string const& path, std::string const& name)
+Texture2D& ResourceManager::load_texture2D(PAK const& pf, std::string const& path, std::optional<std::string> const& name)
 {
-    auto key = name.empty() ? path : name;
+    auto key = name ? *name : path;
     auto iter = textures2D_.find(key);
 
     if (iter != textures2D_.end()) {
         return iter->second;
     }
 
-    spdlog::info("loading 2D texture {} from PAK {}", path, pf.filename());
-
+    spdlog::info("loading 2D texture {} from PAK {} ({})", path, pf.fpath().string(), name.value_or(std::string{}));
     MD2V_EXPECT(".pcx" == std::filesystem::path(path).extension());
 
     auto node = pf.find(path);
     MD2V_EXPECT(node);
 
-    std::ifstream inf(pf.filename().c_str(), std::ios_base::in | std::ios_base::binary);
+    std::ifstream inf(pf.fpath(), std::ios_base::in | std::ios_base::binary);
     MD2V_EXPECT(inf);
 
     inf.seekg(node->filepos);
@@ -86,36 +79,32 @@ Texture2D& ResourceManager::load_texture2D(PAK const& pf, std::string const& pat
     return result.first->second;
 }
 
-Texture2D& ResourceManager::load_texture2D(std::string const& file, std::string const& name, bool alpha)
+Texture2D& ResourceManager::load_texture2D(std::filesystem::path const& fpath, std::optional<std::string> const& name, bool alpha)
 {
-    auto key = name.empty() ? file : name;
+    auto key = name ? *name : fpath.string();
     auto iter = textures2D_.find(key);
 
     if (iter != textures2D_.end()) {
         return iter->second;
     }
 
-    std::filesystem::path p(file);
-    auto texture_path = p.string();
-
-    MD2V_EXPECT(std::filesystem::exists(p));
-
-    spdlog::info("loading 2D texture {} (alpha: {})", texture_path, alpha);
+    spdlog::info("loading 2D texture {} (alpha: {} name: {})", fpath.string(), alpha, name.value_or(std::string{}));
+    MD2V_EXPECT(std::filesystem::exists(fpath));
 
     Texture2D texture;
 
-    if (".pcx" != p.extension()) {
+    if (".pcx" != fpath.extension()) {
         texture.set_alpha(alpha);
 
         int width, height, n;
-        unsigned char * image = stbi_load(texture_path.c_str(), &width, &height, &n, 3);
+        unsigned char * image = stbi_load(fpath.string().c_str(), &width, &height, &n, 3);
         MD2V_EXPECT(image);
         MD2V_EXPECT(texture.init(width, height, image));
-        spdlog::info("loaded 2D texture {} width: {} height: {}", texture_path, width, height);
+        spdlog::info("loaded 2D texture {} width: {} height: {}", fpath.string(), width, height);
         stbi_image_free(image);
     }
     else {
-        std::ifstream inf(p.string().c_str(), std::ios_base::in | std::ios_base::binary);
+        std::ifstream inf(fpath, std::ios_base::in | std::ios_base::binary);
         PCX pcx(inf);
         texture.set_alpha(false);
         texture.init(pcx.width(), pcx.height(), pcx.image().data());
