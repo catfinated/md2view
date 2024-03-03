@@ -1,8 +1,8 @@
-#include "engine.hpp"
+#include "engine.ipp"
 #include "camera.hpp"
 #include "md2.hpp"
 #include "model_selector.hpp"
-#include "frame_buffer.hpp"
+#include "frame_buffer.ipp"
 #include "screen_quad.hpp"
 
 #include <glm/gtx/string_cast.hpp>

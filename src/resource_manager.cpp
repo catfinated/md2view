@@ -7,6 +7,7 @@
 #include <stb_image.h>
 
 #include <filesystem>
+#include <fstream>
 
 ResourceManager::ResourceManager(std::string const& rootdir)
     : root_dir_(rootdir)

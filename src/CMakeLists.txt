@@ -20,7 +20,11 @@ add_executable(md2view
   pcx.cpp
   pak.cpp
   screen_quad.cpp
-  resource_manager.cpp)
+  resource_manager.cpp
+  camera.cpp
+  model_selector.cpp
+  shader.cpp
+  texture2D.cpp)
 
 set_target_properties(md2view PROPERTIES
     CXX_STANDARD 17
