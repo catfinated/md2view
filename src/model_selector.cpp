@@ -63,7 +63,7 @@ void ModelSelector::init(std::filesystem::path const& path)
     if (selected_ == tree_.end()) {
         return {};
     } 
-    return selected_->name; 
+    return selected_->path; 
  }
 
  MD2& ModelSelector::model() const
@@ -105,96 +105,65 @@ void ModelSelector::load_model_node(Node& node)
 
 void ModelSelector::draw_ui()
 {
-    if (ImGui::TreeNode("Select Model")) {
-        ImGui::Text("%s", path_.string().c_str());
-        std::stack<tree<Node>::iterator> stack;
-
-        auto top = tree_.begin();
-
-        // NB: treehh end_fixed does not seem to be working yet
-        // https://github.com/kpeeters/tree.hh/blob/master/src/tree.hh#L854
-        // we need to go down level be level but only push nodes to the stack
-        // if they are expanded in the UI
-
-         for (auto curr = tree_.begin(top); curr != tree_.end(top); ++curr) {
-            stack.push(curr);
-         }
-
-        unsigned int lastDepth{0};
-        while (!stack.empty()) {
-            auto curr = stack.top();
-            stack.pop();
-            auto depth = tree_.depth(curr);
-
-             while (depth < lastDepth && lastDepth > 1) {
-                 ImGui::TreePop();
-                --lastDepth;
-            }   
-            lastDepth = depth;
-
-            // if curr has no children it is selectable leafat
-            ImGuiTreeNodeFlags flags{0};
-            auto const is_leaf = tree_.number_of_children(curr) == 0U;
-
-            if (is_leaf) {
-                flags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
-                if (curr == selected_) {
-                    flags |= ImGuiTreeNodeFlags_Selected;
-                }     
-            }
-
-            if (ImGui::TreeNodeEx(curr->name.c_str(), flags)) {
-                if (!is_leaf) {
-                    for (auto iter = tree_.begin(curr); iter != tree_.end(curr); ++iter) {
-                        stack.push(iter);
-                    }
-                } else if (ImGui::IsItemClicked()) {
-                    spdlog::info("selected model={} {}", curr->name, curr->path);
-                    load_model_node(*curr);
-                    selected_ = curr;
-                }
-            }
-        }
-        while (lastDepth > 1) {
-            ImGui::TreePop();
-            --lastDepth;
-        }
-        ImGui::TreePop();
+    if (ImGui::Button("Random Model")) {
+        select_random_model();
     }
 
-    ImGui::TextColored(ImVec4(0.0f, 1.0f ,0.0f, 1.0f), "Model: %s", selected_->path.c_str());
+    ImGui::Text("%s", path_.string().c_str());
+    std::stack<tree<Node>::iterator> stack;
 
-    int index = model().animation_index();
+    auto top = tree_.begin();
 
-    ImGui::Combo("Animation", &index,
-                 [](void * data, int idx, char const ** out_text) -> bool {
-                     MD2 const * model = reinterpret_cast<MD2 const *>(data);
-                     assert(model);
-                     if (idx < 0 || static_cast<size_t>(idx) >= model->animations().size()) { return false; }
-                     *out_text = model->animations()[idx].name.c_str();
-                     return true;
-                 },
-                 reinterpret_cast<void *>(&model()),
-                 model().animations().size());
+    // NB: treehh end_fixed does not seem to be working yet
+    // https://github.com/kpeeters/tree.hh/blob/master/src/tree.hh#L854
+    // we need to go down level be level but only push nodes to the stack
+    // if they are expanded in the UI
 
-    model().set_animation(static_cast<size_t>(index));
+    for (auto curr = tree_.begin(top); curr != tree_.end(top); ++curr) {
+        stack.push(curr);
+    }
 
-    int sindex = model().skin_index();
+    unsigned int lastDepth{0};
+    while (!stack.empty()) {
+        auto curr = stack.top();
+        stack.pop();
+        auto depth = tree_.depth(curr);
 
-    ImGui::Combo("Skin", &sindex,
-                 [](void * data, int idx, char const ** out_text) -> bool {
-                     MD2 const * model = reinterpret_cast<MD2 const *>(data);
-                     assert(model);
-                     if (idx < 0 || static_cast<size_t>(idx) >= model->skins().size()) { return false; }
-                     *out_text = model->skins()[idx].name.c_str();
-                     return true;
-                 },
-                 reinterpret_cast<void *>(&model()),
-                 model().skins().size());
+        while (depth < lastDepth && lastDepth > 1) {
+            ImGui::TreePop();
+            --lastDepth;
+        }   
+        lastDepth = depth;
 
-    model().set_skin_index(static_cast<size_t>(sindex));
+        // if curr has no children it is selectable leafat
+        ImGuiTreeNodeFlags flags{0};
+        auto const is_leaf = tree_.number_of_children(curr) == 0U;
 
-    float fps = model().frames_per_second();
-    ImGui::InputFloat("Animation FPS", &fps, 1.0f, 5.0f, "%.3f");
-    model().set_frames_per_second(fps);
+        if (is_leaf) {
+            flags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+            if (curr == selected_) {
+                flags |= ImGuiTreeNodeFlags_Selected;
+            }     
+        }
+
+        //if (depth == 1) {
+        //    ImGui::SetNextItemOpen(true);
+        //}
+
+        if (ImGui::TreeNodeEx(curr->name.c_str(), flags)) {
+            if (!is_leaf) {
+                for (auto iter = tree_.begin(curr); iter != tree_.end(curr); ++iter) {
+                    stack.push(iter);
+                }
+            } else if (ImGui::IsItemClicked()) {
+                spdlog::info("selected model={} {}", curr->name, curr->path);
+                load_model_node(*curr);
+                selected_ = curr;
+            }
+        }
+    }
+    while (lastDepth > 1) {
+        ImGui::TreePop();
+        --lastDepth;
+    }
 }

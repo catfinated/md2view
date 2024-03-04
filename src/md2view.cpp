@@ -35,6 +35,8 @@ private:
     void reset_model_matrix();
     void load_current_texture(EngineBase&);
     void update_model();
+    void draw_ui(EngineBase&);
+    void set_vsync();
 
 private:
     std::shared_ptr<Shader> shader_;
@@ -44,7 +46,7 @@ private:
     boost::program_options::options_description options_;
     std::string models_dir_;
     ModelSelector modelSelector_;
-    bool vsync_enabled_ = false;
+    bool vsync_enabled_ = true;
     int scale_ = 64.0f;
     std::array<float, 3> rot_;
     glm::vec3 pos_;
@@ -154,6 +156,7 @@ bool MD2View::on_engine_initialized(EngineBase& engine)
     //glEnable(GL_BLEND);
     FrameBuffer<>::bind_default();
 
+    set_vsync();
     spdlog::info("done on engine init");
     glCheckError();
     return true;
@@ -271,7 +274,12 @@ void MD2View::render(EngineBase& engine)
     }
 
     glCheckError();
+    draw_ui(engine);
+    glCheckError();
+}
 
+void MD2View::draw_ui(EngineBase& engine)
+{
     // draw gui
     ImGui::Begin("Scene");
 
@@ -282,7 +290,7 @@ void MD2View::render(EngineBase& engine)
     }
 
     if (ImGui::Checkbox("V-sync", &vsync_enabled_)) {
-        glfwSwapInterval(vsync_enabled_ ? 1 : 0);
+        set_vsync();
     }
 
     ImGui::Text("Camera");
@@ -315,13 +323,43 @@ void MD2View::render(EngineBase& engine)
 
     ImGui::Begin("Model");
 
-    if (ImGui::Button("Random Model")) {
-        modelSelector_.select_random_model();
-    }
+    ImGui::TextColored(ImVec4(0.0f, 1.0f ,0.0f, 1.0f), "Model: %s", modelSelector_.model_name().c_str());
+    auto& model = modelSelector_.model();
+    int index = model.animation_index();
 
-    modelSelector_.draw_ui();
+    ImGui::Combo("Animation", &index,
+                 [](void * data, int idx, char const ** out_text) -> bool {
+                     MD2 const * model = reinterpret_cast<MD2 const *>(data);
+                     assert(model);
+                     if (idx < 0 || static_cast<size_t>(idx) >= model->animations().size()) { return false; }
+                     *out_text = model->animations()[idx].name.c_str();
+                     return true;
+                 },
+                 reinterpret_cast<void *>(&model),
+                 model.animations().size());
 
-    load_current_texture(engine);
+    model.set_animation(static_cast<size_t>(index));
+
+    int sindex = model.skin_index();
+
+    ImGui::Combo("Skin", &sindex,
+                 [](void * data, int idx, char const ** out_text) -> bool {
+                     MD2 const * model = reinterpret_cast<MD2 const *>(data);
+                     assert(model);
+                     if (idx < 0 || static_cast<size_t>(idx) >= model->skins().size()) { return false; }
+                     *out_text = model->skins()[idx].name.c_str();
+                     return true;
+                 },
+                 reinterpret_cast<void *>(&model),
+                 model.skins().size());
+
+    model.set_skin_index(static_cast<size_t>(sindex));
+
+    float fps = model.frames_per_second();
+    ImGui::InputFloat("Animation FPS", &fps, 1.0f, 5.0f, "%.3f");
+    model.set_frames_per_second(fps);
+
+    load_current_texture(engine); // skin may have changed
 
     ImGui::Text("Model");
     ImGui::PushItemWidth(vec4width);
@@ -350,16 +388,21 @@ void MD2View::render(EngineBase& engine)
         model_changed = true;
     }
 
+    ImGui::Image(reinterpret_cast<void*>(std::uintptr_t(texture_->id())), ImVec2(texture_->width(), texture_->height()),
+                ImVec2(0,0), ImVec2(1,1), ImColor(255,255,255,255), ImColor(255,255,255,128));
+
     ImGui::End();
 
-    ImGui::Begin("Texture");
-
-    ImGui::Image(reinterpret_cast<void*>(std::uintptr_t(texture_->id())), ImVec2(texture_->width(), texture_->height()),
-                 ImVec2(0,0), ImVec2(1,1), ImColor(255,255,255,255), ImColor(255,255,255,128));
-
+    ImGui::Begin("Models");
+    modelSelector_.draw_ui();
     ImGui::End();
 
     if (model_changed) { update_model(); }
+}
+
+void MD2View::set_vsync()
+{
+    glfwSwapInterval(vsync_enabled_ ? 1 : 0);
 }
 
 void MD2View::update(EngineBase& engine, GLfloat delta_time)
