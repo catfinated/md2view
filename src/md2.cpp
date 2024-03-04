@@ -59,12 +59,16 @@ bool MD2::load(PAK const& pf, std::string const& filename)
         return false; 
     }
 
-    std::ifstream inf(pf.fpath(), std::ios_base::binary);
+    auto ispak = !pf.isDirectory();
+    auto p = ispak ? pf.fpath() : pf.fpath() / filename;
+    spdlog::info("{}", p.string());
+
+    std::ifstream inf(p, std::ios_base::binary);
     if (!inf) { return false; }
 
     inf.seekg(node->filepos);
 
-    auto result = load(inf, filename, true);
+    auto result = load(inf, ispak ? filename : p.string(), ispak);
     inf.close();
     return result;
 }
@@ -124,6 +128,7 @@ bool MD2::load_skins(std::ifstream& infile, size_t offset, std::string const& fi
     spdlog::info("num skins={}", skins.size());
 
     auto root = std::filesystem::path(filename).parent_path();
+    // todo: if !ispak just look for skin files in the same directory
 
     for (auto const& skin : skins) {
         spdlog::info("skin: '{}'", std::string_view{skin.name.data(), skin.name.size()});

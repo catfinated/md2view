@@ -43,6 +43,9 @@ std::shared_ptr<Shader> ResourceManager::load_shader(std::string const& name,
 
 Texture2D& ResourceManager::load_texture2D(PAK const& pf, std::string const& path, std::optional<std::string> const& name)
 {
+    if (pf.isDirectory()) {
+        return load_texture2D(path, name);
+    }
     auto key = name ? *name : path;
     auto iter = textures2D_.find(key);
 

@@ -40,7 +40,7 @@ private:
 
     void load_model_node(Node& n);
 
-    void add_node(std::filesystem::path const& path, std::filesystem::path const& root);
+    void add_node(std::filesystem::path const& path);
 
     std::mt19937 mt_;
     std::filesystem::path path_;

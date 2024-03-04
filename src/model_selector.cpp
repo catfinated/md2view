@@ -12,26 +12,26 @@
 #include <exception>
 #include <stack>
 
-void ModelSelector::add_node(std::filesystem::path const& path, std::filesystem::path const& root)
+void ModelSelector::add_node(std::filesystem::path const& path)
 {
     auto parent = tree_.begin();
     spdlog::debug("add node for {}", path.string());
     MD2V_EXPECT(path.extension() == ".md2");
-    // pak seperator is always '/' but for windows it will be '\'
-    auto const sep = root.empty() ? "/" : "\\"; 
+    // pak seperator is always '/'
+    auto const sep = "/";
 
     std::string curr;
-    for (auto& part : path.lexically_relative(root)) {
+    for (auto& part : path) {
         if (!curr.empty()) curr.append(sep); 
         curr += part.string();
-        auto fullpath = (root / curr).string();
+        auto fullpath = curr;
         auto child = std::find_if(parent, tree_.end(), [&](auto const& node) { return node.path == fullpath; });
 
         if (child == tree_.end()) {
             Node newNode;
             newNode.name = part.string();
             newNode.path = fullpath;
-            spdlog::debug("new node {} {} {}", newNode.name, newNode.path, parent->name);
+            spdlog::debug("new model node {} {} {}", newNode.name, newNode.path, parent->name);
             child = tree_.append_child(parent, std::move(newNode));
         }
         parent = child;
@@ -42,37 +42,17 @@ void ModelSelector::init(std::filesystem::path const& path)
 {
     selected_ = tree_.end();
     path_ = path;
-
-    if (!std::filesystem::exists(path_)) {
-        throw std::runtime_error("invalid models path: " + path_.string());
-    }
+    pak_ = std::make_unique<PAK>(path_);
 
     Node node;
     node.path = path_.string();
     tree_.insert(tree_.begin(), std::move(node));
 
-    if (std::filesystem::is_directory(path_)) {
-        std::filesystem::recursive_directory_iterator iter(path_), end;
-
-        for (; iter != end; ++iter ) {
-            if (".md2" == iter->path().extension().string()) {
-                spdlog::debug("{} {}", iter->path().string(), iter->path().extension().string());
-                add_node(iter->path(), path_);
-            }
-        }
-    }
-    else if (".pak" == path_.extension()) {
-        pak_ = std::make_unique<PAK>(path_);
-        pak_->visit([this](PAK::Node const& pakNode) {
-                     if (".md2" == std::filesystem::path(pakNode.path).extension()) {
-                         this->add_node(std::filesystem::path(pakNode.path), {});
-                     }
-                 });
-
-    }
-    else {
-        throw std::runtime_error("models must be in dir or a pak file");
-    }
+    pak_->visit([this](PAK::Node const& pakNode) {
+                    if (".md2" == std::filesystem::path(pakNode.path).extension()) {
+                        this->add_node(std::filesystem::path(pakNode.path));
+                    }
+                });
 
     select_random_model();
 }

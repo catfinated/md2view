@@ -8,6 +8,8 @@
 #include <string>
 
 // https://quakewiki.org/wiki/.pak
+// Supports loading from a real .pak file
+// or treating a directory as though it were a .pak file 
 class PAK
 {
 public:
@@ -39,6 +41,8 @@ public:
 
     std::filesystem::path const& fpath() const { return fpath_; }
 
+    [[nodiscard]] bool isDirectory() const { return fpath_.extension() != ".pak"; }
+
     Node const * find(std::string const&) const;
 
     template <typename Visitor>
@@ -51,6 +55,8 @@ public:
 
 private:
     [[nodiscard]] bool init();
+    [[nodiscard]] bool init_from_file();
+    void init_from_directory();
 
     std::filesystem::path fpath_;
     tree<Node> tree_;

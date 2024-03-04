@@ -22,6 +22,47 @@ PAK::PAK(std::filesystem::path const& fpath)
 
 bool PAK::init()
 {
+    if (!std::filesystem::exists(fpath_)) {
+        spdlog::error("'{}' does not exist!", fpath_.string());
+        return false;
+    }
+
+    tree_.insert(tree_.begin(), Node{});
+
+    if (std::filesystem::is_regular_file(fpath_)) {
+        return init_from_file();
+    }
+    init_from_directory();
+    return true;
+}
+
+void PAK::init_from_directory()
+{
+    for (auto const& dir_entry : std::filesystem::recursive_directory_iterator(fpath_ )) {
+        std::string p;
+        auto parent = tree_.begin();
+        for (auto const& part : dir_entry.path().lexically_relative(fpath_)) {
+            if (!p.empty()) p.append("/");
+            p += part.string();
+            auto child = std::find_if(parent, tree_.end(), [&](auto const& node) { return node.path == p; });
+            if (child == tree_.end()) {
+                auto sz  = std::filesystem::is_regular_file(dir_entry.path()) ? 
+                        std::filesystem::file_size(dir_entry.path()) : 0;
+                Node node;
+                node.name = part.string();
+                node.path = p;
+                node.filepos = 0;
+                node.filelen = sz;
+                child = tree_.append_child(parent, std::move(node));
+                spdlog::info("insert {} {}", p, sz);
+            }
+            parent = child;       
+        }
+    }       
+    }
+
+bool PAK::init_from_file()
+{
     std::ifstream inf(fpath_, std::ios_base::in | std::ios_base::binary);
 
     if (!inf) {
@@ -56,8 +97,6 @@ bool PAK::init()
         num_entries);
 
     inf.seekg(hdr.dirofs);
-
-    tree_.insert(tree_.begin(), Node{});
 
     for (size_t i = 0; i < num_entries; ++ i) {
         MD2V_EXPECT(inf);
