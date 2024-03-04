@@ -1,15 +1,11 @@
 #include "model_selector.hpp"
 #include "common.hpp"
-#include "engine.hpp"
-#include "md2.hpp"
 #include "pak.hpp"
 
 #include <imgui.h>
 #include <spdlog/spdlog.h>
 
 #include <algorithm>
-#include <cassert>
-#include <exception>
 #include <stack>
 
 void ModelSelector::add_node(std::filesystem::path const& path)
@@ -38,17 +34,16 @@ void ModelSelector::add_node(std::filesystem::path const& path)
     }
 }
 
-void ModelSelector::init(std::filesystem::path const& path)
+void ModelSelector::init(PAK const& pak)
 {
     selected_ = tree_.end();
-    path_ = path;
-    pak_ = std::make_unique<PAK>(path_);
 
     Node node;
-    node.path = path_.string();
+    node.path = pak.fpath().string();
+    node.name = node.path;
     tree_.insert(tree_.begin(), std::move(node));
 
-    for (auto const& key_value : pak_->entries()) {
+    for (auto const& key_value : pak.entries()) {
         auto const path = std::filesystem::path(key_value.first);
         if (".md2" == path.extension()) {
             add_node(path);
@@ -58,20 +53,13 @@ void ModelSelector::init(std::filesystem::path const& path)
     select_random_model();
 }
 
- std::string ModelSelector::model_name() const 
+ std::string ModelSelector::model_path() const 
  { 
     if (selected_ == tree_.end()) {
         return {};
     } 
     return selected_->path; 
  }
-
- MD2& ModelSelector::model() const
- { 
-    assert(selected_ != tree_.end()); 
-    assert(selected_->model);
-    return *(selected_->model); 
-}
 
 void ModelSelector::select_random_model()
 {
@@ -90,38 +78,23 @@ void ModelSelector::select_random_model()
     auto idx = dist(mt_);
     auto iter = iters[idx];
     spdlog::info("selected random model='{}' '{}'", iter->path, iter->name);
-    load_model_node(*iter);
     selected_ = iter;
 }
 
-void ModelSelector::load_model_node(Node& node)
+bool ModelSelector::draw_ui()
 {
-    if (!node.model) {
-        spdlog::debug("loading model {}", node.path);
-        node.model = std::make_unique<MD2>(node.path, pak_.get());
-        spdlog::info("loaded model {}", node.path);
-    }
-}
-
-void ModelSelector::draw_ui()
-{
+    bool ret = false;
     if (ImGui::Button("Random Model")) {
         select_random_model();
+        ret = true;
     }
-
-    ImGui::Text("%s", path_.string().c_str());
-    std::stack<tree<Node>::iterator> stack;
-
-    auto top = tree_.begin();
 
     // NB: treehh end_fixed does not seem to be working yet
     // https://github.com/kpeeters/tree.hh/blob/master/src/tree.hh#L854
     // we need to go down level be level but only push nodes to the stack
     // if they are expanded in the UI
-
-    for (auto curr = tree_.begin(top); curr != tree_.end(top); ++curr) {
-        stack.push(curr);
-    }
+    std::stack<tree<Node>::iterator> stack;
+    stack.push(tree_.begin());
 
     unsigned int lastDepth{0};
     while (!stack.empty()) {
@@ -129,7 +102,7 @@ void ModelSelector::draw_ui()
         stack.pop();
         auto depth = tree_.depth(curr);
 
-        while (depth < lastDepth && lastDepth > 1) {
+        while (depth < lastDepth) {
             ImGui::TreePop();
             --lastDepth;
         }   
@@ -146,9 +119,9 @@ void ModelSelector::draw_ui()
             }     
         }
 
-        //if (depth == 1) {
-        //    ImGui::SetNextItemOpen(true);
-        //}
+        if (depth == 0) {
+            ImGui::SetNextItemOpen(true);
+        }
 
         if (ImGui::TreeNodeEx(curr->name.c_str(), flags)) {
             if (!is_leaf) {
@@ -157,13 +130,14 @@ void ModelSelector::draw_ui()
                 }
             } else if (ImGui::IsItemClicked()) {
                 spdlog::info("selected model={} {}", curr->name, curr->path);
-                load_model_node(*curr);
                 selected_ = curr;
+                ret = true;
             }
         }
     }
-    while (lastDepth > 1) {
+    while (lastDepth > 0) {
         ImGui::TreePop();
         --lastDepth;
     }
+    return ret;
 }

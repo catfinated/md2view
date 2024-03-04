@@ -4,6 +4,7 @@
 #include "model_selector.hpp"
 #include "frame_buffer.ipp"
 #include "screen_quad.hpp"
+#include "pak.hpp"
 
 #include <glm/gtx/string_cast.hpp>
 #include <spdlog/spdlog.h>
@@ -37,8 +38,11 @@ private:
     void update_model();
     void draw_ui(EngineBase&);
     void set_vsync();
+    void load_model(EngineBase&);
 
 private:
+    std::unique_ptr<PAK> pak_;
+    std::unique_ptr<MD2> md2_;
     std::shared_ptr<Shader> shader_;
     std::shared_ptr<Shader> blur_shader_;
     std::shared_ptr<Shader> glow_shader_;
@@ -84,6 +88,11 @@ bool MD2View::parse_args(EngineBase& engine)
     return true;
 }
 
+void MD2View::load_model(EngineBase&)
+{
+    md2_ = std::make_unique<MD2>(modelSelector_.model_path(), pak_.get());
+}
+
 void MD2View::reset_model_matrix()
 {
     rot_[0] = 0.0f;
@@ -101,20 +110,16 @@ void MD2View::reset_camera()
 
 void MD2View::load_current_texture(EngineBase& engine)
 {
-    auto const& path = modelSelector_.model().current_skin().fpath;
-
-    if (modelSelector_.pak()) {
-        texture_ = std::addressof(engine.resource_manager().load_texture2D(*modelSelector_.pak(), path));
-    }
-    else {
-        texture_ = std::addressof(engine.resource_manager().load_texture2D(path));
-    }
+    auto const& path = md2_->current_skin().fpath;
+    texture_ = std::addressof(engine.resource_manager().load_texture2D(*pak_, path));
 }
 
 bool MD2View::on_engine_initialized(EngineBase& engine)
 {
+    pak_ = std::make_unique<PAK>(models_dir_);
     // init objects which needed an opengl context to initialize
-    modelSelector_.init(models_dir_);
+    modelSelector_.init(*pak_);
+    load_model(engine);
     blur_fb_.reset(new FrameBuffer<1, false>(engine.width(), engine.height()));
     main_fb_.reset(new FrameBuffer<2, true>(engine.width(), engine.height()));
     screen_quad_.init();
@@ -238,7 +243,7 @@ void MD2View::render(EngineBase& engine)
     glCheckError();
 
     glClear(GL_DEPTH_BUFFER_BIT);
-    modelSelector_.model().draw(*shader_);
+    md2_->draw(*shader_);
 
     glCheckError();
 
@@ -323,9 +328,8 @@ void MD2View::draw_ui(EngineBase& engine)
 
     ImGui::Begin("Model");
 
-    ImGui::TextColored(ImVec4(0.0f, 1.0f ,0.0f, 1.0f), "Model: %s", modelSelector_.model_name().c_str());
-    auto& model = modelSelector_.model();
-    int index = model.animation_index();
+    ImGui::TextColored(ImVec4(0.0f, 1.0f ,0.0f, 1.0f), "Model: %s", modelSelector_.model_path().c_str());
+    int index = md2_->animation_index();
 
     ImGui::Combo("Animation", &index,
                  [](void * data, int idx, char const ** out_text) -> bool {
@@ -335,12 +339,12 @@ void MD2View::draw_ui(EngineBase& engine)
                      *out_text = model->animations()[idx].name.c_str();
                      return true;
                  },
-                 reinterpret_cast<void *>(&model),
-                 model.animations().size());
+                 reinterpret_cast<void *>(md2_.get()),
+                 md2_->animations().size());
 
-    model.set_animation(static_cast<size_t>(index));
+    md2_->set_animation(static_cast<size_t>(index));
 
-    int sindex = model.skin_index();
+    int sindex = md2_->skin_index();
 
     ImGui::Combo("Skin", &sindex,
                  [](void * data, int idx, char const ** out_text) -> bool {
@@ -350,16 +354,15 @@ void MD2View::draw_ui(EngineBase& engine)
                      *out_text = model->skins()[idx].name.c_str();
                      return true;
                  },
-                 reinterpret_cast<void *>(&model),
-                 model.skins().size());
+                 reinterpret_cast<void *>(md2_.get()),
+                 md2_->skins().size());
 
-    model.set_skin_index(static_cast<size_t>(sindex));
-
-    float fps = model.frames_per_second();
-    ImGui::InputFloat("Animation FPS", &fps, 1.0f, 5.0f, "%.3f");
-    model.set_frames_per_second(fps);
-
+    md2_->set_skin_index(static_cast<size_t>(sindex));
     load_current_texture(engine); // skin may have changed
+
+    float fps = md2_->frames_per_second();
+    ImGui::InputFloat("Animation FPS", &fps, 1.0f, 5.0f, "%.3f");
+    md2_->set_frames_per_second(fps);
 
     ImGui::Text("Model");
     ImGui::PushItemWidth(vec4width);
@@ -394,7 +397,9 @@ void MD2View::draw_ui(EngineBase& engine)
     ImGui::End();
 
     ImGui::Begin("Models");
-    modelSelector_.draw_ui();
+    if (modelSelector_.draw_ui()) {
+        load_model(engine);
+    }
     ImGui::End();
 
     if (model_changed) { update_model(); }
@@ -407,7 +412,7 @@ void MD2View::set_vsync()
 
 void MD2View::update(EngineBase& engine, GLfloat delta_time)
 {
-    modelSelector_.model().update(delta_time);
+    md2_->update(delta_time);
 }
 
 void MD2View::process_input(EngineBase& engine, GLfloat delta_time)
