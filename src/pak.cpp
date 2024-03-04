@@ -9,8 +9,24 @@
 #include <fstream>
 #include <vector>
 
-static_assert(sizeof(PAK::Header) == 12, "unexpected PackHeader size");
-static_assert(sizeof(PAK::Entry) == 64, "unexpected PackFile size");
+#pragma pack(push, 1)
+struct Header
+{
+    std::array<char, 4> id;
+    int32_t dirofs;
+    int32_t dirlen;
+};
+
+struct Entry
+{
+    std::array<char, 56> name;
+    int32_t filepos;
+    int32_t filelen;
+};
+#pragma pack(pop)
+
+static_assert(sizeof(Header) == 12, "unexpected PackHeader size");
+static_assert(sizeof(Entry) == 64, "unexpected PackFile size");
 
 PAK::PAK(std::filesystem::path const& fpath)
     : fpath_(fpath)
@@ -27,8 +43,6 @@ bool PAK::init()
         return false;
     }
 
-    tree_.insert(tree_.begin(), Node{});
-
     if (std::filesystem::is_regular_file(fpath_)) {
         return init_from_file();
     }
@@ -39,27 +53,19 @@ bool PAK::init()
 void PAK::init_from_directory()
 {
     for (auto const& dir_entry : std::filesystem::recursive_directory_iterator(fpath_ )) {
-        std::string p;
-        auto parent = tree_.begin();
-        for (auto const& part : dir_entry.path().lexically_relative(fpath_)) {
-            if (!p.empty()) p.append("/");
-            p += part.string();
-            auto child = std::find_if(parent, tree_.end(), [&](auto const& node) { return node.path == p; });
-            if (child == tree_.end()) {
-                auto sz  = std::filesystem::is_regular_file(dir_entry.path()) ? 
-                        std::filesystem::file_size(dir_entry.path()) : 0;
-                Node node;
-                node.name = part.string();
-                node.path = p;
-                node.filepos = 0;
-                node.filelen = sz;
-                child = tree_.append_child(parent, std::move(node));
-                spdlog::info("insert {} {}", p, sz);
-            }
-            parent = child;       
+        if (std::filesystem::is_regular_file(dir_entry.path())) {
+            auto path = dir_entry.path().lexically_relative(fpath_).string();
+            std::replace(path.begin(), path.end(), '\\', '/');
+            Node node;
+            node.name = dir_entry.path().stem().string();
+            node.path = path;
+            node.filepos = 0;
+            node.filelen = std::filesystem::file_size(dir_entry.path());
+            spdlog::info("{} {} {}", node.name, node.path, node.filelen);
+            entries_.emplace(path, std::move(node));
         }
-    }       
     }
+}
 
 bool PAK::init_from_file()
 {
@@ -111,40 +117,18 @@ bool PAK::init_from_file()
             entry.filepos,
             entry.filelen);
 
-        std::vector<std::string> parts;
-        boost::algorithm::split(parts, fullname, boost::algorithm::is_any_of("/"));
-
-        auto parent = tree_.begin();
-        std::string node_name;
-        for (auto j = 0u; j < parts.size(); ++j) {
-            auto const& part = parts.at(j);
-            if (!node_name.empty()) node_name.append("/");
-            node_name += part;
-
-            auto child = std::find_if(parent, tree_.end(), [&](auto const& node) { return node.path == node_name; });
-
-            if (child == tree_.end()) {
-                Node node;
-                node.name = part;
-                node.path = node_name;
-                node.filepos = entry.filepos;
-                node.filelen = entry.filelen;
-                child = tree_.append_child(parent, std::move(node));
-            }
-            parent = child;
-        }
+        Node node;
+        node.name = std::filesystem::path(fullname).stem().string();
+        node.path = fullname;
+        node.filepos = entry.filepos;
+        node.filelen = entry.filelen;
+        entries_.emplace(fullname, std::move(node));
     }
-
     return true;
 }
 
 PAK::Node const * PAK::find(std::string const& name) const
 {
-    auto iter = std::find_if(tree_.begin(), tree_.end(), [&](auto const& node) { return node.path == name; });
-
-    if (iter == tree_.end()) {
-        return nullptr;
-    }
-    return std::addressof(*iter);
+    return std::addressof(entries_.at(name));
 }
 

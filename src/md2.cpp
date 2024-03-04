@@ -59,9 +59,9 @@ bool MD2::load(PAK const& pf, std::string const& filename)
         return false; 
     }
 
-    auto ispak = !pf.isDirectory();
+    auto ispak = !pf.is_directory();
     auto p = ispak ? pf.fpath() : pf.fpath() / filename;
-    spdlog::info("{}", p.string());
+    spdlog::debug("{}", p.string());
 
     std::ifstream inf(p, std::ios_base::binary);
     if (!inf) { return false; }
