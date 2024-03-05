@@ -15,9 +15,8 @@ public:
         GLuint filter_max = GL_LINEAR;
     };
 
-    Texture2D() = default;
     ~Texture2D();
-    Texture2D(GLuint width, GLuint height, unsigned char * data);
+    Texture2D(GLuint width, GLuint height, unsigned char const * data, bool alpha = false);
 
     // non-copyable
     Texture2D(Texture2D const&) = delete;
@@ -27,12 +26,9 @@ public:
     Texture2D(Texture2D&& rhs);
     Texture2D& operator=(Texture2D&&);
 
-    bool init(GLuint width, GLuint height, unsigned char const * data);
     void bind() const;
 
     Attributes const& attributes() const { return attr_; }
-    void set_alpha(bool alpha);
-    bool initialized() const { return initialized_; }
     GLuint id() const { return id_; }
 
     GLuint width() const { return width_; }
@@ -42,12 +38,11 @@ public:
 
 private:
     void cleanup();
+    [[nodiscard]] bool init(GLuint width, GLuint height, unsigned char const * data, bool alpha);
 
 private:
     Attributes attr_;
     GLuint id_;
     GLuint width_ = 0;
     GLuint height_ = 0;
-    bool initialized_ = false;
-
 }; // class Texture2D

@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <stdexcept>
+#include <utility>
 
  Shader::Shader(std::filesystem::path const& vertex,
                 std::filesystem::path const& fragment,
@@ -20,32 +21,23 @@
 
  Shader::Shader(Shader&& rhs)
 {
-    program_ = rhs.program_;
-    initialized_ = rhs.initialized_;
-
-    rhs.program_ = 0;
-    rhs.initialized_ = false;
+    program_ = std::exchange(rhs.program_, 0U);
 }
 
  Shader& Shader::operator=(Shader&& rhs)
 {
     if (this != &rhs) {
         cleanup();
-        program_ = rhs.program_;
-        initialized_ = rhs.initialized_;
-
-        rhs.program_ = 0;
-        rhs.initialized_ = false;
+        program_ = std::exchange(rhs.program_, 0U);
     }
-
     return *this;
 }
 
  void Shader::cleanup()
 {
-    if (initialized_) {
+    if (program_ > 0U) {
         glDeleteProgram(program_);
-        initialized_ = false;
+        program_ = 0U;
     }
 }
 
@@ -102,7 +94,6 @@
         glDeleteShader(geometry_id);
     }
 
-    initialized_ = true;
     return true;
 }
 

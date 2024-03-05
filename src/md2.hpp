@@ -118,7 +118,7 @@ public:
     };
 
     MD2() = default;
-    explicit MD2(std::string const& filename, PAK const * pak = nullptr);
+    explicit MD2(std::string const& filename, PAK const& pak);
     ~MD2();
 
     MD2(MD2 const&) = delete;
@@ -153,15 +153,14 @@ public:
     void set_frames_per_second(float f) { frames_per_second_ = boost::algorithm::clamp(f, 0.0f, 60.0f); }
 
 private:
-    bool validate_header(Header const& hdr);
     void setup_buffers();
-    bool load(std::string const& filename);
-    bool load(PAK const&, std::string const& filename);
-    bool load(std::ifstream&, std::string const&, bool = false);
-    bool load_skins(std::ifstream&, size_t, std::string const&, bool ispak);
-    bool load_triangles(std::ifstream&, size_t);
-    bool load_texcoords(std::ifstream&, size_t);
-    bool load_frames(std::ifstream&, size_t);
+    [[nodiscard]] bool validate_header(Header const& hdr);
+    [[nodiscard]] bool load(PAK const&, std::string const& filename);
+    [[nodiscard]] bool load(std::ifstream&, std::string const&, bool = false);
+    [[nodiscard]] bool load_skins(std::ifstream&, size_t, std::string const&, bool ispak);
+    [[nodiscard]] bool load_triangles(std::ifstream&, size_t);
+    [[nodiscard]] bool load_texcoords(std::ifstream&, size_t);
+    [[nodiscard]] bool load_frames(std::ifstream&, size_t);
 
 private:
     struct KeyFrame

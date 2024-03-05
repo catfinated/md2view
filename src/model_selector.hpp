@@ -10,11 +10,16 @@ class PAK;
 class ModelSelector
 {
 public:
-    ModelSelector()
+    ModelSelector(PAK const& pak)
       : mt_(std::random_device{}())
-      {}
+      {
+        init(pak);
+      }
 
-    void init(PAK const& pak);
+    ModelSelector(ModelSelector const&) = delete;
+    ModelSelector& operator=(ModelSelector const&) = delete;
+    ModelSelector(ModelSelector&&) = default;
+    ModelSelector& operator=(ModelSelector&&) = default;
 
     std::string model_path() const;
 
@@ -30,10 +35,10 @@ private:
         std::string path;
     };
 
+    void init(PAK const& pak);
     void add_node(std::filesystem::path const& path);
 
     std::mt19937 mt_;
     tree<Node> tree_;
     tree<Node>::iterator selected_;
-
 };

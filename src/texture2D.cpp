@@ -4,10 +4,11 @@
 #include <spdlog/spdlog.h>
 
 #include <stdexcept>
+#include <utility>
 
- Texture2D::Texture2D(GLuint width, GLuint height, unsigned char * data)
+ Texture2D::Texture2D(GLuint width, GLuint height, unsigned char const * data, bool alpha)
 {
-    if (!init(width, height, data)) {
+    if (!init(width, height, data, alpha)) {
         throw std::runtime_error("failed to init Texture2D");
     }
 }
@@ -20,13 +21,9 @@
  Texture2D::Texture2D(Texture2D&& rhs)
 {
     attr_ = rhs.attr_;
-    id_ = rhs.id_;
+    id_ = std::exchange(rhs.id_, 0U);
     width_ = rhs.width_;
     height_ = rhs.height_;
-    initialized_ = rhs.initialized_;
-
-    rhs.id_ = 0;
-    rhs.initialized_ = false;
 }
 
  Texture2D& Texture2D::operator=(Texture2D&& rhs)
@@ -34,13 +31,9 @@
     if (this != &rhs) {
         cleanup();
         attr_ = rhs.attr_;
-        id_ = rhs.id_;
+        id_ = std::exchange(rhs.id_, 0U);
         width_ = rhs.width_;
         height_ = rhs.height_;
-        initialized_ = rhs.initialized_;
-
-        rhs.id_ = 0;
-        rhs.initialized_ = false;
     }
 
     return *this;
@@ -48,26 +41,21 @@
 
  void Texture2D::cleanup()
 {
-    if (initialized_) {
+    if (id_ != 0U) {
         glDeleteTextures(1, &id_);
-        initialized_ = false;
+        id_ = 0U;
     }
 }
 
- bool Texture2D::init(GLuint width, GLuint height, unsigned char const * data)
+ bool Texture2D::init(GLuint width, GLuint height, unsigned char const * data, bool alpha)
 {
-    if (initialized_) {
-        return false;
-    }
-
     glGenTextures(1, &id_);
 
     width_ = width;
     height_ = height;
-    initialized_ = true;
 
-    attr_.internal_format = GL_RGB8;
-    attr_.image_format = GL_RGB;
+    attr_.internal_format = alpha ? GL_RGBA : GL_RGB8;
+    attr_.image_format = alpha ? GL_RGBA : GL_RGB;
     attr_.filter_min = GL_LINEAR_MIPMAP_LINEAR;
     attr_.filter_max = GL_LINEAR;
 
@@ -97,18 +85,7 @@
 
  void Texture2D::bind() const
 {
-    MD2V_EXPECT(initialized_);
     glBindTexture(GL_TEXTURE_2D, id_);
 }
 
- void Texture2D::set_alpha(bool alpha)
-{
-    if (alpha) {
-        attr_.internal_format = GL_RGBA;
-        attr_.image_format = GL_RGBA;
-    }
-    else {
-        attr_.internal_format = GL_RGB;
-        attr_.image_format = GL_RGB;
-    }
-}
+ 

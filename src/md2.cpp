@@ -31,11 +31,9 @@ std::string animation_id_from_frame_name(std::string const& name)
     return id;
 }
 
-MD2::MD2(std::string const& filename, PAK const * pak)
+MD2::MD2(std::string const& filename, PAK const& pak)
 {
-    bool status = pak ? load(*pak, filename) : load(filename);
-
-    if (!status) {
+    if (!load(pak, filename)) {
         throw std::runtime_error("failed to load MD2 model " + filename);
     }
 
@@ -53,11 +51,7 @@ bool MD2::load(PAK const& pf, std::string const& filename)
     spdlog::info("loading model {} from pak {}", filename, pf.fpath().string());
     if (filename.empty()) { return false; }
     
-    auto node = pf.find(filename);
-    if (!node) { 
-        spdlog::error("model not found {}", filename);
-        return false; 
-    }
+    auto const& node = pf.entries().at(filename);
 
     auto ispak = !pf.is_directory();
     auto p = ispak ? pf.fpath() : pf.fpath() / filename;
@@ -66,24 +60,9 @@ bool MD2::load(PAK const& pf, std::string const& filename)
     std::ifstream inf(p, std::ios_base::binary);
     if (!inf) { return false; }
 
-    inf.seekg(node->filepos);
+    inf.seekg(node.filepos);
 
     auto result = load(inf, ispak ? filename : p.string(), ispak);
-    inf.close();
-    return result;
-}
-
-bool MD2::load(std::string const& filename)
-{
-    if (filename.empty()) { return false; }
-
-    spdlog::info("loading model from file {}", filename);
-
-    std::ifstream inf(filename.c_str(), std::ios::binary);
-
-    if (!inf.good()) { return false; }
-
-    auto result = load(inf, filename);
     inf.close();
     return result;
 }

@@ -9,7 +9,7 @@ class Shader;
 class ScreenQuad
 {
 public:
-    ScreenQuad() = default;
+    ScreenQuad();
     ~ScreenQuad();
 
     ScreenQuad(ScreenQuad const&) = delete;
@@ -18,13 +18,11 @@ public:
     ScreenQuad(ScreenQuad&&) = delete;
     ScreenQuad& operator=(ScreenQuad&&) = delete;
 
-    void init();
     void draw(Shader& shader);
 
 private:
     GLuint vao_;
     GLuint vbo_;
-    bool   initialized_ = false;
     static std::array<GLfloat, 24> vertices_;
 };
 

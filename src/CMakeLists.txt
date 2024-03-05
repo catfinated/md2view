@@ -5,6 +5,9 @@ find_package(OpenGL REQUIRED)
 find_package(Boost COMPONENTS system program_options REQUIRED)
 find_package(imgui REQUIRED)
 find_package(spdlog REQUIRED)
+find_package(imgui REQUIRED)
+find_package(Stb REQUIRED)
+find_path(TREEHH_INCLUDE_DIRS "treehh/tree.hh")
 
 #IF(APPLE)
 #   find_library(COCOA_LIBRARY Cocoa)
@@ -33,10 +36,10 @@ set_target_properties(md2view PROPERTIES
 )
 
 target_link_libraries(md2view
-   PUBLIC Boost::system Boost::program_options glfw GLEW::GLEW glm::glm OpenGL::GL imgui::imgui spdlog::spdlog
+   PRIVATE Boost::system Boost::program_options glfw GLEW::GLEW glm::glm OpenGL::GL imgui::imgui spdlog::spdlog
 )
 
-target_include_directories(md2view PRIVATE ${OPENGL_INCLUDE_DIR})
+target_include_directories(md2view PRIVATE ${OPENGL_INCLUDE_DIR} ${Stb_INCLUDE_DIR} ${TREEHH_INCLUDE_DIRS})
 
 target_compile_options(md2view
    PUBLIC -DGLM_ENABLE_EXPERIMENTAL -DGLEW_NO_GLU -DFMT_USE_USER_DEFINED_LITERALS=1

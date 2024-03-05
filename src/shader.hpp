@@ -32,13 +32,8 @@ public:
            std::filesystem::path const& fragment,
            std::optional<std::filesystem::path> const& geometry = {});
 
-    bool init(std::filesystem::path const& vertex,
-              std::filesystem::path const& fragment,
-              std::optional<std::filesystem::path> const& geometry = {});
-
     GLuint program() const { return program_; }
     void use() const { glUseProgram(program()); }
-    bool initialized() const { return initialized_; }
 
     void set_uniform_block_binding(char const * block, GLuint binding_point);
 
@@ -118,12 +113,15 @@ public:
     void set_view_position(glm::vec3 const& v) { set_uniform(camera_position_location(), v); }
 
 private:
+    [[nodiscard]] bool init(std::filesystem::path const& vertex,
+                            std::filesystem::path const& fragment,
+                            std::optional<std::filesystem::path> const& geometry = {});
     [[nodiscard]] bool compile_shader(GLenum shader_type, std::filesystem::path const& path, GLuint& handle);
     [[nodiscard]] bool link_program();
     void cleanup();
+    
 
 private:
     GLuint program_;
-    bool initialized_ = false;
 };
 

@@ -20,8 +20,6 @@ public:
     FrameBuffer(FrameBuffer&&) = delete;
     FrameBuffer& operator=(FrameBuffer&&) = delete;
 
-    bool init(GLuint width, GLuint height);
-
     void bind()
     {
         glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_);
@@ -41,6 +39,7 @@ private:
     void cleanup();
     void create_texture_attachment(GLuint width, GLuint height);
     void create_render_buffer_attachement(GLuint width, GLuint height);
+    [[nodiscard]] bool init(GLuint width, GLuint height);
 
 private:
     GLuint frame_buffer_;

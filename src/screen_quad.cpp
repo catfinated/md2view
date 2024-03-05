@@ -12,10 +12,8 @@ std::array<GLfloat, 24> ScreenQuad::vertices_ = {{
      1.0f,  1.0f,  1.0f, 1.0f
 }};
 
-void ScreenQuad::init()
+ScreenQuad::ScreenQuad()
 {
-    if (initialized_) { return; }
-
     glGenVertexArrays(1, &vao_);
     glGenBuffers(1, &vbo_);
 
@@ -32,10 +30,8 @@ void ScreenQuad::init()
 
 ScreenQuad::~ScreenQuad()
 {
-    if (initialized_) {
-        glDeleteVertexArrays(1, &vao_);
-        glDeleteBuffers(1, &vbo_);
-    }
+    glDeleteVertexArrays(1, &vao_);
+    glDeleteBuffers(1, &vbo_);
 }
 
 void ScreenQuad::draw(Shader& shader)

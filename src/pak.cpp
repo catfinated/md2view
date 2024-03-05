@@ -127,8 +127,3 @@ bool PAK::init_from_file()
     return true;
 }
 
-PAK::Node const * PAK::find(std::string const& name) const
-{
-    return std::addressof(entries_.at(name));
-}
-

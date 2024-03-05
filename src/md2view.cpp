@@ -43,13 +43,18 @@ private:
 private:
     std::unique_ptr<PAK> pak_;
     std::unique_ptr<MD2> md2_;
+    std::unique_ptr<ModelSelector> model_selector_;
+    std::shared_ptr<Texture2D> texture_;
     std::shared_ptr<Shader> shader_;
     std::shared_ptr<Shader> blur_shader_;
     std::shared_ptr<Shader> glow_shader_;
+    std::unique_ptr<ScreenQuad> screen_quad_;
+    std::unique_ptr<FrameBuffer<1, false>> blur_fb_;
+    std::unique_ptr<FrameBuffer<2, true>> main_fb_;
+
     Camera camera_;
     boost::program_options::options_description options_;
     std::string models_dir_;
-    ModelSelector modelSelector_;
     bool vsync_enabled_ = true;
     int scale_ = 64.0f;
     std::array<float, 3> rot_;
@@ -58,11 +63,7 @@ private:
     glm::mat4 view_;
     glm::mat4 projection_;
     std::array<float, 4> clear_color_;
-    std::unique_ptr<FrameBuffer<1, false>> blur_fb_;
-    std::unique_ptr<FrameBuffer<2, true>> main_fb_;
-    ScreenQuad screen_quad_;
     GLint disable_blur_loc_;
-    Texture2D * texture_ = nullptr;
     bool glow_ = false;
     glm::vec3 glow_color_;
     GLint glow_loc_;
@@ -90,7 +91,7 @@ bool MD2View::parse_args(EngineBase& engine)
 
 void MD2View::load_model(EngineBase&)
 {
-    md2_ = std::make_unique<MD2>(modelSelector_.model_path(), pak_.get());
+    md2_ = std::make_unique<MD2>(model_selector_->model_path(), *pak_);
 }
 
 void MD2View::reset_model_matrix()
@@ -111,18 +112,18 @@ void MD2View::reset_camera()
 void MD2View::load_current_texture(EngineBase& engine)
 {
     auto const& path = md2_->current_skin().fpath;
-    texture_ = std::addressof(engine.resource_manager().load_texture2D(*pak_, path));
+    texture_ = engine.resource_manager().load_texture2D(*pak_, path);
 }
 
 bool MD2View::on_engine_initialized(EngineBase& engine)
 {
     pak_ = std::make_unique<PAK>(models_dir_);
     // init objects which needed an opengl context to initialize
-    modelSelector_.init(*pak_);
+    model_selector_ = std::make_unique<ModelSelector>(*pak_);
     load_model(engine);
-    blur_fb_.reset(new FrameBuffer<1, false>(engine.width(), engine.height()));
-    main_fb_.reset(new FrameBuffer<2, true>(engine.width(), engine.height()));
-    screen_quad_.init();
+    blur_fb_ = std::make_unique<FrameBuffer<1, false>>(engine.width(), engine.height());
+    main_fb_ = std::make_unique<FrameBuffer<2, true>>(engine.width(), engine.height());
+    screen_quad_ = std::make_unique<ScreenQuad>();
 
     clear_color_ = { 0.2f, 0.2f, 0.2f, 1.0f };
     glClearColor(clear_color_[0], clear_color_[1], clear_color_[2], 1.0f);
@@ -177,11 +178,11 @@ void MD2View::on_framebuffer_resized(int width, int height)
     shader_->set_projection(projection);
 
     FrameBuffer<>::bind_default();
-    main_fb_.reset(new FrameBuffer<2, true>(width, height));
+    main_fb_ = std::make_unique<FrameBuffer<2, true>>(width, height);
     main_fb_->bind();
     glViewport(0, 0, width, height);
 
-    blur_fb_.reset(new FrameBuffer<1, false>(width, height));
+    blur_fb_ = std::make_unique<FrameBuffer<1, false>>(width, height);
     blur_fb_->bind();
     glViewport(0, 0, width, height);
     FrameBuffer<>::bind_default();
@@ -255,7 +256,7 @@ void MD2View::render(EngineBase& engine)
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, main_fb_->color_buffer(1));
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        screen_quad_.draw(*glow_shader_);
+        screen_quad_->draw(*glow_shader_);
 
         blur_fb_->bind_default();
         glClear(GL_COLOR_BUFFER_BIT);
@@ -266,7 +267,7 @@ void MD2View::render(EngineBase& engine)
         glBindTexture(GL_TEXTURE_2D, main_fb_->color_buffer(1));
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, blur_fb_->color_buffer(0));
-        screen_quad_.draw(*glow_shader_);
+        screen_quad_->draw(*glow_shader_);
     } 
     else {
         main_fb_->bind_default();
@@ -275,7 +276,7 @@ void MD2View::render(EngineBase& engine)
         glBindTexture(GL_TEXTURE_2D, main_fb_->color_buffer(0));
         blur_shader_->set_uniform(disable_blur_loc_, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        screen_quad_.draw(*blur_shader_);
+        screen_quad_->draw(*blur_shader_);
     }
 
     glCheckError();
@@ -328,7 +329,7 @@ void MD2View::draw_ui(EngineBase& engine)
 
     ImGui::Begin("Model");
 
-    ImGui::TextColored(ImVec4(0.0f, 1.0f ,0.0f, 1.0f), "Model: %s", modelSelector_.model_path().c_str());
+    ImGui::TextColored(ImVec4(0.0f, 1.0f ,0.0f, 1.0f), "Model: %s", model_selector_->model_path().c_str());
     int index = md2_->animation_index();
 
     ImGui::Combo("Animation", &index,
@@ -397,7 +398,7 @@ void MD2View::draw_ui(EngineBase& engine)
     ImGui::End();
 
     ImGui::Begin("Models");
-    if (modelSelector_.draw_ui()) {
+    if (model_selector_->draw_ui()) {
         load_model(engine);
     }
     ImGui::End();

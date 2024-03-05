@@ -28,8 +28,6 @@ public:
 
     [[nodiscard]] bool is_directory() const { return fpath_.extension() != ".pak"; }
 
-    Node const * find(std::string const&) const;
-
     std::unordered_map<std::string, Node> const& entries() const { return entries_; }
 
 private:
