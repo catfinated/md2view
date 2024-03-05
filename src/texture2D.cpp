@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <utility>
 
- Texture2D::Texture2D(GLuint width, GLuint height, unsigned char const * data, bool alpha)
+ Texture2D::Texture2D(GLuint width, GLuint height, gsl::span<unsigned char const> data, bool alpha)
 {
     if (!init(width, height, data, alpha)) {
         throw std::runtime_error("failed to init Texture2D");
@@ -47,7 +47,7 @@
     }
 }
 
- bool Texture2D::init(GLuint width, GLuint height, unsigned char const * data, bool alpha)
+ bool Texture2D::init(GLuint width, GLuint height, gsl::span<unsigned char const> data, bool alpha)
 {
     glGenTextures(1, &id_);
 
@@ -65,7 +65,7 @@
 
     glTexImage2D(GL_TEXTURE_2D, 0, attr_.internal_format,
                  width_, height_, 0, attr_.image_format,
-                 GL_UNSIGNED_BYTE, data);
+                 GL_UNSIGNED_BYTE, data.data());
 
     glGenerateMipmap(GL_TEXTURE_2D);
 

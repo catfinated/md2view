@@ -4,6 +4,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <gsl/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 
 #include <array>
@@ -35,10 +36,13 @@ public:
     GLuint program() const { return program_; }
     void use() const { glUseProgram(program()); }
 
-    void set_uniform_block_binding(char const * block, GLuint binding_point);
+    void set_uniform_block_binding(gsl::not_null<char const *> block, GLuint binding_point);
 
-    GLint uniform_location(GLchar const * name) const;
-    GLint uniform_location(std::string const& name) const { return uniform_location(name.c_str()); }
+    GLint uniform_location(gsl::not_null<GLchar const *> name) const;
+    GLint uniform_location(std::string const& name) const 
+    { 
+        return uniform_location(gsl::not_null<GLchar const*>(name.c_str())); 
+    }
 
     // maybe cache some of these
     GLint model_location() const { return uniform_location("model"); }
@@ -57,7 +61,7 @@ public:
     void set_uniform(GLint location, GLfloat f);
 
     template <typename T>
-    void set_uniform(GLchar const * name, T const& t)
+    void set_uniform(gsl::not_null<GLchar const *> name, T const& t)
     {
         set_uniform(uniform_location(name), t);
     }
@@ -93,10 +97,8 @@ public:
     }
 
     template <std::size_t N>
-    void set_uniform(GLchar const * name, std::array<glm::mat4, N> const& a)
+    void set_uniform(gsl::not_null<GLchar const *> name, std::array<glm::mat4, N> const& a)
     {
-        assert(name);
-
         // do we need to set each element indvidually? seems slow
         for (size_t i = 0; i < a.size(); ++i) {
             std::ostringstream oss;

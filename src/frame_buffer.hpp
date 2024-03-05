@@ -2,8 +2,7 @@
 
 #include "gl.hpp"
 
-#include <boost/optional.hpp>
-
+#include <optional>
 #include <stdexcept>
 
 template <size_t NumColorBuf = 1, bool RenderBuf = false>
@@ -44,5 +43,5 @@ private:
 private:
     GLuint frame_buffer_;
     std::array<GLuint, NumColorBuf> color_buffers_;
-    boost::optional<GLuint> render_buffer_;
+    std::optional<GLuint> render_buffer_;
 };

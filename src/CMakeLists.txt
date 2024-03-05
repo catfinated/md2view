@@ -7,6 +7,7 @@ find_package(imgui REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(imgui REQUIRED)
 find_package(Stb REQUIRED)
+find_package(gsl-lite REQUIRED)
 find_path(TREEHH_INCLUDE_DIRS "treehh/tree.hh")
 
 #IF(APPLE)
@@ -36,7 +37,7 @@ set_target_properties(md2view PROPERTIES
 )
 
 target_link_libraries(md2view
-   PRIVATE Boost::system Boost::program_options glfw GLEW::GLEW glm::glm OpenGL::GL imgui::imgui spdlog::spdlog
+   PRIVATE Boost::system Boost::program_options glfw GLEW::GLEW glm::glm OpenGL::GL imgui::imgui spdlog::spdlog gsl::gsl-lite-v1
 )
 
 target_include_directories(md2view PRIVATE ${OPENGL_INCLUDE_DIR} ${Stb_INCLUDE_DIR} ${TREEHH_INCLUDE_DIRS})

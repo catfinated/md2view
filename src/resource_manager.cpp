@@ -63,7 +63,7 @@ std::shared_ptr<Texture2D> ResourceManager::load_texture2D(PAK const& pf, std::s
     PCX pcx(inf);
     inf.close();
 
-    auto texture = std::make_shared<Texture2D>(pcx.width(), pcx.height(), pcx.image().data());;
+    auto texture = std::make_shared<Texture2D>(pcx.width(), pcx.height(), gsl::make_span(pcx.image()));
     auto result = textures2D_.emplace(std::make_pair(key, std::move(texture)));
 
     MD2V_EXPECT(result.second);
@@ -88,14 +88,14 @@ std::shared_ptr<Texture2D> ResourceManager::load_texture2D(std::filesystem::path
         int width, height, n;
         unsigned char * image = stbi_load(fpath.string().c_str(), &width, &height, &n, 3);
         MD2V_EXPECT(image);
-        texture = std::make_shared<Texture2D>(width, height, image, alpha);
+        texture = std::make_shared<Texture2D>(width, height, gsl::make_span(image, width * height), alpha);
         spdlog::info("loaded 2D texture {} width: {} height: {}", fpath.string(), width, height);
         stbi_image_free(image);
     }
     else {
         std::ifstream inf(fpath, std::ios_base::in | std::ios_base::binary);
         PCX pcx(inf);
-        texture = std::make_shared<Texture2D>(pcx.width(), pcx.height(), pcx.image().data());
+        texture = std::make_shared<Texture2D>(pcx.width(), pcx.height(), gsl::make_span(pcx.image()));
         inf.close();
     }
 

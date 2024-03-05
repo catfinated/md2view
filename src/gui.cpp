@@ -2,17 +2,15 @@
 #include "engine.hpp"
 #include "shader.hpp"
 
-Gui::Gui(EngineBase& engine)
+Gui::Gui(EngineBase& engine, gsl::not_null<GLFWwindow *> window)
     : engine_(engine)
+    , window_(window)
 {
+    init();
 }
 
-void Gui::init(GLFWwindow * window)
+void Gui::init()
 {
-    assert(window);
-
-    window_ = window;
-
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
 

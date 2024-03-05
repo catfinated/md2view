@@ -4,13 +4,14 @@
 
 #include <imgui.h>
 #include <GLFW/glfw3.h>
+#include <gsl/gsl-lite.hpp>
 
 class EngineBase;
 
 class Gui
 {
 public:
-    Gui(EngineBase&);
+    Gui(EngineBase&, gsl::not_null<GLFWwindow*> window);
 
     Gui(Gui const&) = delete;
     Gui& operator=(Gui const&) = delete;
@@ -18,7 +19,6 @@ public:
     Gui(Gui&&) = delete;
     Gui& operator=(Gui&&) = delete;
 
-    void init(GLFWwindow *);
     void update(double current_time, bool apply_inputs = true);
     void render();
     void shutdown();
@@ -31,8 +31,10 @@ private:
         num_buffers
     };
 
-    EngineBase&   engine_;
-    GLFWwindow *  window_ = nullptr;
+    void init();
+
+    EngineBase&  engine_;
+    gsl::not_null<GLFWwindow *>  window_;
     double        time_ = 0.0;
     bool          mouse_pressed_[3] = { false, false, false };
     float         mouse_wheel_ = 0.0f;

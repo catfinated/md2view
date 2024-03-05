@@ -54,10 +54,7 @@ template <typename Game>
 class Engine : public EngineBase
 {
 public:
-    Engine()
-        : EngineBase()
-        , gui_(*this)
-    {}
+    Engine() = default;
 
     bool init(int argc, char const * argv[]);
     void run_game();
@@ -76,7 +73,7 @@ protected:
 
 private:
     Game game_;
-    Gui gui_;
+    std::unique_ptr<Gui> gui_;
     GLFWwindow * window_;
     GLfloat delta_time_ = 0.0f;
     GLfloat last_frame_ = 0.0f;

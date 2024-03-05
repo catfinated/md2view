@@ -2,6 +2,8 @@
 
 #include "gl.hpp"
 
+#include <gsl/gsl-lite.hpp>
+
 class Texture2D
 {
 public:
@@ -16,7 +18,7 @@ public:
     };
 
     ~Texture2D();
-    Texture2D(GLuint width, GLuint height, unsigned char const * data, bool alpha = false);
+    Texture2D(GLuint width, GLuint height, gsl::span<unsigned char const> data, bool alpha = false);
 
     // non-copyable
     Texture2D(Texture2D const&) = delete;
@@ -38,7 +40,7 @@ public:
 
 private:
     void cleanup();
-    [[nodiscard]] bool init(GLuint width, GLuint height, unsigned char const * data, bool alpha);
+    [[nodiscard]] bool init(GLuint width, GLuint height, gsl::span<unsigned char const> data, bool alpha);
 
 private:
     Attributes attr_;

@@ -62,6 +62,8 @@ md2view is built using vcpkg to manage dependencies. These dependencies are:
 
 [treehh](https://github.com/kpeeters/tree.hh)
 
+[gsl-lite](https://github.com/gsl-lite/gsl-lite)
+
 ## Attributions
 
 While I have used many resources for learning OpenGL the one I personally like best is:

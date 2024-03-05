@@ -133,7 +133,7 @@ bool Engine<Game>::init(int argc, char const * argv[])
     last_x_ = width / 2.0;
     last_y_ = height / 2.0;
 
-    gui_.init(window_);
+    gui_ = std::make_unique<Gui>(*this, gsl::not_null{window_});
     glCheckError();
 
     return true;
@@ -156,13 +156,13 @@ void Engine<Game>::run_game()
             game_.process_input(*this, delta_time_);
         }
 
-        gui_.update(current_frame, !input_goes_to_game_);
+        gui_->update(current_frame, !input_goes_to_game_);
         glCheckError();
         game_.update(*this, delta_time_);
         glCheckError();
         game_.render(*this);
         glCheckError();
-        gui_.render();
+        gui_->render();
         glCheckError();
 
         glfwSwapBuffers(window_);

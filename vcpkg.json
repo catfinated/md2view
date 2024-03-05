@@ -11,6 +11,7 @@
     "imgui",
     "spdlog",
     "stb",
-    "treehh"
+    "treehh",
+    "gsl-lite"
   ]
 }
