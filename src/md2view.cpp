@@ -178,16 +178,10 @@ void MD2View::on_framebuffer_resized(int width, int height)
     shader_->set_projection(projection);
 
     FrameBuffer<>::bind_default();
+    glViewport(0, 0, width, height);
+
     main_fb_ = std::make_unique<FrameBuffer<2, true>>(width, height);
-    main_fb_->bind();
-    glViewport(0, 0, width, height);
-
     blur_fb_ = std::make_unique<FrameBuffer<1, false>>(width, height);
-    blur_fb_->bind();
-    glViewport(0, 0, width, height);
-    FrameBuffer<>::bind_default();
-
-    glViewport(0, 0, width, height);
 }
 
 void MD2View::update_model()
@@ -259,22 +253,23 @@ void MD2View::render(EngineBase& engine)
         screen_quad_->draw(*glow_shader_);
 
         blur_fb_->bind_default();
-        glClear(GL_COLOR_BUFFER_BIT);
         glow_shader_->use();
+        glClear(GL_COLOR_BUFFER_BIT);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, main_fb_->color_buffer(0));
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, main_fb_->color_buffer(1));
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, blur_fb_->color_buffer(0));
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         screen_quad_->draw(*glow_shader_);
     } 
     else {
         main_fb_->bind_default();
         blur_shader_->use();
+        blur_shader_->set_uniform(disable_blur_loc_, 1);
         glActiveTexture(GL_TEXTURE0);;
         glBindTexture(GL_TEXTURE_2D, main_fb_->color_buffer(0));
-        blur_shader_->set_uniform(disable_blur_loc_, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         screen_quad_->draw(*blur_shader_);
     }
