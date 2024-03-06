@@ -1,9 +1,9 @@
 #include "md2.hpp"
 #include "pak.hpp"
 #include "shader.hpp"
-#include "common.hpp"
 
 #include <glm/gtx/compatibility.hpp>
+#include <gsl-lite/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 #include <fmt/ostream.h>
 
@@ -49,25 +49,60 @@ MD2::~MD2()
 bool MD2::load(PAK const& pf, std::string const& filename)
 {
     spdlog::info("loading model {} from pak {}", filename, pf.fpath().string());
-    if (filename.empty()) { return false; }
+    gsl_Expects(!filename.empty());
     
     auto const& node = pf.entries().at(filename);
-
     auto ispak = !pf.is_directory();
     auto p = ispak ? pf.fpath() : pf.fpath() / filename;
     spdlog::debug("{}", p.string());
 
     std::ifstream inf(p, std::ios_base::binary);
-    if (!inf) { return false; }
-
+    gsl_Expects(inf);
     inf.seekg(node.filepos);
-
-    auto result = load(inf, ispak ? filename : p.string(), ispak);
+    if (!load(inf)) {
+        return false;
+    }
     inf.close();
-    return result;
+    
+    if (!ispak) {
+        load_skins_from_directory(p.parent_path(), pf.fpath());
+    }
+    set_skin_index(0);
+    return true;
 }
 
-bool MD2::load(std::ifstream& infile, std::string const& filename, bool ispak)
+void MD2::load_skins_from_directory(std::filesystem::path const& dpath, std::filesystem::path const& root)
+{
+    static constexpr std::array extensions = {".pcx", ".png", ".jpg"};
+
+    spdlog::info("load skins from {}", dpath.string());
+    std::vector<SkinData> found_skins;
+    for (auto const& skin : skins_) {
+        auto path = dpath / skin.name;
+        for (auto const& ext : extensions) {
+            path = path.replace_extension(ext);
+            if (std::filesystem::exists(path)) {
+                found_skins.emplace_back(path.string(), path.stem().string());
+                break;
+            }
+        }
+    }
+
+    if (found_skins.empty()) {  // drfreak model has no skins specified
+        for (auto const& dir_entry : std::filesystem::directory_iterator{dpath}) {
+            if (std::filesystem::is_regular_file(dir_entry.path())) {
+                auto const extension = dir_entry.path().extension();
+                if (extension == ".png") {
+                    auto relpath = dir_entry.path(); 
+                    found_skins.emplace_back(relpath.string(), relpath.stem().string());
+                } 
+            }
+        }   
+    }
+    skins_ = std::move(found_skins); 
+}
+
+bool MD2::load(std::ifstream& infile)
 {
     next_frame_ = 1;
     current_frame_ = 0;
@@ -81,21 +116,19 @@ bool MD2::load(std::ifstream& infile, std::string const& filename, bool ispak)
     infile.read(reinterpret_cast<char * >(&hdr_), sizeof(hdr_));
     spdlog::debug("md2 header: {}", hdr_);
 
-    MD2V_EXPECT(load_skins(infile, offset, filename, ispak));
-    MD2V_EXPECT(load_triangles(infile, offset));
-    MD2V_EXPECT(load_texcoords(infile, offset));
-    MD2V_EXPECT(load_frames(infile, offset));
+    gsl_Assert(load_skins(infile, offset));
+    gsl_Assert(load_triangles(infile, offset));
+    gsl_Assert(load_texcoords(infile, offset));
+    gsl_Assert(load_frames(infile, offset));
 
     setup_buffers();
     set_animation(0);
-    set_skin_index(0);
-
     return true;
 }
 
-bool MD2::load_skins(std::ifstream& infile, size_t offset, std::string const& filename, bool ispak)
+bool MD2::load_skins(std::ifstream& infile, size_t offset)
 {
-    MD2V_EXPECT(infile);
+    gsl_Expects(infile);
 
     // read skins
     static_assert(sizeof(Skin) == 64, "md2 skin has padding");
@@ -103,41 +136,14 @@ bool MD2::load_skins(std::ifstream& infile, size_t offset, std::string const& fi
     skins.resize(hdr_.num_skins); // need resize so we actually push elements
     infile.seekg(offset + hdr_.offset_skins);
     infile.read(reinterpret_cast<char * >(skins.data()), sizeof(Skin) * skins.size());
+    assert(infile.gcount() == sizeof(Skin) * skins.size());
     assert(skins.size() == static_cast<size_t>(hdr_.num_skins));
     spdlog::info("num skins={}", skins.size());
-
-    auto root = std::filesystem::path(filename).parent_path();
-    // todo: if !ispak just look for skin files in the same directory
 
     for (auto const& skin : skins) {
         spdlog::info("skin: '{}'", std::string_view{skin.name.data(), skin.name.size()});
         std::filesystem::path f(std::string(skin.name.data()));
-
-        if (ispak) {
-            skins_.emplace_back(f.string(), f.stem().string());
-            spdlog::debug("{}", skins_.back().fpath);
-        }
-        else {
-            auto p = root / f.filename();
-            auto cp = p;
-            p.replace_extension("png");
-
-            if (std::filesystem::exists(cp)) {
-                skins_.emplace_back(cp.string(), cp.stem().string());
-                spdlog::debug("{}", skins_.back().fpath);
-            }
-            else if (std::filesystem::exists(p)) {
-                skins_.emplace_back(p.string(), cp.stem().string());
-                spdlog::debug("{}", skins_.back().fpath);
-            }
-        }
-    }
-
-    // for drfreak model
-    if (!ispak && skins_.empty()) {
-        auto base = root.filename();
-        auto p =  root / base;
-        skins_.emplace_back(p.string() + ".png", base.string());
+        skins_.emplace_back(f.string(), f.stem().string());
         spdlog::debug("{}", skins_.back().fpath);
     }
 
@@ -146,7 +152,7 @@ bool MD2::load_skins(std::ifstream& infile, size_t offset, std::string const& fi
 
 bool MD2::load_triangles(std::ifstream& infile, size_t offset)
 {
-    MD2V_EXPECT(infile);
+    gsl_Expects(infile);
     static_assert(sizeof(Triangle) == 6 * sizeof(uint16_t), "md2 triangle has padding");
     triangles_.resize(hdr_.num_tris);
     infile.seekg(offset + hdr_.offset_tris);
@@ -157,8 +163,8 @@ bool MD2::load_triangles(std::ifstream& infile, size_t offset)
 
 bool MD2::load_texcoords(std::ifstream& infile, size_t offset)
 {
-    MD2V_EXPECT(infile);
-    MD2V_EXPECT(!triangles_.empty());
+    gsl_Expects(infile);
+    gsl_Expects(!triangles_.empty());
 
     // read texcoords
     static_assert(sizeof(TexCoord) == 2 * sizeof(int16_t), "md2 texcoord has padding");
@@ -187,7 +193,7 @@ bool MD2::load_texcoords(std::ifstream& infile, size_t offset)
 
 bool MD2::load_frames(std::ifstream& infile, size_t offset)
 {
-    MD2V_EXPECT(infile);
+    gsl_Expects(infile);
 
     frames_.resize(hdr_.num_frames);
     key_frames_.resize(hdr_.num_frames);

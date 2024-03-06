@@ -13,6 +13,7 @@ http://tfc.duke.free.fr/old/models/md2.htm
 
 #include <array>
 #include <cstdint>
+#include <filesystem>
 #include <string>
 #include <iosfwd>
 #include <vector>
@@ -156,11 +157,12 @@ private:
     void setup_buffers();
     [[nodiscard]] bool validate_header(Header const& hdr);
     [[nodiscard]] bool load(PAK const&, std::string const& filename);
-    [[nodiscard]] bool load(std::ifstream&, std::string const&, bool = false);
-    [[nodiscard]] bool load_skins(std::ifstream&, size_t, std::string const&, bool ispak);
+    [[nodiscard]] bool load(std::ifstream&);
+    [[nodiscard]] bool load_skins(std::ifstream&, size_t);
     [[nodiscard]] bool load_triangles(std::ifstream&, size_t);
     [[nodiscard]] bool load_texcoords(std::ifstream&, size_t);
     [[nodiscard]] bool load_frames(std::ifstream&, size_t);
+    void load_skins_from_directory(std::filesystem::path const& dpath, std::filesystem::path const& root);
 
 private:
     struct KeyFrame
