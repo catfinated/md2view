@@ -1,15 +1,14 @@
 #include "frame_buffer.hpp"
 
-template <size_t NumColorBuf, bool RenderBuf>
-FrameBuffer<NumColorBuf, RenderBuf>::FrameBuffer(GLuint width, GLuint height)
+FrameBuffer::FrameBuffer(GLuint width, GLuint height, size_t num_color_buffers, bool enable_render_buffer)
+    : color_buffers_(num_color_buffers)
 {
-    if (!init(width, height)) {
+    if (!init(width, height, enable_render_buffer)) {
         throw std::runtime_error("failed to initalize framebuffer");
     }
 }
 
-template <size_t NumColorBuf, bool RenderBuf>
-bool FrameBuffer<NumColorBuf, RenderBuf>::init(GLuint width, GLuint height)
+bool FrameBuffer::init(GLuint width, GLuint height, bool enable_render_buffer)
 {
     glCheckError();
     glGenFramebuffers(1, &frame_buffer_);
@@ -20,7 +19,7 @@ bool FrameBuffer<NumColorBuf, RenderBuf>::init(GLuint width, GLuint height)
     create_texture_attachment(width, height);
     glCheckError();
 
-    if (RenderBuf) {
+    if (enable_render_buffer) {
         create_render_buffer_attachement(width, height);
     }
 
@@ -36,30 +35,27 @@ bool FrameBuffer<NumColorBuf, RenderBuf>::init(GLuint width, GLuint height)
     return true;
 }
 
-template <size_t NumColorBuf, bool RenderBuf>
-FrameBuffer<NumColorBuf, RenderBuf>::~FrameBuffer()
+FrameBuffer::~FrameBuffer()
 {
     cleanup();
 }
 
-template <size_t NumColorBuf, bool RenderBuf>
-void FrameBuffer<NumColorBuf, RenderBuf>::cleanup()
+void FrameBuffer::cleanup()
 {
-    if (RenderBuf) {
+    if (render_buffer_) {
         GLuint rb = *render_buffer_;
         glDeleteRenderbuffers(1, &rb);
     }
 
-    glDeleteTextures(NumColorBuf, color_buffers_.data());
+    glDeleteTextures(color_buffers_.size(), color_buffers_.data());
     glDeleteFramebuffers(1, &frame_buffer_);
 }
 
-template <size_t NumColorBuf, bool RenderBuf>
-void FrameBuffer<NumColorBuf, RenderBuf>::create_texture_attachment(GLuint width, GLuint height)
+void FrameBuffer::create_texture_attachment(GLuint width, GLuint height)
 {
-    glGenTextures(NumColorBuf, color_buffers_.data());
+    glGenTextures(color_buffers_.size(), color_buffers_.data());
 
-    for (auto i = 0u; i < NumColorBuf; ++i) {
+    for (auto i = 0u; i < color_buffers_.size(); ++i) {
         glBindTexture(GL_TEXTURE_2D, color_buffers_[i]);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -73,8 +69,7 @@ void FrameBuffer<NumColorBuf, RenderBuf>::create_texture_attachment(GLuint width
     glCheckError();
 }
 
-template <size_t NumColorBuf, bool RenderBuf>
-void FrameBuffer<NumColorBuf, RenderBuf>::create_render_buffer_attachement(GLuint width, GLuint height)
+void FrameBuffer::create_render_buffer_attachement(GLuint width, GLuint height)
 {
     GLuint rb;
     glGenRenderbuffers(1, &rb);

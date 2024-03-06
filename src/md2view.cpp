@@ -2,7 +2,7 @@
 #include "camera.hpp"
 #include "md2.hpp"
 #include "model_selector.hpp"
-#include "frame_buffer.ipp"
+#include "frame_buffer.hpp"
 #include "screen_quad.hpp"
 #include "pak.hpp"
 
@@ -49,8 +49,8 @@ private:
     std::shared_ptr<Shader> blur_shader_;
     std::shared_ptr<Shader> glow_shader_;
     std::unique_ptr<ScreenQuad> screen_quad_;
-    std::unique_ptr<FrameBuffer<1, false>> blur_fb_;
-    std::unique_ptr<FrameBuffer<2, true>> main_fb_;
+    std::unique_ptr<FrameBuffer> blur_fb_;
+    std::unique_ptr<FrameBuffer> main_fb_;
 
     Camera camera_;
     boost::program_options::options_description options_;
@@ -121,8 +121,8 @@ bool MD2View::on_engine_initialized(EngineBase& engine)
     // init objects which needed an opengl context to initialize
     model_selector_ = std::make_unique<ModelSelector>(*pak_);
     load_model(engine);
-    blur_fb_ = std::make_unique<FrameBuffer<1, false>>(engine.width(), engine.height());
-    main_fb_ = std::make_unique<FrameBuffer<2, true>>(engine.width(), engine.height());
+    blur_fb_ = std::make_unique<FrameBuffer>(engine.width(), engine.height(), 1, false);
+    main_fb_ = std::make_unique<FrameBuffer>(engine.width(), engine.height(), 2, true);
     screen_quad_ = std::make_unique<ScreenQuad>();
 
     clear_color_ = { 0.2f, 0.2f, 0.2f, 1.0f };
@@ -160,7 +160,7 @@ bool MD2View::on_engine_initialized(EngineBase& engine)
     glDepthFunc(GL_LEQUAL);
     //glDisable(GL_BLEND);
     //glEnable(GL_BLEND);
-    FrameBuffer<>::bind_default();
+    FrameBuffer::bind_default();
 
     set_vsync();
     spdlog::info("done on engine init");
@@ -177,11 +177,11 @@ void MD2View::on_framebuffer_resized(int width, int height)
     shader_->use();
     shader_->set_projection(projection);
 
-    FrameBuffer<>::bind_default();
+    FrameBuffer::bind_default();
     glViewport(0, 0, width, height);
 
-    main_fb_ = std::make_unique<FrameBuffer<2, true>>(width, height);
-    blur_fb_ = std::make_unique<FrameBuffer<1, false>>(width, height);
+    main_fb_ = std::make_unique<FrameBuffer>(width, height, 2, true);
+    blur_fb_ = std::make_unique<FrameBuffer>(width, height, 1, false);
 }
 
 void MD2View::update_model()
@@ -252,7 +252,7 @@ void MD2View::render(EngineBase& engine)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         screen_quad_->draw(*glow_shader_);
 
-        blur_fb_->bind_default();
+        FrameBuffer::bind_default();
         glow_shader_->use();
         glClear(GL_COLOR_BUFFER_BIT);
         glActiveTexture(GL_TEXTURE0);
@@ -265,7 +265,7 @@ void MD2View::render(EngineBase& engine)
         screen_quad_->draw(*glow_shader_);
     } 
     else {
-        main_fb_->bind_default();
+        FrameBuffer::bind_default();
         blur_shader_->use();
         blur_shader_->set_uniform(disable_blur_loc_, 1);
         glActiveTexture(GL_TEXTURE0);;

@@ -4,13 +4,13 @@
 
 #include <optional>
 #include <stdexcept>
+#include <vector>
 
-template <size_t NumColorBuf = 1, bool RenderBuf = false>
 class FrameBuffer
 {
 public:
     FrameBuffer() = default;
-    FrameBuffer(GLuint width, GLuint height);
+    FrameBuffer(GLuint width, GLuint height, size_t num_color_buffers = 1, bool enable_render_buffer = false);
     ~FrameBuffer();
 
     FrameBuffer(FrameBuffer const&) = delete;
@@ -29,8 +29,8 @@ public:
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-    GLuint color_buffer(size_t n) const { assert(n < NumColorBuf); return color_buffers_[n]; }
-    void use_color_buffer(size_t n) const { assert(n < NumColorBuf); glBindTexture(GL_TEXTURE_2D, color_buffers_[n]); }
+    GLuint color_buffer(size_t n) const { return color_buffers_.at(n); }
+    void use_color_buffer(size_t n) const { glBindTexture(GL_TEXTURE_2D, color_buffers_.at(n)); }
 
     GLuint handle() const { return frame_buffer_; }
 
@@ -38,10 +38,10 @@ private:
     void cleanup();
     void create_texture_attachment(GLuint width, GLuint height);
     void create_render_buffer_attachement(GLuint width, GLuint height);
-    [[nodiscard]] bool init(GLuint width, GLuint height);
+    [[nodiscard]] bool init(GLuint width, GLuint height, bool enable_render_buffer);
 
 private:
     GLuint frame_buffer_;
-    std::array<GLuint, NumColorBuf> color_buffers_;
+    std::vector<GLuint> color_buffers_;
     std::optional<GLuint> render_buffer_;
 };
