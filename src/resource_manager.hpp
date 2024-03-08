@@ -27,8 +27,6 @@ public:
                                         
     std::shared_ptr<Shader> shader(std::string const& name) { return shaders_.at(name); }
 
-    std::shared_ptr<Texture2D> load_texture2D(std::filesystem::path const& path, std::optional<std::string> const& name = {}, bool alpha = false);
-
     std::shared_ptr<Texture2D> load_texture2D(PAK const& pf, std::string const& path, std::optional<std::string> const& name = {});
 
     std::shared_ptr<Texture2D> texture2D(std::string const& name) { return textures2D_.at(name); }

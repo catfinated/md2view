@@ -2,7 +2,12 @@
 
 #include "gl.hpp"
 
-#include <gsl/gsl-lite.hpp>
+#include <gsl-lite/gsl-lite.hpp>
+
+#include <memory>
+#include <string>
+
+class PAK;
 
 class Texture2D
 {
@@ -37,6 +42,8 @@ public:
     GLuint height() const { return height_; }
 
     static void unbind() { glBindTexture(GL_TEXTURE_2D, 0); }
+
+    static std::shared_ptr<Texture2D> load(PAK const& pak, std::string const& path);
 
 private:
     void cleanup();

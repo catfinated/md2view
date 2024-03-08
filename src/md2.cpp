@@ -50,21 +50,18 @@ bool MD2::load(PAK const& pf, std::string const& filename)
 {
     spdlog::info("loading model {} from pak {}", filename, pf.fpath().string());
     gsl_Expects(!filename.empty());
-    
-    auto const& node = pf.entries().at(filename);
     auto ispak = !pf.is_directory();
-    auto p = ispak ? pf.fpath() : pf.fpath() / filename;
-    spdlog::debug("{}", p.string());
 
-    std::ifstream inf(p, std::ios_base::binary);
-    gsl_Expects(inf);
-    inf.seekg(node.filepos);
-    if (!load(inf)) {
-        return false;
+    {
+        auto inf = pf.open_ifstream(filename);
+        gsl_Expects(inf);
+        if (!load(inf)) {
+            return false;
+        }
     }
-    inf.close();
     
     if (!ispak) {
+        auto p = pf.fpath() / filename;
         load_skins_from_directory(p.parent_path(), pf.fpath());
     }
     set_skin_index(0);
@@ -82,7 +79,7 @@ void MD2::load_skins_from_directory(std::filesystem::path const& dpath, std::fil
         for (auto const& ext : extensions) {
             path = path.replace_extension(ext);
             if (std::filesystem::exists(path)) {
-                found_skins.emplace_back(path.string(), path.stem().string());
+                found_skins.emplace_back(path.lexically_relative(root).string(), path.stem().string());
                 break;
             }
         }
@@ -93,7 +90,7 @@ void MD2::load_skins_from_directory(std::filesystem::path const& dpath, std::fil
             if (std::filesystem::is_regular_file(dir_entry.path())) {
                 auto const extension = dir_entry.path().extension();
                 if (extension == ".png") {
-                    auto relpath = dir_entry.path(); 
+                    auto relpath = dir_entry.path().lexically_relative(root); 
                     found_skins.emplace_back(relpath.string(), relpath.stem().string());
                 } 
             }

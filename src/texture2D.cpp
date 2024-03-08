@@ -1,7 +1,11 @@
 #include "texture2D.hpp"
-#include "common.hpp"
+#include "pak.hpp"
+#include "pcx.hpp"
 
 #include <spdlog/spdlog.h>
+#include <gsl-lite/gsl-lite.hpp>
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 
 #include <stdexcept>
 #include <utility>
@@ -88,4 +92,25 @@
     glBindTexture(GL_TEXTURE_2D, id_);
 }
 
- 
+std::shared_ptr<Texture2D> Texture2D::load(PAK const& pak, std::string const& path)
+{
+    spdlog::info("load texture {} from {}", path, pak.fpath().string());
+    auto const is_pcx = std::filesystem::path(path).extension() == ".pcx";
+
+    if (is_pcx) {
+        auto inf  = pak.open_ifstream(path);
+        gsl_Assert(inf.is_open());
+        PCX pcx(inf);
+        return std::make_shared<Texture2D>(pcx.width(), pcx.height(), gsl::make_span(pcx.image()));;
+    }
+
+    auto const abspath = (pak.fpath() / path).make_preferred();
+    gsl_Assert(std::filesystem::exists(abspath));
+    int width, height, n;
+    unsigned char * image = stbi_load(abspath.string().c_str(), &width, &height, &n, 3);
+    gsl_Assert(image);
+    auto texture = std::make_shared<Texture2D>(width, height, gsl::make_span(image, width * height));
+    spdlog::info("loaded 2D texture {} width: {} height: {}", path, width, height);
+    stbi_image_free(image);
+    return texture;
+}

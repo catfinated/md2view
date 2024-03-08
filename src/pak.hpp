@@ -5,6 +5,7 @@
 #include <array>
 #include <cstdint>
 #include <filesystem>
+#include <fstream>
 #include <string>
 #include <unordered_map>
 
@@ -27,6 +28,8 @@ public:
     std::filesystem::path const& fpath() const { return fpath_; }
 
     [[nodiscard]] bool is_directory() const { return fpath_.extension() != ".pak"; }
+
+    std::ifstream open_ifstream(std::filesystem::path const& fpath) const;
 
     std::unordered_map<std::string, Node> const& entries() const { return entries_; }
 
