@@ -25,13 +25,15 @@ public:
 
     explicit PAK(std::filesystem::path const& fpath);
 
-    std::filesystem::path const& fpath() const { return fpath_; }
+    std::filesystem::path const& fpath() const noexcept { return fpath_; }
 
-    [[nodiscard]] bool is_directory() const { return fpath_.extension() != ".pak"; }
+    [[nodiscard]] bool is_directory() const noexcept { return fpath_.extension() != ".pak"; }
 
     std::ifstream open_ifstream(std::filesystem::path const& fpath) const;
 
     std::unordered_map<std::string, Node> const& entries() const { return entries_; }
+
+    [[nodiscard]] bool has_models() const noexcept { return has_models_; }
 
 private:
     [[nodiscard]] bool init();
@@ -40,4 +42,5 @@ private:
 
     std::filesystem::path fpath_;
     std::unordered_map<std::string, Node> entries_;
+    bool has_models_{false};
 };

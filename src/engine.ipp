@@ -1,7 +1,7 @@
 #include "engine.hpp"
 
 #include <cassert>
-#include <gsl-lite/gsl-lite.hpp>
+#include <gsl/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 
 inline bool EngineBase::check_key_pressed(unsigned int key)
@@ -126,7 +126,10 @@ bool Engine<Game>::init(int argc, char const * argv[])
     glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &nrAttributes);
     spdlog::info("Maximum # of vertex attributes supported: {}", nrAttributes);
 
-    gsl_Assert(game_.on_engine_initialized(*this));
+    if (!game_.on_engine_initialized(*this)) {
+        spdlog::error("failed to initialize game");
+        return false;
+    }
     glCheckError();
 
     last_x_ = width / 2.0;

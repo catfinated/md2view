@@ -2,7 +2,7 @@
 #include "pak.hpp"
 
 #include <imgui.h>
-#include <gsl-lite/gsl-lite.hpp>
+#include <gsl/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 
 #include <algorithm>

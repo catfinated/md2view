@@ -3,7 +3,7 @@
 #include "pcx.hpp"
 
 #include <spdlog/spdlog.h>
-#include <gsl-lite/gsl-lite.hpp>
+#include <gsl/gsl-lite.hpp>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 

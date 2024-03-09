@@ -2,7 +2,7 @@
 
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
-#include <gsl-lite/gsl-lite.hpp>
+#include <gsl/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 
 #include <algorithm>
@@ -63,6 +63,7 @@ void PAK::init_from_directory()
             node.filelen = std::filesystem::file_size(dir_entry.path());
             spdlog::info("{} {} {}", node.name, node.path, node.filelen);
             entries_.emplace(path, std::move(node));
+            has_models_ |= dir_entry.path().extension() == ".md2";
         }
     }
 }
@@ -110,7 +111,8 @@ bool PAK::init_from_file()
         inf.read(reinterpret_cast<char *>(&entry), sizeof(entry));
         // TODO: ensure filepos/filelen converted from little endian to host
 
-        auto fullname = std::string(entry.name.data());
+        auto const fullname = std::string(entry.name.data());
+        auto const path = std::filesystem::path(fullname);
 
         spdlog::debug("file: {} {} {}",
             fullname,
@@ -118,11 +120,12 @@ bool PAK::init_from_file()
             entry.filelen);
 
         Node node;
-        node.name = std::filesystem::path(fullname).stem().string();
+        node.name = path.stem().string();
         node.path = fullname;
         node.filepos = entry.filepos;
         node.filelen = entry.filelen;
         entries_.emplace(fullname, std::move(node));
+        has_models_ |= path.extension() == ".md2";
     }
     return true;
 }
@@ -142,4 +145,6 @@ std::ifstream PAK::open_ifstream(std::filesystem::path const& filename) const
     spdlog::info("open file {}", p.string());
     return std::ifstream(p, flags);
 }
+
+
 

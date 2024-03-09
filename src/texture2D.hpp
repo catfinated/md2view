@@ -2,7 +2,7 @@
 
 #include "gl.hpp"
 
-#include <gsl-lite/gsl-lite.hpp>
+#include <gsl/gsl-lite.hpp>
 
 #include <memory>
 #include <string>

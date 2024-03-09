@@ -118,6 +118,10 @@ void MD2View::load_current_texture(EngineBase& engine)
 bool MD2View::on_engine_initialized(EngineBase& engine)
 {
     pak_ = std::make_unique<PAK>(models_dir_);
+    if (!pak_->has_models()) {
+        spdlog::error("PAK '{}' has no MD2 models to view", models_dir_);
+        return false;
+    }
     // init objects which needed an opengl context to initialize
     model_selector_ = std::make_unique<ModelSelector>(*pak_);
     load_model(engine);

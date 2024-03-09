@@ -3,7 +3,7 @@
 #include "shader.hpp"
 
 #include <glm/gtx/compatibility.hpp>
-#include <gsl-lite/gsl-lite.hpp>
+#include <gsl/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 #include <fmt/ostream.h>
 
