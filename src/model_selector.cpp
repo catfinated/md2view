@@ -43,11 +43,8 @@ void ModelSelector::init(PAK const& pak)
     node.name = node.path;
     tree_.insert(tree_.begin(), std::move(node));
 
-    for (auto const& key_value : pak.entries()) {
-        auto const path = std::filesystem::path(key_value.first);
-        if (".md2" == path.extension()) {
-            add_node(path);
-        }
+    for (auto const& pak_entry : pak.models()) {
+        add_node(pak_entry.path);
     }
 
     select_random_model();

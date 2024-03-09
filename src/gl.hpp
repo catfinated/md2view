@@ -11,7 +11,6 @@
 #include <spdlog/spdlog.h>
 
 #include <cassert>
-#include <iostream>
 
 inline const char * glErrorToString(GLenum error)
 {

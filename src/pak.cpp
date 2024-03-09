@@ -63,7 +63,6 @@ void PAK::init_from_directory()
             node.filelen = std::filesystem::file_size(dir_entry.path());
             spdlog::info("{} {} {}", node.name, node.path, node.filelen);
             entries_.emplace(path, std::move(node));
-            has_models_ |= dir_entry.path().extension() == ".md2";
         }
     }
 }
@@ -125,7 +124,6 @@ bool PAK::init_from_file()
         node.filepos = entry.filepos;
         node.filelen = entry.filelen;
         entries_.emplace(fullname, std::move(node));
-        has_models_ |= path.extension() == ".md2";
     }
     return true;
 }
@@ -145,6 +143,4 @@ std::ifstream PAK::open_ifstream(std::filesystem::path const& filename) const
     spdlog::info("open file {}", p.string());
     return std::ifstream(p, flags);
 }
-
-
 

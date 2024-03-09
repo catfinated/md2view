@@ -12,6 +12,7 @@
     "spdlog",
     "stb",
     "treehh",
-    "gsl-lite"
+    "gsl-lite",
+    "range-v3"
   ]
 }
