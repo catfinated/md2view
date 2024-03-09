@@ -1,8 +1,8 @@
 #include "model_selector.hpp"
-#include "common.hpp"
 #include "pak.hpp"
 
 #include <imgui.h>
+#include <gsl-lite/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 
 #include <algorithm>
@@ -12,7 +12,7 @@ void ModelSelector::add_node(std::filesystem::path const& path)
 {
     auto parent = tree_.begin();
     spdlog::debug("add node for {}", path.string());
-    MD2V_EXPECT(path.extension() == ".md2");
+    gsl_Assert(path.extension() == ".md2");
     // pak seperator is always '/'
     auto const sep = "/";
 

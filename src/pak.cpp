@@ -1,8 +1,8 @@
 #include "pak.hpp"
-#include "common.hpp"
 
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
+#include <gsl-lite/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 
 #include <algorithm>
@@ -105,7 +105,7 @@ bool PAK::init_from_file()
     inf.seekg(hdr.dirofs);
 
     for (size_t i = 0; i < num_entries; ++ i) {
-        MD2V_EXPECT(inf);
+        gsl_Assert(inf);
         Entry entry;
         inf.read(reinterpret_cast<char *>(&entry), sizeof(entry));
         // TODO: ensure filepos/filelen converted from little endian to host

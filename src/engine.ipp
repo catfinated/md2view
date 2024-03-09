@@ -1,8 +1,7 @@
 #include "engine.hpp"
-#include "common.hpp"
 
 #include <cassert>
-
+#include <gsl-lite/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 
 inline bool EngineBase::check_key_pressed(unsigned int key)
@@ -59,7 +58,7 @@ bool Engine<Game>::init(int argc, char const * argv[])
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
     window_ = glfwCreateWindow(width, height, game_.title(), nullptr, nullptr);
-    MD2V_EXPECT(window_);
+    gsl_Assert(window_);
     glfwMakeContextCurrent(window_);
 
     glfwSetWindowUserPointer(window_, this);
@@ -115,7 +114,7 @@ bool Engine<Game>::init(int argc, char const * argv[])
     glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     glewExperimental = GL_TRUE;
-    MD2V_EXPECT(glewInit() == GLEW_OK);
+    gsl_Assert(glewInit() == GLEW_OK);
     glGetError(); // glewInit is known to cause invalid enum error
 
     glfwGetFramebufferSize(window_, &width_, &height_);
@@ -127,7 +126,7 @@ bool Engine<Game>::init(int argc, char const * argv[])
     glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &nrAttributes);
     spdlog::info("Maximum # of vertex attributes supported: {}", nrAttributes);
 
-    MD2V_EXPECT(game_.on_engine_initialized(*this));
+    gsl_Assert(game_.on_engine_initialized(*this));
     glCheckError();
 
     last_x_ = width / 2.0;
