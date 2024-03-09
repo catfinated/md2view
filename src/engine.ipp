@@ -1,12 +1,13 @@
 #include "engine.hpp"
 
-#include <cassert>
 #include <gsl/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 
+#include <iostream>
+
 inline bool EngineBase::check_key_pressed(unsigned int key)
 {
-    assert(key < max_keys);
+    gsl_Expects(key < max_keys);
 
     if (keys_[key] && !keys_pressed_[key]) {
         keys_pressed_[key] = true;
@@ -69,7 +70,7 @@ bool Engine<Game>::init(int argc, char const * argv[])
     auto key_callback = [](GLFWwindow * window, int key, int scancode, int action, int mode) {
         using EngineType = Engine<Game>;
         EngineType * engine = static_cast<EngineType *>(glfwGetWindowUserPointer(window));
-        assert(engine);
+        gsl_Assert(engine);
         engine->key_callback(key, action);
     };
 
@@ -78,7 +79,7 @@ bool Engine<Game>::init(int argc, char const * argv[])
     auto mouse_callback = [](GLFWwindow * window, double xpos, double ypos) {
         using EngineType = Engine<Game>;
         EngineType * engine = static_cast<EngineType *>(glfwGetWindowUserPointer(window));
-        assert(engine);
+        gsl_Assert(engine);
         engine->mouse_callback(xpos, ypos);
     };
 
@@ -87,7 +88,7 @@ bool Engine<Game>::init(int argc, char const * argv[])
     auto scroll_callback = [](GLFWwindow * window, double xoffset, double yoffset) {
         using EngineType = Engine<Game>;
         EngineType * engine = static_cast<EngineType *>(glfwGetWindowUserPointer(window));
-        assert(engine);
+        gsl_Assert(engine);
         engine->scroll_callback(xoffset, yoffset);
      };
 
@@ -96,7 +97,7 @@ bool Engine<Game>::init(int argc, char const * argv[])
     auto win_resize_callback = [](GLFWwindow * window, int width, int height) {
         using EngineType = Engine<Game>;
         EngineType * engine = static_cast<EngineType *>(glfwGetWindowUserPointer(window));
-        assert(engine);
+        gsl_Assert(engine);
         engine->window_resize_callback(width, height);
     };
 
@@ -105,7 +106,7 @@ bool Engine<Game>::init(int argc, char const * argv[])
     auto fb_resize_callback = [](GLFWwindow * window, int width, int height) {
         using EngineType = Engine<Game>;
         EngineType * engine = static_cast<EngineType *>(glfwGetWindowUserPointer(window));
-        assert(engine);
+        gsl_Assert(engine);
         engine->framebuffer_resize_callback(width, height);
     };
 
