@@ -101,7 +101,7 @@ std::shared_ptr<Texture2D> Texture2D::load(PAK const& pak, std::string const& pa
         auto inf  = pak.open_ifstream(path);
         gsl_Assert(inf.is_open());
         PCX pcx(inf);
-        return std::make_shared<Texture2D>(pcx.width(), pcx.height(), gsl::make_span(pcx.image()));;
+        return std::make_shared<Texture2D>(pcx.width(), pcx.height(), gsl::make_span(pcx.image()));
     }
 
     auto const abspath = (pak.fpath() / path).make_preferred();

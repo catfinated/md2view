@@ -8,6 +8,7 @@
 
 #include <bitset>
 #include <random>
+#include <memory>
 
 class EngineBase
 {
@@ -21,9 +22,7 @@ public:
 
     static size_t const max_keys = 1024;
 
-    EngineBase()
-        : resource_manager_("data") // up from build dir
-    {}
+    EngineBase() = default;
 
     int width() const { return width_; }
     int height() const { return height_; }
@@ -31,7 +30,11 @@ public:
     int screen_width() const { return screen_width_; }
     int screen_height() const { return screen_height_; }
 
-    ResourceManager& resource_manager() { return resource_manager_; }
+    ResourceManager& resource_manager() 
+    { 
+        gsl_Expects(resource_manager_);
+        return *resource_manager_; 
+    }
     std::bitset<max_keys> const& keys() const { return keys_; }
 
     bool check_key_pressed(unsigned int key);
@@ -43,14 +46,12 @@ public:
 
     Mouse const& mouse() const { return mouse_; }  
 
-private:
-    ResourceManager resource_manager_;
-
 protected:
     int width_;
     int height_;
     int screen_width_;
     int screen_height_;
+    std::unique_ptr<ResourceManager> resource_manager_;
 
     std::bitset<max_keys> keys_;
     std::bitset<max_keys> keys_pressed_;
@@ -58,6 +59,7 @@ protected:
 
     boost::program_options::options_description opt_desc_;
     boost::program_options::variables_map variables_map_;
+    std::string pak_path_;
 };
 
 template <typename Game>

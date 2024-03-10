@@ -8,6 +8,7 @@
 
 #include <glm/gtx/string_cast.hpp>
 #include <spdlog/spdlog.h>
+#include <spdlog/fmt/std.h>
 
 #include <algorithm>
 #include <cstdlib>
@@ -28,9 +29,6 @@ public:
     void render(EngineBase& engine);
     char const * const title() const { return "MD2View"; }
 
-    boost::program_options::options_description& options() { return options_; }
-    bool parse_args(EngineBase& engine);
-
 private:
     void reset_camera();
     void reset_model_matrix();
@@ -41,8 +39,7 @@ private:
     void load_model(EngineBase&);
 
 private:
-    std::unique_ptr<PAK> pak_;
-    std::unique_ptr<MD2> md2_;
+    std::shared_ptr<MD2> md2_;
     std::unique_ptr<ModelSelector> model_selector_;
     std::shared_ptr<Texture2D> texture_;
     std::shared_ptr<Shader> shader_;
@@ -53,7 +50,6 @@ private:
     std::unique_ptr<FrameBuffer> main_fb_;
 
     Camera camera_;
-    boost::program_options::options_description options_;
     std::string models_dir_;
     bool vsync_enabled_ = true;
     int scale_ = 64.0f;
@@ -70,28 +66,13 @@ private:
 };
 
 MD2View::MD2View()
-    : options_("Game options")
 {
     reset_model_matrix();
-
-    options_.add_options()
-        ("models,m",
-         boost::program_options::value<std::string>(&models_dir_),
-         "MD2 Models Directory or PAK file");
 }
 
-bool MD2View::parse_args(EngineBase& engine)
+void MD2View::load_model(EngineBase& engine)
 {
-    if (models_dir_.empty()) {
-        models_dir_ = "../data/models";
-    }
-
-    return true;
-}
-
-void MD2View::load_model(EngineBase&)
-{
-    md2_ = std::make_unique<MD2>(model_selector_->model_path(), *pak_);
+    md2_ = engine.resource_manager().load_model(model_selector_->model_path());
 }
 
 void MD2View::reset_model_matrix()
@@ -112,18 +93,17 @@ void MD2View::reset_camera()
 void MD2View::load_current_texture(EngineBase& engine)
 {
     auto const& path = md2_->current_skin().fpath;
-    texture_ = engine.resource_manager().load_texture2D(*pak_, path);
+    texture_ = engine.resource_manager().load_texture2D(path);
 }
 
 bool MD2View::on_engine_initialized(EngineBase& engine)
 {
-    pak_ = std::make_unique<PAK>(models_dir_);
-    if (!pak_->has_models()) {
-        spdlog::error("PAK '{}' has no MD2 models to view", models_dir_);
+    if (!engine.resource_manager().pak().has_models()) {
+        spdlog::error("PAK '{}' has no MD2 models to view", engine.resource_manager().pak().fpath());
         return false;
     }
     // init objects which needed an opengl context to initialize
-    model_selector_ = std::make_unique<ModelSelector>(*pak_);
+    model_selector_ = std::make_unique<ModelSelector>(engine.resource_manager().pak());
     load_model(engine);
     blur_fb_ = std::make_unique<FrameBuffer>(engine.width(), engine.height(), 1, false);
     main_fb_ = std::make_unique<FrameBuffer>(engine.width(), engine.height(), 2, true);
@@ -133,7 +113,7 @@ bool MD2View::on_engine_initialized(EngineBase& engine)
     glClearColor(clear_color_[0], clear_color_[1], clear_color_[2], 1.0f);
 
     spdlog::info("begin load shaders");
-    shader_ = engine.resource_manager().load_shader("md2", "md2.vert", "md2.frag");
+    shader_ = engine.resource_manager().load_shader("md2");
     shader_->use();
     update_model();
     load_current_texture(engine);
@@ -141,12 +121,12 @@ bool MD2View::on_engine_initialized(EngineBase& engine)
     glow_color_ = glm::vec3(0.0f, 1.0f, 0.0f);
     shader_->set_uniform(glow_loc_, glow_color_);
 
-    blur_shader_ = engine.resource_manager().load_shader("blur", "screen.vert", "blur.frag");
+    blur_shader_ = engine.resource_manager().load_shader("blur", "screen");
     blur_shader_->use();
     disable_blur_loc_ = blur_shader_->uniform_location("disable_blur");
     blur_shader_->set_uniform(disable_blur_loc_, 1);
 
-    glow_shader_ = engine.resource_manager().load_shader("glow", "screen.vert", "glow.frag");
+    glow_shader_ = engine.resource_manager().load_shader("glow", "screen");
     glow_shader_->use();
 
     auto loc = glow_shader_->uniform_location("screenTexture");
@@ -272,7 +252,7 @@ void MD2View::render(EngineBase& engine)
         FrameBuffer::bind_default();
         blur_shader_->use();
         blur_shader_->set_uniform(disable_blur_loc_, 1);
-        glActiveTexture(GL_TEXTURE0);;
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, main_fb_->color_buffer(0));
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         screen_quad_->draw(*blur_shader_);
@@ -307,7 +287,6 @@ void MD2View::draw_ui(EngineBase& engine)
         if (ImGui::Button("Reset Camera")) {
             reset_camera();
         }
-
 
         ImGui::Text("View");
         ImGui::PushItemWidth(vec4width);

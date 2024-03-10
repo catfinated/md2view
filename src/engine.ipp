@@ -23,9 +23,12 @@ bool Engine<Game>::parse_args(int argc, char const * argv[])
     engine.add_options()
         ("help,h", "Show this help message")
         ("width,W", boost::program_options::value<int>(&width_)->default_value(1280), "Screen width")
-        ("height,H", boost::program_options::value<int>(&height_)->default_value(800), "Screen height");
+        ("height,H", boost::program_options::value<int>(&height_)->default_value(800), "Screen height")
+        ("pak,p",
+         boost::program_options::value<std::string>(&pak_path_),
+         "PAK file or directory to emulate as a PAK"); 
 
-    options_desc().add(engine).add(game_.options());
+    options_desc().add(engine);
 
     boost::program_options::store(
         boost::program_options::parse_command_line(argc, argv, options_desc()), variables_map_);
@@ -36,7 +39,7 @@ bool Engine<Game>::parse_args(int argc, char const * argv[])
         return false;
     }
 
-    return game_.parse_args(*this);
+    return true;
 }
 
 template <typename Game>
@@ -51,6 +54,10 @@ bool Engine<Game>::init(int argc, char const * argv[])
 
     screen_width_ = width;
     screen_height_ = height;
+
+    std::optional<std::filesystem::path> pak;
+    if (!pak_path_.empty()) { pak = pak_path_; } 
+    resource_manager_ = std::make_unique<ResourceManager>("data", pak);
 
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
