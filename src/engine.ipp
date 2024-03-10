@@ -133,8 +133,8 @@ bool Engine<Game>::init(int argc, char const * argv[])
     }
     glCheckError();
 
-    last_x_ = width / 2.0;
-    last_y_ = height / 2.0;
+    mouse_.xpos = width / 2.0;
+    mouse_.ypos = height / 2.0;
 
     gui_ = std::make_unique<Gui>(*this, gsl::not_null{window_});
     glCheckError();
@@ -200,16 +200,10 @@ void Engine<Game>::key_callback(int key, int action)
 template <typename Game>
 void Engine<Game>::mouse_callback(double xpos, double ypos)
 {
-    if (first_mouse_) {
-        last_x_ = xpos;
-        last_y_ = ypos;
-        first_mouse_ = false;
-    }
-
-    GLfloat xoffset = xpos - last_x_;
-    GLfloat yoffset = last_y_ - ypos; // reversed since y-coords go from bottom to top
-    last_x_ = xpos;
-    last_y_ = ypos;
+    GLfloat xoffset = xpos - mouse_.xpos.value_or(xpos);
+    GLfloat yoffset = mouse_.ypos.value_or(ypos) - ypos; // reversed since y-coords go from bottom to top
+    mouse_.xpos = xpos;
+    mouse_.ypos = ypos;
 
     if (input_goes_to_game_) {
         game_.on_mouse_movement(xoffset, yoffset);
@@ -219,6 +213,9 @@ void Engine<Game>::mouse_callback(double xpos, double ypos)
 template <typename Game>
 void Engine<Game>::scroll_callback(double xoffset, double yoffset)
 {
+    mouse_.scroll_xoffset = xoffset;
+    mouse_.scroll_yoffset = yoffset;
+
     if (input_goes_to_game_) {
         game_.on_mouse_scroll(xoffset, yoffset);
     }

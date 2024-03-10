@@ -37,7 +37,6 @@ private:
     gsl::not_null<GLFWwindow *>  window_;
     double        time_ = 0.0;
     bool          mouse_pressed_[3] = { false, false, false };
-    float         mouse_wheel_ = 0.0f;
     GLuint        font_texture_ = 0;
     int           attrib_location_tex_ = 0;
     int           attrib_location_projection_ = 0;

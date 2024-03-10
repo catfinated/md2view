@@ -12,6 +12,13 @@
 class EngineBase
 {
 public:
+    struct Mouse {
+        std::optional<double> xpos;
+        std::optional<double> ypos;
+        std::optional<double> scroll_xoffset;
+        std::optional<double> scroll_yoffset; 
+    };
+
     static size_t const max_keys = 1024;
 
     EngineBase()
@@ -34,6 +41,8 @@ public:
     boost::program_options::options_description& options_desc() { return opt_desc_; }
     boost::program_options::variables_map const& variables_map() { return variables_map_; }
 
+    Mouse const& mouse() const { return mouse_; }  
+
 private:
     ResourceManager resource_manager_;
 
@@ -45,6 +54,7 @@ protected:
 
     std::bitset<max_keys> keys_;
     std::bitset<max_keys> keys_pressed_;
+    Mouse mouse_;
 
     boost::program_options::options_description opt_desc_;
     boost::program_options::variables_map variables_map_;
@@ -77,9 +87,6 @@ private:
     GLFWwindow * window_;
     GLfloat delta_time_ = 0.0f;
     GLfloat last_frame_ = 0.0f;
-    GLfloat last_x_;
-    GLfloat last_y_;
-    bool first_mouse_ = true;
     bool input_goes_to_game_ = false;
 };
 

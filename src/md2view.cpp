@@ -163,7 +163,7 @@ bool MD2View::on_engine_initialized(EngineBase& engine)
     glEnable(GL_CULL_FACE);
     glDepthFunc(GL_LEQUAL);
     //glDisable(GL_BLEND);
-    //glEnable(GL_BLEND);
+    glEnable(GL_BLEND);
     FrameBuffer::bind_default();
 
     set_vsync();
@@ -285,8 +285,10 @@ void MD2View::render(EngineBase& engine)
 
 void MD2View::draw_ui(EngineBase& engine)
 {
+    static float const vec4width = 275;
+    static int const precision = 5;
     // draw gui
-    ImGui::Begin("Scene");
+    ImGui::Begin("MD2View");
 
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
@@ -298,111 +300,115 @@ void MD2View::draw_ui(EngineBase& engine)
         set_vsync();
     }
 
-    ImGui::Text("Camera");
-    camera_.draw_ui();
+    if (ImGui::TreeNodeEx("Camera", ImGuiTreeNodeFlags_DefaultOpen)) {
 
-    if (ImGui::Button("Reset Camera")) {
-        reset_camera();
+        camera_.draw_ui();
+
+        if (ImGui::Button("Reset Camera")) {
+            reset_camera();
+        }
+
+
+        ImGui::Text("View");
+        ImGui::PushItemWidth(vec4width);
+        ImGui::InputFloat4("", glm::value_ptr(view_[0]), "%.3f", ImGuiInputTextFlags_ReadOnly);
+        ImGui::InputFloat4("", glm::value_ptr(view_[1]), "%.3f", ImGuiInputTextFlags_ReadOnly);
+        ImGui::InputFloat4("", glm::value_ptr(view_[2]), "%.3f", ImGuiInputTextFlags_ReadOnly);
+        ImGui::InputFloat4("", glm::value_ptr(view_[3]), "%.3f", ImGuiInputTextFlags_ReadOnly);
+        ImGui::PopItemWidth();
+
+        ImGui::Text("Projection");
+        ImGui::PushItemWidth(vec4width);
+        ImGui::InputFloat4("", glm::value_ptr(projection_[0]), "%.3f", ImGuiInputTextFlags_ReadOnly);
+        ImGui::InputFloat4("", glm::value_ptr(projection_[1]), "%.3f", ImGuiInputTextFlags_ReadOnly);
+        ImGui::InputFloat4("", glm::value_ptr(projection_[2]), "%.3f", ImGuiInputTextFlags_ReadOnly);
+        ImGui::InputFloat4("", glm::value_ptr(projection_[3]), "%.3f", ImGuiInputTextFlags_ReadOnly);
+        ImGui::PopItemWidth();
+
+        ImGui::TreePop();
     }
 
-    static float const vec4width = 275;
-    static int const precision = 5;
+   if (ImGui::TreeNodeEx("Model", ImGuiTreeNodeFlags_DefaultOpen)) {
 
-    ImGui::Text("View");
-    ImGui::PushItemWidth(vec4width);
-    ImGui::InputFloat4("", glm::value_ptr(view_[0]), "%.3f", ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat4("", glm::value_ptr(view_[1]), "%.3f", ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat4("", glm::value_ptr(view_[2]), "%.3f", ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat4("", glm::value_ptr(view_[3]), "%.3f", ImGuiInputTextFlags_ReadOnly);
-    ImGui::PopItemWidth();
+        ImGui::TextColored(ImVec4(0.0f, 1.0f ,0.0f, 1.0f), "Model: %s", model_selector_->model_path().c_str());
+        int index = md2_->animation_index();
 
-    ImGui::Text("Projection");
-    ImGui::PushItemWidth(vec4width);
-    ImGui::InputFloat4("", glm::value_ptr(projection_[0]), "%.3f", ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat4("", glm::value_ptr(projection_[1]), "%.3f", ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat4("", glm::value_ptr(projection_[2]), "%.3f", ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat4("", glm::value_ptr(projection_[3]), "%.3f", ImGuiInputTextFlags_ReadOnly);
-    ImGui::PopItemWidth();
+        ImGui::Combo("Animation", &index,
+                    [](void * data, int idx, char const ** out_text) -> bool {
+                        MD2 const * model = reinterpret_cast<MD2 const *>(data);
+                        assert(model);
+                        if (idx < 0 || static_cast<size_t>(idx) >= model->animations().size()) { return false; }
+                        *out_text = model->animations()[idx].name.c_str();
+                        return true;
+                    },
+                    reinterpret_cast<void *>(md2_.get()),
+                    md2_->animations().size());
 
+        md2_->set_animation(static_cast<size_t>(index));
+
+        int sindex = md2_->skin_index();
+
+        ImGui::Combo("Skin", &sindex,
+                    [](void * data, int idx, char const ** out_text) -> bool {
+                        MD2 const * model = reinterpret_cast<MD2 const *>(data);
+                        assert(model);
+                        if (idx < 0 || static_cast<size_t>(idx) >= model->skins().size()) { return false; }
+                        *out_text = model->skins()[idx].name.c_str();
+                        return true;
+                    },
+                    reinterpret_cast<void *>(md2_.get()),
+                    md2_->skins().size());
+
+        md2_->set_skin_index(static_cast<size_t>(sindex));
+        load_current_texture(engine); // skin may have changed
+
+        float fps = md2_->frames_per_second();
+        ImGui::InputFloat("Animation FPS", &fps, 1.0f, 5.0f, "%.3f");
+        md2_->set_frames_per_second(fps);
+
+        ImGui::Text("Model");
+        ImGui::PushItemWidth(vec4width);
+        ImGui::InputFloat4("", glm::value_ptr(model_[0]), "%.3f", ImGuiInputTextFlags_ReadOnly);
+        ImGui::InputFloat4("", glm::value_ptr(model_[1]), "%.3f", ImGuiInputTextFlags_ReadOnly);
+        ImGui::InputFloat4("", glm::value_ptr(model_[2]), "%.3f", ImGuiInputTextFlags_ReadOnly);
+        ImGui::InputFloat4("", glm::value_ptr(model_[3]), "%.3f", ImGuiInputTextFlags_ReadOnly);
+        ImGui::PopItemWidth();
+
+        ImGui::Checkbox("Glow", &glow_);
+        if (ImGui::ColorEdit3("Glow color", glm::value_ptr(glow_color_))) {
+            shader_->use();
+            shader_->set_uniform(glow_loc_, glow_color_);
+        }
+
+        bool model_changed = ImGui::SliderInt("Scale Factor", &scale_, 1, 256);
+        model_changed |= ImGui::SliderFloat("X-Position", &pos_[0], -7.0f, 7.0f);
+        model_changed |= ImGui::SliderFloat("Y-Position", &pos_[1], -7.0f, 7.0f);
+        model_changed |= ImGui::SliderFloat("Z-Position", &pos_[2], -7.0f, 7.0f);
+        model_changed |= ImGui::SliderAngle("X-Rotation", &rot_[0]);
+        model_changed |= ImGui::SliderAngle("Y-Rotation", &rot_[1]);
+        model_changed |= ImGui::SliderAngle("Z-Rotation", &rot_[2]);
+
+        if (ImGui::Button("Reset Model")) {
+            reset_model_matrix();
+            model_changed = true;
+        }
+        if (model_changed) { 
+            update_model(); 
+        }
+        ImGui::Image(reinterpret_cast<void*>(std::uintptr_t(texture_->id())), ImVec2(texture_->width(), texture_->height()),
+                    ImVec2(0,0), ImVec2(1,1), ImColor(255,255,255,255), ImColor(255,255,255,128));
+
+        ImGui::TreePop();
+    }
+
+    if (ImGui::TreeNodeEx("Select Model", ImGuiTreeNodeFlags_DefaultOpen)) {
+        if (model_selector_->draw_ui()) {       
+            load_model(engine);
+            load_current_texture(engine); // skin may have changed
+        }
+        ImGui::TreePop();
+    }
     ImGui::End();
-
-    ImGui::Begin("Model");
-
-    ImGui::TextColored(ImVec4(0.0f, 1.0f ,0.0f, 1.0f), "Model: %s", model_selector_->model_path().c_str());
-    int index = md2_->animation_index();
-
-    ImGui::Combo("Animation", &index,
-                 [](void * data, int idx, char const ** out_text) -> bool {
-                     MD2 const * model = reinterpret_cast<MD2 const *>(data);
-                     assert(model);
-                     if (idx < 0 || static_cast<size_t>(idx) >= model->animations().size()) { return false; }
-                     *out_text = model->animations()[idx].name.c_str();
-                     return true;
-                 },
-                 reinterpret_cast<void *>(md2_.get()),
-                 md2_->animations().size());
-
-    md2_->set_animation(static_cast<size_t>(index));
-
-    int sindex = md2_->skin_index();
-
-    ImGui::Combo("Skin", &sindex,
-                 [](void * data, int idx, char const ** out_text) -> bool {
-                     MD2 const * model = reinterpret_cast<MD2 const *>(data);
-                     assert(model);
-                     if (idx < 0 || static_cast<size_t>(idx) >= model->skins().size()) { return false; }
-                     *out_text = model->skins()[idx].name.c_str();
-                     return true;
-                 },
-                 reinterpret_cast<void *>(md2_.get()),
-                 md2_->skins().size());
-
-    md2_->set_skin_index(static_cast<size_t>(sindex));
-    load_current_texture(engine); // skin may have changed
-
-    float fps = md2_->frames_per_second();
-    ImGui::InputFloat("Animation FPS", &fps, 1.0f, 5.0f, "%.3f");
-    md2_->set_frames_per_second(fps);
-
-    ImGui::Text("Model");
-    ImGui::PushItemWidth(vec4width);
-    ImGui::InputFloat4("", glm::value_ptr(model_[0]), "%.3f", ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat4("", glm::value_ptr(model_[1]), "%.3f", ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat4("", glm::value_ptr(model_[2]), "%.3f", ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat4("", glm::value_ptr(model_[3]), "%.3f", ImGuiInputTextFlags_ReadOnly);
-    ImGui::PopItemWidth();
-
-    ImGui::Checkbox("Glow", &glow_);
-    if (ImGui::ColorEdit3("Glow color", glm::value_ptr(glow_color_))) {
-        shader_->use();
-        shader_->set_uniform(glow_loc_, glow_color_);
-    }
-
-    bool model_changed = ImGui::SliderInt("Scale Factor", &scale_, 1, 256);
-    model_changed |= ImGui::SliderFloat("X-Position", &pos_[0], -7.0f, 7.0f);
-    model_changed |= ImGui::SliderFloat("Y-Position", &pos_[1], -7.0f, 7.0f);
-    model_changed |= ImGui::SliderFloat("Z-Position", &pos_[2], -7.0f, 7.0f);
-    model_changed |= ImGui::SliderAngle("X-Rotation", &rot_[0]);
-    model_changed |= ImGui::SliderAngle("Y-Rotation", &rot_[1]);
-    model_changed |= ImGui::SliderAngle("Z-Rotation", &rot_[2]);
-
-    if (ImGui::Button("Reset Model")) {
-        reset_model_matrix();
-        model_changed = true;
-    }
-
-    ImGui::Image(reinterpret_cast<void*>(std::uintptr_t(texture_->id())), ImVec2(texture_->width(), texture_->height()),
-                ImVec2(0,0), ImVec2(1,1), ImColor(255,255,255,255), ImColor(255,255,255,128));
-
-    ImGui::End();
-
-    ImGui::Begin("Models");
-    if (model_selector_->draw_ui()) {
-        load_model(engine);
-    }
-    ImGui::End();
-
-    if (model_changed) { update_model(); }
 }
 
 void MD2View::set_vsync()

@@ -113,9 +113,8 @@ void Gui::update(double current_time, bool apply_inputs)
        // (we already got mouse wheel, keyboard keys & characters from glfw callbacks polled in glfwPollEvents())
        if (glfwGetWindowAttrib(window_, GLFW_FOCUSED))
        {
-           double mouse_x, mouse_y;
-           glfwGetCursorPos(window_, &mouse_x, &mouse_y);
-           io.MousePos = ImVec2((float)mouse_x, (float)mouse_y);   // Mouse position in screen coordinates (set to -1,-1 if no mouse / on another screen, etc.)
+           io.MousePos = ImVec2(static_cast<float>(engine_.mouse().xpos.value_or(-1)), 
+                                static_cast<float>(engine_.mouse().ypos.value_or(-1)));   // Mouse position in screen coordinates (set to -1,-1 if no mouse / on another screen, etc.)
        }
        else
        {
@@ -130,8 +129,7 @@ void Gui::update(double current_time, bool apply_inputs)
            mouse_pressed_[i] = false;
        }
 
-       io.MouseWheel = mouse_wheel_;
-       mouse_wheel_ = 0.0f;
+       io.MouseWheel = engine_.mouse().scroll_yoffset.value_or(0.0);
     }
 
     // Hide OS mouse cursor if ImGui is drawing it
