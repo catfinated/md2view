@@ -1,10 +1,5 @@
-#include "engine.ipp"
-#include "camera.hpp"
-#include "md2.hpp"
-#include "model_selector.hpp"
-#include "frame_buffer.hpp"
-#include "screen_quad.hpp"
-#include "pak.hpp"
+#include "md2view.hpp"
+#include "engine.hpp"
 
 #include <glm/gtx/string_cast.hpp>
 #include <spdlog/spdlog.h>
@@ -13,64 +8,13 @@
 #include <algorithm>
 #include <cstdlib>
 #include <cstdint>
-#include <memory>
-
-class MD2View
-{
-public:
-    MD2View();
-
-    bool on_engine_initialized(EngineBase& engine);
-    void process_input(EngineBase& engine, GLfloat delta_time);
-    void on_mouse_movement(GLfloat xoffset, GLfloat yoffset);
-    void on_mouse_scroll(double xoffset, double yoffset);
-    void on_framebuffer_resized(int, int);
-    void update(EngineBase& engine, GLfloat delta_time);
-    void render(EngineBase& engine);
-    char const * const title() const { return "MD2View"; }
-
-private:
-    void reset_camera();
-    void reset_model_matrix();
-    void load_current_texture(EngineBase&);
-    void update_model();
-    void draw_ui(EngineBase&);
-    void set_vsync();
-    void load_model(EngineBase&);
-
-private:
-    std::shared_ptr<MD2> md2_;
-    std::unique_ptr<ModelSelector> model_selector_;
-    std::shared_ptr<Texture2D> texture_;
-    std::shared_ptr<Shader> shader_;
-    std::shared_ptr<Shader> blur_shader_;
-    std::shared_ptr<Shader> glow_shader_;
-    std::unique_ptr<ScreenQuad> screen_quad_;
-    std::unique_ptr<FrameBuffer> blur_fb_;
-    std::unique_ptr<FrameBuffer> main_fb_;
-
-    Camera camera_;
-    std::string models_dir_;
-    bool vsync_enabled_ = true;
-    int scale_ = 64.0f;
-    std::array<float, 3> rot_;
-    glm::vec3 pos_;
-    glm::mat4 model_;
-    glm::mat4 view_;
-    glm::mat4 projection_;
-    std::array<float, 4> clear_color_;
-    GLint disable_blur_loc_;
-    bool glow_ = false;
-    glm::vec3 glow_color_;
-    GLint glow_loc_;
-};
 
 MD2View::MD2View()
 {
     reset_model_matrix();
 }
 
-void MD2View::load_model(EngineBase& engine)
+void MD2View::load_model(Engine& engine)
 {
     md2_ = engine.resource_manager().load_model(model_selector_->model_path());
 }
@@ -90,13 +34,13 @@ void MD2View::reset_camera()
     camera_.reset(glm::vec3(0.0f, 0.0f, 3.0f));
 }
 
-void MD2View::load_current_texture(EngineBase& engine)
+void MD2View::load_current_texture(Engine& engine)
 {
     auto const& path = md2_->current_skin().fpath;
     texture_ = engine.resource_manager().load_texture2D(path);
 }
 
-bool MD2View::on_engine_initialized(EngineBase& engine)
+bool MD2View::on_engine_initialized(Engine& engine)
 {
     if (!engine.resource_manager().pak().has_models()) {
         spdlog::error("PAK '{}' has no MD2 models to view", engine.resource_manager().pak().fpath());
@@ -184,7 +128,7 @@ void MD2View::update_model()
     shader_->set_model(model_);
 }
 
-void MD2View::render(EngineBase& engine)
+void MD2View::render(Engine& engine)
 {
     //ImGui::ShowTestWindow(nullptr);
     //return;
@@ -263,7 +207,7 @@ void MD2View::render(EngineBase& engine)
     glCheckError();
 }
 
-void MD2View::draw_ui(EngineBase& engine)
+void MD2View::draw_ui(Engine& engine)
 {
     static float const vec4width = 275;
     static int const precision = 5;
@@ -395,12 +339,12 @@ void MD2View::set_vsync()
     glfwSwapInterval(vsync_enabled_ ? 1 : 0);
 }
 
-void MD2View::update(EngineBase& engine, GLfloat delta_time)
+void MD2View::update(Engine& engine, GLfloat delta_time)
 {
     md2_->update(delta_time);
 }
 
-void MD2View::process_input(EngineBase& engine, GLfloat delta_time)
+void MD2View::process_input(Engine& engine, GLfloat delta_time)
 {
     if (engine.keys()[GLFW_KEY_W]) {
         camera_.move(Camera::FORWARD, delta_time);
@@ -426,15 +370,3 @@ void MD2View::on_mouse_scroll(double xoffset, double yoffset)
     camera_.on_mouse_scroll(xoffset, yoffset);
 }
 
-int main(int argc, char const * argv[])
-{
-    Engine<MD2View> engine;
-
-    if (!engine.init(argc, argv)) {
-        return EXIT_FAILURE;
-    }
-
-    engine.run_game();
-
-    return EXIT_SUCCESS;
-}

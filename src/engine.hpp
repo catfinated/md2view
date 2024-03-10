@@ -10,7 +10,7 @@
 #include <random>
 #include <memory>
 
-class EngineBase
+class Engine
 {
 public:
     struct Mouse {
@@ -22,7 +22,7 @@ public:
 
     static size_t const max_keys = 1024;
 
-    EngineBase() = default;
+    Engine() = default;
 
     int width() const { return width_; }
     int height() const { return height_; }
@@ -37,7 +37,7 @@ public:
     }
     std::bitset<max_keys> const& keys() const { return keys_; }
 
-    bool check_key_pressed(unsigned int key);
+    [[nodiscard]] bool check_key_pressed(unsigned int key);
 
     float aspect_ratio() const { return static_cast<float>(width_) / static_cast<float>(height_); }
 
@@ -60,35 +60,7 @@ protected:
     boost::program_options::options_description opt_desc_;
     boost::program_options::variables_map variables_map_;
     std::string pak_path_;
-};
 
-template <typename Game>
-class Engine : public EngineBase
-{
-public:
-    Engine() = default;
-
-    bool init(int argc, char const * argv[]);
-    void run_game();
-
-protected:
-    GLfloat delta_time() const { return delta_time_; }
-
-    // consider using attorney so these callbacks don't have to be public
-    void key_callback(int key, int action);
-    void mouse_callback(double xpos, double ypos);
-    void scroll_callback(double xoffset, double yoffset);
-    bool parse_args(int argc, char const * argv[]);
-
-    void window_resize_callback(int x, int y);
-    void framebuffer_resize_callback(int x, int y);
-
-private:
-    Game game_;
-    std::unique_ptr<Gui> gui_;
     GLFWwindow * window_;
-    GLfloat delta_time_ = 0.0f;
-    GLfloat last_frame_ = 0.0f;
-    bool input_goes_to_game_ = false;
 };
 

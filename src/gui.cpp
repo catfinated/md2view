@@ -2,7 +2,7 @@
 #include "engine.hpp"
 #include "shader.hpp"
 
-Gui::Gui(EngineBase& engine, gsl::not_null<GLFWwindow *> window)
+Gui::Gui(Engine& engine, gsl::not_null<GLFWwindow *> window)
     : engine_(engine)
     , window_(window)
 {

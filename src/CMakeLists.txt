@@ -30,7 +30,9 @@ add_executable(md2view
   model_selector.cpp
   shader.cpp
   texture2D.cpp
-  frame_buffer.cpp)
+  frame_buffer.cpp
+  engine.cpp
+  main.cpp)
 
 set_target_properties(md2view PROPERTIES
     CXX_STANDARD 17

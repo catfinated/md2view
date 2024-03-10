@@ -6,12 +6,12 @@
 #include <GLFW/glfw3.h>
 #include <gsl/gsl-lite.hpp>
 
-class EngineBase;
+class Engine;
 
 class Gui
 {
 public:
-    Gui(EngineBase&, gsl::not_null<GLFWwindow*> window);
+    Gui(Engine&, gsl::not_null<GLFWwindow*> window);
 
     Gui(Gui const&) = delete;
     Gui& operator=(Gui const&) = delete;
@@ -33,7 +33,7 @@ private:
 
     void init();
 
-    EngineBase&  engine_;
+    Engine&  engine_;
     gsl::not_null<GLFWwindow *>  window_;
     double        time_ = 0.0;
     bool          mouse_pressed_[3] = { false, false, false };

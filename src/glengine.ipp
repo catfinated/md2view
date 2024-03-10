@@ -1,23 +1,12 @@
-#include "engine.hpp"
+#include "glengine.hpp"
 
 #include <gsl/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 
 #include <iostream>
 
-inline bool EngineBase::check_key_pressed(unsigned int key)
-{
-    gsl_Expects(key < max_keys);
-
-    if (keys_[key] && !keys_pressed_[key]) {
-        keys_pressed_[key] = true;
-        return true;
-    }
-    return false;
-}
-
 template <typename Game>
-bool Engine<Game>::parse_args(int argc, char const * argv[])
+bool GLEngine<Game>::parse_args(int argc, char const * argv[])
 {
     boost::program_options::options_description engine("Engine options");
     engine.add_options()
@@ -43,7 +32,7 @@ bool Engine<Game>::parse_args(int argc, char const * argv[])
 }
 
 template <typename Game>
-bool Engine<Game>::init(int argc, char const * argv[])
+bool GLEngine<Game>::init(int argc, char const * argv[])
 {
     if (!parse_args(argc, argv)) {
         return false;
@@ -75,7 +64,7 @@ bool Engine<Game>::init(int argc, char const * argv[])
 
     // define the callbacks here as lambdas so they are not accessible to outside code
     auto key_callback = [](GLFWwindow * window, int key, int scancode, int action, int mode) {
-        using EngineType = Engine<Game>;
+        using EngineType = GLEngine<Game>;
         EngineType * engine = static_cast<EngineType *>(glfwGetWindowUserPointer(window));
         gsl_Assert(engine);
         engine->key_callback(key, action);
@@ -84,7 +73,7 @@ bool Engine<Game>::init(int argc, char const * argv[])
     glfwSetKeyCallback(window_, key_callback);
 
     auto mouse_callback = [](GLFWwindow * window, double xpos, double ypos) {
-        using EngineType = Engine<Game>;
+        using EngineType = GLEngine<Game>;
         EngineType * engine = static_cast<EngineType *>(glfwGetWindowUserPointer(window));
         gsl_Assert(engine);
         engine->mouse_callback(xpos, ypos);
@@ -93,7 +82,7 @@ bool Engine<Game>::init(int argc, char const * argv[])
     glfwSetCursorPosCallback(window_, mouse_callback);
 
     auto scroll_callback = [](GLFWwindow * window, double xoffset, double yoffset) {
-        using EngineType = Engine<Game>;
+        using EngineType = GLEngine<Game>;
         EngineType * engine = static_cast<EngineType *>(glfwGetWindowUserPointer(window));
         gsl_Assert(engine);
         engine->scroll_callback(xoffset, yoffset);
@@ -102,7 +91,7 @@ bool Engine<Game>::init(int argc, char const * argv[])
     glfwSetScrollCallback(window_, scroll_callback);
 
     auto win_resize_callback = [](GLFWwindow * window, int width, int height) {
-        using EngineType = Engine<Game>;
+        using EngineType = GLEngine<Game>;
         EngineType * engine = static_cast<EngineType *>(glfwGetWindowUserPointer(window));
         gsl_Assert(engine);
         engine->window_resize_callback(width, height);
@@ -111,7 +100,7 @@ bool Engine<Game>::init(int argc, char const * argv[])
     glfwSetWindowSizeCallback(window_, win_resize_callback);
 
     auto fb_resize_callback = [](GLFWwindow * window, int width, int height) {
-        using EngineType = Engine<Game>;
+        using EngineType = GLEngine<Game>;
         EngineType * engine = static_cast<EngineType *>(glfwGetWindowUserPointer(window));
         gsl_Assert(engine);
         engine->framebuffer_resize_callback(width, height);
@@ -150,7 +139,7 @@ bool Engine<Game>::init(int argc, char const * argv[])
 }
 
 template <typename Game>
-void Engine<Game>::run_game()
+void GLEngine<Game>::run_game()
 {
     last_frame_ = glfwGetTime();
     //glfwSwapInterval(1);
@@ -183,7 +172,7 @@ void Engine<Game>::run_game()
 }
 
 template <typename Game>
-void Engine<Game>::key_callback(int key, int action)
+void GLEngine<Game>::key_callback(int key, int action)
 {
     if (action == GLFW_PRESS) {
         if (key == GLFW_KEY_ESCAPE) {
@@ -205,7 +194,7 @@ void Engine<Game>::key_callback(int key, int action)
 }
 
 template <typename Game>
-void Engine<Game>::mouse_callback(double xpos, double ypos)
+void GLEngine<Game>::mouse_callback(double xpos, double ypos)
 {
     GLfloat xoffset = xpos - mouse_.xpos.value_or(xpos);
     GLfloat yoffset = mouse_.ypos.value_or(ypos) - ypos; // reversed since y-coords go from bottom to top
@@ -218,7 +207,7 @@ void Engine<Game>::mouse_callback(double xpos, double ypos)
 }
 
 template <typename Game>
-void Engine<Game>::scroll_callback(double xoffset, double yoffset)
+void GLEngine<Game>::scroll_callback(double xoffset, double yoffset)
 {
     mouse_.scroll_xoffset = xoffset;
     mouse_.scroll_yoffset = yoffset;
@@ -229,7 +218,7 @@ void Engine<Game>::scroll_callback(double xoffset, double yoffset)
 }
 
 template <typename Game>
-void Engine<Game>::window_resize_callback(int x, int y)
+void GLEngine<Game>::window_resize_callback(int x, int y)
 {
     spdlog::info("window resize x={} y={}", x, y);
     screen_width_ = x;
@@ -237,7 +226,7 @@ void Engine<Game>::window_resize_callback(int x, int y)
 }
 
 template <typename Game>
-void Engine<Game>::framebuffer_resize_callback(int x, int y)
+void GLEngine<Game>::framebuffer_resize_callback(int x, int y)
 {
     spdlog::info("framebuffer resize x={} y={}", x, y);
     width_ = x;
