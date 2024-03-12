@@ -33,13 +33,13 @@ public:
 
     std::ifstream open_ifstream(std::filesystem::path const& fpath) const;
 
-    [[nodiscard]] bool has_models() const noexcept { return !models().empty(); }
-
     auto models() const 
     {
         return entries() | ranges::views::values | ranges::views::filter([](auto const& n) { 
             return boost::algorithm::ends_with(n.path, ".md2"); });
     }
+
+     [[nodiscard]] bool has_models() const noexcept { return !models().empty(); }
     
 private:
     [[nodiscard]] bool init();
