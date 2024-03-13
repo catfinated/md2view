@@ -10,6 +10,7 @@ find_package(Stb REQUIRED)
 find_package(gsl-lite REQUIRED)
 find_package(range-v3 CONFIG REQUIRED)
 find_path(TREEHH_INCLUDE_DIRS "treehh/tree.hh")
+find_package(Vulkan REQUIRED)
 
 #IF(APPLE)
 #   find_library(COCOA_LIBRARY Cocoa)
@@ -18,7 +19,7 @@ find_path(TREEHH_INCLUDE_DIRS "treehh/tree.hh")
 #   SET(PLATFORM_LIBS ${COCOA_LIBRARY} ${IOKIT_LIBRARY} ${COREVIDEO_LIBRARY})
 #ENDIF(APPLE)
 
-add_executable(md2view
+add_library(libmd2v
   md2view.cpp
   gui.cpp
   md2.cpp
@@ -31,16 +32,15 @@ add_executable(md2view
   shader.cpp
   texture2D.cpp
   frame_buffer.cpp
-  engine.cpp
-  main.cpp)
+  engine.cpp)
 
-set_target_properties(md2view PROPERTIES
+set_target_properties(libmd2v PROPERTIES
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS NO
 )
 
-target_link_libraries(md2view PRIVATE
+target_link_libraries(libmd2v PUBLIC
    Boost::system 
    Boost::program_options 
    glfw 
@@ -55,8 +55,30 @@ target_link_libraries(md2view PRIVATE
    range-v3::range-v3
 )
 
-target_include_directories(md2view PRIVATE ${OPENGL_INCLUDE_DIR} ${Stb_INCLUDE_DIR} ${TREEHH_INCLUDE_DIRS})
+target_include_directories(libmd2v PUBLIC ${OPENGL_INCLUDE_DIR} ${Stb_INCLUDE_DIR} ${TREEHH_INCLUDE_DIRS})
 
-target_compile_options(md2view
+target_compile_options(libmd2v
    PUBLIC -DGLM_ENABLE_EXPERIMENTAL -DGLEW_NO_GLU -DFMT_USE_USER_DEFINED_LITERALS=1
+)
+
+add_executable(glmd2v main.cpp)
+
+target_link_libraries(glmd2v PRIVATE libmd2v)
+
+set_target_properties(glmd2v PROPERTIES
+    CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED YES
+    CXX_EXTENSIONS NO
+)
+
+add_executable(vkmd2v vkengine.cpp vkmain.cpp)
+
+target_link_libraries(vkmd2v PRIVATE libmd2v Vulkan::Vulkan)
+
+target_compile_options(vkmd2v PUBLIC -DGLFW_INCLUDE_VULKAN)
+
+set_target_properties(vkmd2v PROPERTIES
+    CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED YES
+    CXX_EXTENSIONS NO
 )

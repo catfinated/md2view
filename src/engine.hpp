@@ -4,7 +4,6 @@
 #include "gui.hpp"
 
 #include <boost/program_options.hpp>
-#include <GLFW/glfw3.h>
 
 #include <bitset>
 #include <random>
@@ -47,6 +46,8 @@ public:
     Mouse const& mouse() const { return mouse_; }  
 
 protected:
+    bool parse_args(int argc, char const * argv[]);
+    
     int width_;
     int height_;
     int screen_width_;
@@ -60,7 +61,5 @@ protected:
     boost::program_options::options_description opt_desc_;
     boost::program_options::variables_map variables_map_;
     std::string pak_path_;
-
-    GLFWwindow * window_;
 };
 

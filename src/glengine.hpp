@@ -2,6 +2,8 @@
 
 #include "engine.hpp"
 
+#include <GLFW/glfw3.h>
+
 template <typename Game>
 class GLEngine : public Engine
 {
@@ -18,13 +20,13 @@ protected:
     void key_callback(int key, int action);
     void mouse_callback(double xpos, double ypos);
     void scroll_callback(double xoffset, double yoffset);
-    bool parse_args(int argc, char const * argv[]);
 
     void window_resize_callback(int x, int y);
     void framebuffer_resize_callback(int x, int y);
 
 private:
     Game game_;
+    GLFWwindow * window_;
     std::unique_ptr<Gui> gui_;
     GLfloat delta_time_ = 0.0f;
     GLfloat last_frame_ = 0.0f;

@@ -3,7 +3,8 @@
 
 The purpose of this project is to be able to load, render, texture, and animate
 MD2 models that are stored in *Quake II* PAK files or which have been extracted into
-an equivalent directory structure. The rendering is currently done in OpenGL.
+an equivalent directory structure. The rendering is currently done in OpenGL 4. 
+Support for a Vulkan renderer is currently in progress.
 
 Here are some screenshots of md2view in action:
 
@@ -27,6 +28,11 @@ will be displayed in the GUI when you manipulate the camera.
 
 You can use the GUI to enable an optional post-processing "glow" effect around the
 model. You can set the color to use as well.
+
+## Renders 
+
+The OpenGL renderer is compiled into the `glmd2v` binary target. 
+The Vulkan renderer (incomplete) is compiled into the `vkmd2v` binary target.
 
 ## Testing
 
@@ -75,6 +81,8 @@ While I have used many resources for learning OpenGL the one I personally like b
 Which is authored by [Joey de Vries](https://twitter.com/JoeyDeVriez).
 The code for those tutorials is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by-nc/4.0/legalcode).
 Code for the camera and the blur shader is derived from those tutorials with modifications/customizations.
+
+For learning Vulkan I am using this [Vulkan Tutorial](https://vulkan-tutorial.com/)
 
 The inspiration for the glow post-processing effect came from [Makin' Stuff Look Good](https://www.youtube.com/watch?v=SMLbbi8oaO8)
 
