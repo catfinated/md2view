@@ -41,7 +41,9 @@ void VKEngine::init_window()
 void VKEngine::init_vulkan()
 {
     instance_ = forceUnwrap(Instance::create());
-    debug_messenger_ = forceUnwrap(DebugMessenger::create(instance_));
+    debugMessenger_ = forceUnwrap(DebugMessenger::create(instance_));
+    physicalDevice_ = forceUnwrap(PhysicalDevice::pickPhysicalDevice(instance_));
+    device_ = forceUnwrap(Device::create(physicalDevice_));
 }
 
 void VKEngine::run_game()

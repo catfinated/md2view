@@ -23,7 +23,9 @@ private:
 
     Window window_;
     Instance instance_;
-    std::optional<DebugMessenger> debug_messenger_;
+    std::optional<DebugMessenger> debugMessenger_;
+    PhysicalDevice physicalDevice_;
+    Device device_;
 };
 
 }

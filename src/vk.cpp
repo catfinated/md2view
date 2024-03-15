@@ -6,9 +6,14 @@
 
 #include <array>
 #include <string_view>
+#include <vector>
 
 namespace vk {
 namespace {
+
+static constexpr std::array<char const*, 1> validationLayers = {
+    "VK_LAYER_KHRONOS_validation"    
+};
 
 VKAPI_ATTR VkBool32 VKAPI_CALL vk_debug_callback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -47,18 +52,29 @@ void populate_debug_messenger_create_info(VkDebugUtilsMessengerCreateInfoEXT& cr
 
 }
 
-Window::Window(GLFWwindow * window)
+Window::Window(GLFWwindow * window) noexcept
     : window_(window)
 {}
 
-Window::~Window()
+Window::~Window() noexcept
 {
     if (window_) {
         glfwDestroyWindow(window_);
     }
 }
 
-tl::expected<Window, std::runtime_error> Window::create(int width, int height)
+Window& Window::operator=(Window&& rhs) noexcept 
+{
+    if (this != std::addressof(rhs)) {
+        if (window_) {
+            glfwDestroyWindow(window_);
+        }
+        window_ = std::exchange(rhs.window_, nullptr);
+    }
+    return *this;
+}
+
+tl::expected<Window, std::runtime_error> Window::create(int width, int height) noexcept
 {
     gsl_Expects(width > 0);
     gsl_Expects(height > 0);
@@ -73,18 +89,29 @@ tl::expected<Window, std::runtime_error> Window::create(int width, int height)
     return Window{window}; 
 }
 
-Instance::Instance(VkInstance handle)
+Instance::Instance(VkInstance handle) noexcept
     : handle_(handle)
 {}
 
-Instance::~Instance()
+Instance::~Instance() noexcept
 {
     if (handle_) {
         vkDestroyInstance(*handle_, nullptr);
     }
 }
 
-tl::expected<Instance, std::runtime_error> Instance::create()
+Instance& Instance::operator=(Instance&& rhs) noexcept 
+{
+    if (this != std::addressof(rhs)) {
+        if (handle_) {
+            vkDestroyInstance(*handle_, nullptr);
+        }        
+        handle_ = std::exchange(rhs.handle_, std::nullopt);
+    }
+    return *this;
+}
+
+tl::expected<Instance, std::runtime_error> Instance::create() noexcept
 {
     VkApplicationInfo appInfo{};
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -93,10 +120,6 @@ tl::expected<Instance, std::runtime_error> Instance::create()
     appInfo.pEngineName = "No Engine";
     appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
     appInfo.apiVersion = VK_API_VERSION_1_0;
-
-    static constexpr std::array<char const*, 1> validationLayers = {
-        "VK_LAYER_KHRONOS_validation"    
-    };
 
     uint32_t layerCount;
     vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
@@ -110,8 +133,7 @@ tl::expected<Instance, std::runtime_error> Instance::create()
             return sv == std::string_view{layer.layerName};
         });
         if (iter == ranges::end(availableLayers)) {
-            throw std::runtime_error(
-                fmt::format("validation layer not available {}", sv));
+            tl::make_unexpected(std::runtime_error(fmt::format("validation layer not available {}", sv)));
         } 
         spdlog::info("found validation layer {}", sv);
     }
@@ -140,19 +162,31 @@ tl::expected<Instance, std::runtime_error> Instance::create()
     return Instance{vkInstance};
 }
 
-DebugMessenger::DebugMessenger(Instance& instance,  VkDebugUtilsMessengerEXT handle)
+DebugMessenger::DebugMessenger(Instance const& instance,  VkDebugUtilsMessengerEXT handle) noexcept
     : instance_(std::addressof(instance))
     , handle_(handle)
 {}
 
-DebugMessenger::~DebugMessenger()
+DebugMessenger::~DebugMessenger() noexcept
 {
     if (handle_) {
         destroy_debug_utils_messenger(*instance_, *handle_, nullptr);
     }
 }
 
-tl::expected<DebugMessenger, std::runtime_error> DebugMessenger::create(Instance& instance)
+DebugMessenger& DebugMessenger::operator=(DebugMessenger&& rhs) noexcept
+{
+    if (this != std::addressof(rhs)) {
+        if (handle_) {
+            destroy_debug_utils_messenger(*instance_, *handle_, nullptr);  
+        }
+        instance_ = rhs.instance_;
+        handle_ = std::exchange(rhs.handle_, std::nullopt);
+    }
+    return *this;
+}
+
+tl::expected<DebugMessenger, std::runtime_error> DebugMessenger::create(Instance const& instance) noexcept
 {
     VkDebugUtilsMessengerCreateInfoEXT createInfo{};
     populate_debug_messenger_create_info(createInfo);
@@ -163,6 +197,104 @@ tl::expected<DebugMessenger, std::runtime_error> DebugMessenger::create(Instance
         return tl::make_unexpected(std::runtime_error("failed to set up debug messenger!"));
     }
     return DebugMessenger{instance, debug_messenger};
+}
+
+Device::Device(VkDevice device, PhysicalDevice const& physicalDevices) noexcept
+    : device_(device)
+{
+    vkGetDeviceQueue(device, physicalDevices.queueFamilyIndices().graphicsFamily.value(), 0, &graphicsQueue_);
+}
+
+Device::~Device() noexcept
+{
+    if (device_) {
+        vkDestroyDevice(*device_, nullptr);
+    }   
+}
+
+Device& Device::operator=(Device&& rhs) noexcept
+{
+    if (this != std::addressof(rhs)) {
+        if (device_) {
+            vkDestroyDevice(*device_, nullptr);
+        }
+        device_ = std::exchange(rhs.device_, std::nullopt);
+        graphicsQueue_ = rhs.graphicsQueue_;
+    }
+    return *this;
+}
+
+tl::expected<Device, std::runtime_error> Device::create(PhysicalDevice const& physicalDevice) noexcept
+{
+    static constexpr float queuePriority = 1.0f;
+
+    VkDeviceQueueCreateInfo queueCreateInfo{};
+    queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+    queueCreateInfo.queueFamilyIndex = physicalDevice.queueFamilyIndices().graphicsFamily.value();
+    queueCreateInfo.queueCount = 1;
+    queueCreateInfo.pQueuePriorities = &queuePriority;
+
+    VkPhysicalDeviceFeatures deviceFeatures{};
+
+    VkDeviceCreateInfo createInfo{};
+    createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+    createInfo.pQueueCreateInfos = &queueCreateInfo;
+    createInfo.queueCreateInfoCount = 1;
+    createInfo.pEnabledFeatures = &deviceFeatures;
+    createInfo.enabledExtensionCount = 0; 
+    createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+    createInfo.ppEnabledLayerNames = validationLayers.data();
+
+    VkDevice device;
+    if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device) != VK_SUCCESS) {
+       tl::make_unexpected(std::runtime_error("failed to create logical device!"));
+    }
+    return Device{device, physicalDevice};
+}
+
+tl::expected<PhysicalDevice, std::runtime_error> PhysicalDevice::pickPhysicalDevice(Instance const& instance) noexcept
+{
+    uint32_t deviceCount = 0;
+    if (vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr); deviceCount == 0) {
+        return tl::make_unexpected(std::runtime_error("no Vulkan supported GPU found"));
+    }
+
+    std::vector<VkPhysicalDevice> devices(deviceCount);
+    vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
+    for (const auto& device : devices) {
+        VkPhysicalDeviceProperties deviceProperties;
+        vkGetPhysicalDeviceProperties(device, &deviceProperties);
+        auto const isDiscrete = deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
+        if (!isDiscrete) {
+            continue;
+        }
+        spdlog::info("found GPU discrete {}", deviceProperties.deviceName);
+        auto const queueFamilyIndices = findQueueFamilies(device);
+        if (queueFamilyIndices.isComplete()) {
+            return PhysicalDevice{device, queueFamilyIndices};
+        }
+    }
+    return tl::make_unexpected(std::runtime_error("no suitable device found"));
+}
+
+QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) noexcept
+{
+    QueueFamilyIndices indices;
+    uint32_t queueFamilyCount = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
+    std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+
+    for (auto i{0}; i < queueFamilies.size(); ++i) {
+        auto const& queueFamily = queueFamilies.at(i);
+        if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+            indices.graphicsFamily = i;
+        }
+        if (indices.isComplete()) {
+            break;
+        }
+    }
+    return indices;
 }
 
 }
