@@ -24,6 +24,7 @@ private:
     Window window_;
     Instance instance_;
     std::optional<DebugMessenger> debugMessenger_;
+    std::optional<Surface> surface_;
     PhysicalDevice physicalDevice_;
     Device device_;
 };

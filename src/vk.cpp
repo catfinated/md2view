@@ -76,6 +76,7 @@ Window& Window::operator=(Window&& rhs) noexcept
 
 tl::expected<Window, std::runtime_error> Window::create(int width, int height) noexcept
 {
+    spdlog::info("create window");
     gsl_Expects(width > 0);
     gsl_Expects(height > 0);
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -113,6 +114,7 @@ Instance& Instance::operator=(Instance&& rhs) noexcept
 
 tl::expected<Instance, std::runtime_error> Instance::create() noexcept
 {
+    spdlog::info("create instance");
     VkApplicationInfo appInfo{};
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     appInfo.pApplicationName = "vkmd2v";
@@ -188,6 +190,7 @@ DebugMessenger& DebugMessenger::operator=(DebugMessenger&& rhs) noexcept
 
 tl::expected<DebugMessenger, std::runtime_error> DebugMessenger::create(Instance const& instance) noexcept
 {
+    spdlog::info("create debug messenger");
     VkDebugUtilsMessengerCreateInfoEXT createInfo{};
     populate_debug_messenger_create_info(createInfo);
     VkDebugUtilsMessengerEXT debug_messenger;
@@ -199,10 +202,11 @@ tl::expected<DebugMessenger, std::runtime_error> DebugMessenger::create(Instance
     return DebugMessenger{instance, debug_messenger};
 }
 
-Device::Device(VkDevice device, PhysicalDevice const& physicalDevices) noexcept
+Device::Device(VkDevice device, PhysicalDevice const& physicalDevice) noexcept
     : device_(device)
 {
-    vkGetDeviceQueue(device, physicalDevices.queueFamilyIndices().graphicsFamily.value(), 0, &graphicsQueue_);
+    vkGetDeviceQueue(device, physicalDevice.queueFamilyIndices().graphicsFamily.value(), 0, &graphicsQueue_);
+    vkGetDeviceQueue(device, physicalDevice.queueFamilyIndices().presentFamily.value(), 0, &presentQueue_);
 }
 
 Device::~Device() noexcept
@@ -226,20 +230,28 @@ Device& Device::operator=(Device&& rhs) noexcept
 
 tl::expected<Device, std::runtime_error> Device::create(PhysicalDevice const& physicalDevice) noexcept
 {
+    spdlog::info("create logical device {} {}", physicalDevice.queueFamilyIndices().graphicsFamily.value(),
+    physicalDevice.queueFamilyIndices().presentFamily.value());
     static constexpr float queuePriority = 1.0f;
-
-    VkDeviceQueueCreateInfo queueCreateInfo{};
-    queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-    queueCreateInfo.queueFamilyIndex = physicalDevice.queueFamilyIndices().graphicsFamily.value();
-    queueCreateInfo.queueCount = 1;
-    queueCreateInfo.pQueuePriorities = &queuePriority;
 
     VkPhysicalDeviceFeatures deviceFeatures{};
 
+    std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+    auto const uniqueQueueFamilies = physicalDevice.uniqueQueueFamilies();
+
+    for (uint32_t queueFamily : uniqueQueueFamilies) {
+        VkDeviceQueueCreateInfo queueCreateInfo{};
+        queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        queueCreateInfo.queueFamilyIndex = queueFamily;
+        queueCreateInfo.queueCount = 1;
+        queueCreateInfo.pQueuePriorities = &queuePriority;
+        queueCreateInfos.push_back(queueCreateInfo);
+    }
+
     VkDeviceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-    createInfo.pQueueCreateInfos = &queueCreateInfo;
-    createInfo.queueCreateInfoCount = 1;
+    createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
+    createInfo.pQueueCreateInfos = queueCreateInfos.data();
     createInfo.pEnabledFeatures = &deviceFeatures;
     createInfo.enabledExtensionCount = 0; 
     createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
@@ -252,8 +264,10 @@ tl::expected<Device, std::runtime_error> Device::create(PhysicalDevice const& ph
     return Device{device, physicalDevice};
 }
 
-tl::expected<PhysicalDevice, std::runtime_error> PhysicalDevice::pickPhysicalDevice(Instance const& instance) noexcept
+tl::expected<PhysicalDevice, std::runtime_error> 
+PhysicalDevice::pickPhysicalDevice(Instance const& instance, Surface const& surface) noexcept
 {
+    spdlog::info("pick physical device");
     uint32_t deviceCount = 0;
     if (vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr); deviceCount == 0) {
         return tl::make_unexpected(std::runtime_error("no Vulkan supported GPU found"));
@@ -269,7 +283,7 @@ tl::expected<PhysicalDevice, std::runtime_error> PhysicalDevice::pickPhysicalDev
             continue;
         }
         spdlog::info("found GPU discrete {}", deviceProperties.deviceName);
-        auto const queueFamilyIndices = findQueueFamilies(device);
+        auto const queueFamilyIndices = findQueueFamilies(device, surface);
         if (queueFamilyIndices.isComplete()) {
             return PhysicalDevice{device, queueFamilyIndices};
         }
@@ -277,7 +291,36 @@ tl::expected<PhysicalDevice, std::runtime_error> PhysicalDevice::pickPhysicalDev
     return tl::make_unexpected(std::runtime_error("no suitable device found"));
 }
 
-QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) noexcept
+Surface::~Surface() noexcept
+{
+    if (surface_) {
+        vkDestroySurfaceKHR(*instance_, *surface_, nullptr);
+    }
+}
+
+Surface& Surface::operator=(Surface&& rhs) noexcept
+{
+    if (this != std::addressof(rhs)) {
+        if (surface_) {
+            vkDestroySurfaceKHR(*instance_, *surface_, nullptr);
+        }    
+        instance_ = rhs.instance_;
+        surface_ = std::exchange(rhs.surface_, std::nullopt);   
+    }
+    return *this;
+}
+
+tl::expected<Surface, std::runtime_error> Surface::create(Instance const& instance, Window const& window) noexcept
+{
+    spdlog::info("create surface");
+    VkSurfaceKHR surface;
+    if (glfwCreateWindowSurface(instance, window.get(), nullptr, &surface) != VK_SUCCESS) {
+        return tl::make_unexpected(std::runtime_error("failed to create window surface!"));
+    }
+    return Surface{instance, surface};
+}
+
+QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, Surface const& surface) noexcept
 {
     QueueFamilyIndices indices;
     uint32_t queueFamilyCount = 0;
@@ -290,10 +333,16 @@ QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) noexcept
         if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
             indices.graphicsFamily = i;
         }
+        VkBool32 presentSupport = false;
+        vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
+        if (presentSupport) {
+            indices.presentFamily = i;
+        }
         if (indices.isComplete()) {
             break;
         }
     }
+    spdlog::info("queue family indices: {} {}", indices.graphicsFamily.value(), indices.presentFamily.value());
     return indices;
 }
 

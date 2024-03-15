@@ -42,8 +42,10 @@ void VKEngine::init_vulkan()
 {
     instance_ = forceUnwrap(Instance::create());
     debugMessenger_ = forceUnwrap(DebugMessenger::create(instance_));
-    physicalDevice_ = forceUnwrap(PhysicalDevice::pickPhysicalDevice(instance_));
+    surface_ = forceUnwrap(Surface::create(instance_, window_));
+    physicalDevice_ = forceUnwrap(PhysicalDevice::pickPhysicalDevice(instance_, *surface_));
     device_ = forceUnwrap(Device::create(physicalDevice_));
+    spdlog::info("vulkan initialization complete");
 }
 
 void VKEngine::run_game()

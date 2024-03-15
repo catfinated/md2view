@@ -5,6 +5,7 @@
 #include <tl/expected.hpp>
 
 #include <cstdint>
+#include <set>
 #include <stdexcept>
 #include <optional>
 #include <utility>
@@ -30,6 +31,8 @@ public:
     {
         return glfwWindowShouldClose(window_) > 0;
     }
+
+    [[nodiscard]] GLFWwindow * get() const noexcept { return window_; }
 
     static tl::expected<Window, std::runtime_error> create(int width, int height) noexcept;
 
@@ -94,12 +97,43 @@ private:
     std::optional<VkDebugUtilsMessengerEXT> handle_;
 };
 
+class Surface
+{
+public:
+    ~Surface() noexcept;
+    Surface(Surface const&) = delete;
+    Surface& operator=(Surface const&) = delete;
+    Surface(Surface&& rhs) noexcept
+        : instance_(rhs.instance_) 
+        , surface_(std::exchange(rhs.surface_, std::nullopt))
+    {}
+    Surface& operator=(Surface&& rhs) noexcept;
+
+    operator VkSurfaceKHR() const 
+    {
+        gsl_Assert(surface_);
+        return *surface_;
+    }
+
+    static tl::expected<Surface, std::runtime_error> create(Instance const& instance, Window const& window) noexcept;
+
+private:
+    Surface(Instance const& instance, VkSurfaceKHR surface)
+        : instance_(std::addressof(instance))
+        , surface_(surface)
+    {}
+
+    gsl::not_null<Instance const*> instance_;
+    std::optional<VkSurfaceKHR> surface_;
+};
+
 struct QueueFamilyIndices {
     std::optional<uint32_t> graphicsFamily;
+    std::optional<uint32_t> presentFamily;
 
     [[nodiscard]] bool isComplete() const noexcept
     {
-        return graphicsFamily.has_value();
+        return graphicsFamily.has_value() && presentFamily.has_value();
     }
 };
 
@@ -119,7 +153,14 @@ public:
 
     QueueFamilyIndices const& queueFamilyIndices() const noexcept { return indices_; }
 
-    static tl::expected<PhysicalDevice, std::runtime_error> pickPhysicalDevice(Instance const& instance) noexcept;
+    std::set<uint32_t> uniqueQueueFamilies() const
+    {
+        gsl_Expects(queueFamilyIndices().isComplete());
+        return {indices_.graphicsFamily.value(), indices_.presentFamily.value()};
+    }
+
+    static tl::expected<PhysicalDevice, std::runtime_error> 
+    pickPhysicalDevice(Instance const& instance, Surface const& surface) noexcept;
 
 private:
     VkPhysicalDevice physicalDevice_;
@@ -147,10 +188,9 @@ private:
     Device(VkDevice device, PhysicalDevice const& physicalDevice) noexcept;
     std::optional<VkDevice> device_;
     VkQueue graphicsQueue_;
+    VkQueue presentQueue_;
 };
 
-QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) noexcept;
-
-
+QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, Surface const& surface) noexcept;
 
 } // namespace vk 
