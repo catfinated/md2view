@@ -45,6 +45,7 @@ void VKEngine::init_vulkan()
     surface_ = forceUnwrap(Surface::create(instance_, window_));
     physicalDevice_ = forceUnwrap(PhysicalDevice::pickPhysicalDevice(instance_, *surface_));
     device_ = forceUnwrap(Device::create(physicalDevice_));
+    swapChain_ = forceUnwrap(SwapChain::create(physicalDevice_, device_, window_, *surface_));
     spdlog::info("vulkan initialization complete");
 }
 

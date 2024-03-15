@@ -137,6 +137,12 @@ struct QueueFamilyIndices {
     }
 };
 
+struct SwapChainSupportDetails {
+    VkSurfaceCapabilitiesKHR capabilities;
+    std::vector<VkSurfaceFormatKHR> formats;
+    std::vector<VkPresentModeKHR> presentModes;
+};
+
 class PhysicalDevice
 {
 public:
@@ -158,6 +164,8 @@ public:
         gsl_Expects(queueFamilyIndices().isComplete());
         return {indices_.graphicsFamily.value(), indices_.presentFamily.value()};
     }
+
+    SwapChainSupportDetails querySwapChainSupport(Surface const& surface) const noexcept;
 
     static tl::expected<PhysicalDevice, std::runtime_error> 
     pickPhysicalDevice(Instance const& instance, Surface const& surface) noexcept;
@@ -182,6 +190,12 @@ public:
 
     Device& operator=(Device&& rhs) noexcept;
 
+    operator VkDevice() const
+    {
+        gsl_Assert(device_);
+        return *device_;
+    }
+
     static tl::expected<Device, std::runtime_error> create(PhysicalDevice const& physicalDevice) noexcept;
 
 private:
@@ -191,6 +205,36 @@ private:
     VkQueue presentQueue_;
 };
 
-QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, Surface const& surface) noexcept;
+class SwapChain
+{
+public:
+    ~SwapChain() noexcept;
+    SwapChain(SwapChain const&) = delete;
+    SwapChain& operator=(SwapChain const&) = delete;
+    SwapChain(SwapChain&& rhs) noexcept;
+    SwapChain& operator=(SwapChain&& rhs) noexcept;
+
+    operator VkSwapchainKHR() const 
+    {
+        gsl_Assert(swapChain_);
+        return *swapChain_; 
+    }
+
+    static tl::expected<SwapChain, std::runtime_error>
+    create(PhysicalDevice const& physicalDevice, Device const& device, Window const& window, Surface const& surface) noexcept;
+
+private:
+    SwapChain(VkSwapchainKHR swapChain, 
+              VkFormat swapChainImageFormat,
+              VkExtent2D swapChainExtent,
+              std::vector<VkImage> images, 
+              Device const& device) noexcept;
+
+    std::optional<VkSwapchainKHR> swapChain_;
+    std::vector<VkImage> images_;
+    VkFormat swapChainImageFormat_;
+    VkExtent2D swapChainExtent_;
+    gsl::not_null<Device const*> device_;
+};
 
 } // namespace vk 

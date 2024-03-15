@@ -27,6 +27,7 @@ private:
     std::optional<Surface> surface_;
     PhysicalDevice physicalDevice_;
     Device device_;
+    std::optional<SwapChain> swapChain_;
 };
 
 }
