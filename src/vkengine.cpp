@@ -46,7 +46,8 @@ void VKEngine::init_vulkan()
     physicalDevice_ = forceUnwrap(PhysicalDevice::pickPhysicalDevice(instance_, *surface_));
     device_ = forceUnwrap(Device::create(physicalDevice_));
     swapChain_ = forceUnwrap(SwapChain::create(physicalDevice_, device_, window_, *surface_));
-    spdlog::info("vulkan initialization complete");
+    imageViews_ = forceUnwrap(swapChain_->createImageViews(device_));
+    spdlog::info("vulkan initialization complete. num views={}", imageViews_.size());
 }
 
 void VKEngine::run_game()

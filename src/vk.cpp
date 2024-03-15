@@ -1,12 +1,14 @@
 #include "vk.hpp"
 
 #include <range/v3/algorithm/find_if.hpp>
+#include <range/v3/algorithm/transform.hpp>
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/fmt.h>
 
 #include <algorithm>
 #include <array>
 #include <limits>
+#include <iterator>
 #include <string_view>
 #include <vector>
 
@@ -536,6 +538,69 @@ SwapChain::create(PhysicalDevice const& physicalDevice, Device const& device, Wi
     vkGetSwapchainImagesKHR(device, swapChain, &imageCount, swapChainImages.data());
 
     return SwapChain{swapChain, surfaceFormat.format, extent, std::move(swapChainImages), device};
+}
+
+tl::expected<std::vector<ImageView>, std::runtime_error> SwapChain::createImageViews(Device const& device) const
+{
+    std::vector<VkImageView> swapChainImageViews;
+    swapChainImageViews.resize(images_.size());
+
+    for (size_t i = 0; i < images_.size(); ++i) {
+        VkImageViewCreateInfo createInfo{};
+        createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        createInfo.image = images_.at(i);
+        createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        createInfo.format = swapChainImageFormat_;
+        createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        createInfo.subresourceRange.baseMipLevel = 0;
+        createInfo.subresourceRange.levelCount = 1;
+        createInfo.subresourceRange.baseArrayLayer = 0;
+        createInfo.subresourceRange.layerCount = 1;
+
+        if (vkCreateImageView(device, &createInfo, nullptr, &swapChainImageViews[i]) != VK_SUCCESS) {
+            tl::make_unexpected(std::runtime_error("failed to create image views!"));
+        }
+    }
+
+    std::vector<ImageView> views;
+    views.reserve(swapChainImageViews.size());
+    for (auto const sciv : swapChainImageViews) {
+        views.emplace_back(sciv, device);
+    }
+    return views;
+}
+
+ImageView::ImageView(VkImageView view, Device const& device) noexcept
+    : view_(view)
+    , device_(std::addressof(device))
+{}
+
+ImageView::~ImageView() noexcept
+{
+    if (view_) {
+        vkDestroyImageView(*device_, *view_, nullptr);
+    }
+}
+
+ImageView::ImageView(ImageView&& rhs) noexcept
+    : view_(std::exchange(rhs.view_, std::nullopt))
+    , device_(rhs.device_)
+{}
+    
+ImageView& ImageView::operator=(ImageView&& rhs) noexcept
+{
+    if (this != std::addressof(rhs)) {
+        if (view_) {
+            vkDestroyImageView(*device_, *view_, nullptr); 
+        }
+        view_ = std::exchange(rhs.view_, std::nullopt);
+        device_ = rhs.device_;
+    }
+    return *this;
 }
 
 }

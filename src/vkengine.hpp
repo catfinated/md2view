@@ -28,6 +28,7 @@ private:
     PhysicalDevice physicalDevice_;
     Device device_;
     std::optional<SwapChain> swapChain_;
+    std::vector<ImageView> imageViews_;
 };
 
 }

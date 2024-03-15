@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <optional>
 #include <utility>
+#include <vector>
 
 namespace vk {
 
@@ -205,6 +206,21 @@ private:
     VkQueue presentQueue_;
 };
 
+class ImageView
+{
+public:
+    ImageView(VkImageView, Device const& device) noexcept;
+    ~ImageView() noexcept;
+    ImageView(ImageView const&) = delete;
+    ImageView& operator=(ImageView const&) = delete;
+    ImageView(ImageView&&) noexcept;
+    ImageView& operator=(ImageView&&) noexcept;
+
+private:
+    std::optional<VkImageView> view_;
+    gsl::not_null<Device const*> device_;
+};
+
 class SwapChain
 {
 public:
@@ -219,6 +235,8 @@ public:
         gsl_Assert(swapChain_);
         return *swapChain_; 
     }
+
+    tl::expected<std::vector<ImageView>, std::runtime_error> createImageViews(Device const& device) const;
 
     static tl::expected<SwapChain, std::runtime_error>
     create(PhysicalDevice const& physicalDevice, Device const& device, Window const& window, Surface const& surface) noexcept;
