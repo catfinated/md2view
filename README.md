@@ -4,7 +4,7 @@
 The purpose of this project is to be able to load, render, texture, and animate
 MD2 models that are stored in *Quake II* PAK files or which have been extracted into
 an equivalent directory structure. The rendering is currently done in OpenGL 4. 
-Support for a Vulkan renderer is currently in progress.
+Support for a Vulkan renderer is currently in progress. The code is written in C++17.
 
 Here are some screenshots of md2view in action:
 
@@ -71,6 +71,8 @@ md2view is built using vcpkg to manage dependencies. These dependencies are:
 [gsl-lite](https://github.com/gsl-lite/gsl-lite)
 
 [ranges-v3](https://github.com/ericniebler/range-v3)
+
+[tl-expected](https://github.com/TartanLlama/expected)
 
 ## Attributions
 

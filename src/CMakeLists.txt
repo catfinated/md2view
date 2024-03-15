@@ -71,7 +71,7 @@ set_target_properties(glmd2v PROPERTIES
     CXX_EXTENSIONS NO
 )
 
-add_executable(vkmd2v vkengine.cpp vkmain.cpp)
+add_executable(vkmd2v vk.cpp vkengine.cpp vkmain.cpp)
 
 target_link_libraries(vkmd2v PRIVATE libmd2v Vulkan::Vulkan)
 
