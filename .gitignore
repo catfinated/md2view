@@ -22,3 +22,4 @@ imgui.ini
 .vscode
 CMakeUserPresets.json
 data/*.pak
+data/shaders/*.spv

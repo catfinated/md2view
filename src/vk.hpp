@@ -5,6 +5,7 @@
 #include <tl/expected.hpp>
 
 #include <cstdint>
+#include <filesystem>
 #include <set>
 #include <stdexcept>
 #include <optional>
@@ -236,6 +237,9 @@ public:
         return *swapChain_; 
     }
 
+    VkExtent2D extent() const noexcept { return swapChainExtent_; }
+    VkFormat imageFormat() const noexcept { return swapChainImageFormat_; }
+
     tl::expected<std::vector<ImageView>, std::runtime_error> createImageViews(Device const& device) const;
 
     static tl::expected<SwapChain, std::runtime_error>
@@ -252,6 +256,106 @@ private:
     std::vector<VkImage> images_;
     VkFormat swapChainImageFormat_;
     VkExtent2D swapChainExtent_;
+    gsl::not_null<Device const*> device_;
+};
+
+class ShaderModule 
+{
+public:
+    ~ShaderModule() noexcept;
+    ShaderModule(ShaderModule const&) = delete;
+    ShaderModule& operator=(ShaderModule const&) = delete;
+    ShaderModule(ShaderModule&&) noexcept;
+    ShaderModule& operator=(ShaderModule&&) noexcept;
+
+    operator VkShaderModule() const
+    {
+        gsl_Assert(module_);
+        return *module_;
+    }
+
+    static tl::expected<ShaderModule, std::runtime_error> 
+    create(std::filesystem::path const& path, Device const& device);
+                                                    
+private:
+    ShaderModule(VkShaderModule module, Device const& device) noexcept;
+
+    std::optional<VkShaderModule> module_;
+    gsl::not_null<Device const*> device_;
+};
+
+class InplaceRenderPass
+{
+public:
+    InplaceRenderPass(VkRenderPass renderPass, Device const& device)
+        : renderPass_(renderPass)
+        , device_(std::addressof(device))
+    {}
+
+    ~InplaceRenderPass()
+    {
+        vkDestroyRenderPass(*device_, renderPass_, nullptr);
+    }
+
+    InplaceRenderPass(InplaceRenderPass const&) = delete;
+    InplaceRenderPass& operator=(InplaceRenderPass const&) = delete;
+    InplaceRenderPass(InplaceRenderPass&&) = delete;
+    InplaceRenderPass& operator=(InplaceRenderPass&&) = delete;
+
+    operator VkRenderPass() const { return renderPass_; }
+
+private:
+    VkRenderPass renderPass_;
+    gsl::not_null<Device const*> device_;
+};
+
+class InplacePipelineLayout
+{
+public:
+    InplacePipelineLayout(VkPipelineLayout pipelineLayout, Device const& device)
+        : pipelineLayout_(pipelineLayout)
+        , device_(std::addressof(device))
+    {}
+
+    ~InplacePipelineLayout()
+    {
+        vkDestroyPipelineLayout(*device_, pipelineLayout_, nullptr);
+    }
+
+    InplacePipelineLayout(InplacePipelineLayout const&) = delete;
+    InplacePipelineLayout& operator=(InplacePipelineLayout const&) = delete;
+    InplacePipelineLayout(InplacePipelineLayout&&) = delete;
+    InplacePipelineLayout& operator=(InplacePipelineLayout&&) = delete;
+
+    operator VkPipelineLayout() const { return pipelineLayout_; }
+
+private:
+    VkPipelineLayout pipelineLayout_;
+    gsl::not_null<Device const*> device_;
+};
+
+class InplacePipeline
+{
+public:
+    InplacePipeline(VkPipeline pipeline, Device const& device)
+        : pipeline_(pipeline)
+        , device_(std::addressof(device))
+    {}
+
+    ~InplacePipeline()
+    {
+        vkDestroyPipeline(*device_, pipeline_, nullptr);
+    }
+
+    InplacePipeline(InplacePipeline const&) = delete;
+    InplacePipeline& operator=(InplacePipeline const&) = delete;
+    InplacePipeline(InplacePipeline&&) = delete;
+    InplacePipeline& operator=(InplacePipeline&&) = delete;
+
+    operator VkPipeline() const { return pipeline_; }
+
+private:
+    VkPipeline pipeline_;
     gsl::not_null<Device const*> device_;
 };
 

@@ -18,8 +18,10 @@ public:
     void run_game();
 
 private:
-    void init_window();
-    void init_vulkan();
+    void initWindow();
+    void initVulkan();
+    void createGraphicsPipeline();
+    void createRenderPass();
 
     Window window_;
     Instance instance_;
@@ -29,6 +31,9 @@ private:
     Device device_;
     std::optional<SwapChain> swapChain_;
     std::vector<ImageView> imageViews_;
+    std::optional<InplaceRenderPass> renderPass_;
+    std::optional<InplacePipelineLayout> pipelineLayout_;
+    std::optional<InplacePipeline> graphicsPipeline_;
 };
 
 }

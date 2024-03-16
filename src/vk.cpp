@@ -4,14 +4,15 @@
 #include <range/v3/algorithm/transform.hpp>
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/fmt.h>
+#include <spdlog/fmt/std.h>
 
 #include <algorithm>
 #include <array>
+#include <fstream>
 #include <limits>
 #include <iterator>
 #include <string_view>
 #include <vector>
-
 
 namespace vk {
 
@@ -601,6 +602,66 @@ ImageView& ImageView::operator=(ImageView&& rhs) noexcept
         device_ = rhs.device_;
     }
     return *this;
+}
+
+ShaderModule::ShaderModule(VkShaderModule module, Device const& device) noexcept
+    : module_(module)
+    , device_(std::addressof(device))
+{}
+
+ShaderModule::~ShaderModule() noexcept
+{
+    if (module_) {
+        vkDestroyShaderModule(*device_, *module_, nullptr);
+    }
+}
+
+ShaderModule::ShaderModule(ShaderModule&& rhs) noexcept
+    : module_(std::exchange(rhs.module_, std::nullopt))
+    , device_(rhs.device_)
+{}
+
+ShaderModule& ShaderModule::operator=(ShaderModule&& rhs) noexcept
+{
+    if (this != std::addressof(rhs)) {
+        if (module_) {
+            vkDestroyShaderModule(*device_, *module_, nullptr);
+        }
+        module_ = std::exchange(rhs.module_, std::nullopt);
+        device_ = rhs.device_;        
+    }
+    return *this;
+}
+
+tl::expected<ShaderModule, std::runtime_error> 
+ShaderModule::create(std::filesystem::path const& path, Device const& device)
+{
+    std::vector<char> buffer;
+    {
+        std::ifstream inf(path, std::ios::ate | std::ios::binary);
+
+        if (!inf.is_open()) {
+            return tl::make_unexpected(
+                std::runtime_error(fmt::format("failed to open file '{}'!", path)));
+        }
+
+        auto const fileSize = static_cast<size_t>(inf.tellg());
+        inf.seekg(0);
+        buffer.resize(fileSize);
+        inf.read(buffer.data(), fileSize);
+    }
+
+    VkShaderModuleCreateInfo createInfo{};
+    createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    createInfo.codeSize = buffer.size();
+    createInfo.pCode = reinterpret_cast<uint32_t const*>(buffer.data());
+
+    VkShaderModule shaderModule;
+    if (vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
+        return tl::make_unexpected(std::runtime_error("failed to create shader module!"));
+    }
+
+    return ShaderModule{shaderModule, device};
 }
 
 }
