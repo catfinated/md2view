@@ -392,4 +392,44 @@ private:
     gsl::not_null<Device const*> device_;
 };
 
+class CommandBuffer
+{
+public:
+    CommandBuffer(VkCommandBuffer buffer)
+        : buffer_(buffer)
+    {}
+
+    operator VkCommandBuffer() const { return buffer_; }
+
+private:
+    VkCommandBuffer buffer_;
+};
+
+class CommandPool
+{
+public:
+    ~CommandPool() noexcept;
+    CommandPool(CommandPool const&) = delete;
+    CommandPool& operator=(CommandPool const&) = delete;
+    CommandPool(CommandPool&&) noexcept;
+    CommandPool& operator=(CommandPool&&) noexcept;
+
+    operator VkCommandPool() const
+    {
+        gsl_Assert(pool_);
+        return *pool_;
+    }
+
+    tl::expected<CommandBuffer, std::runtime_error> createBuffer() const noexcept;
+
+    static tl::expected<CommandPool, std::runtime_error> 
+    create(PhysicalDevice const& physicalDevice, Device const& device) noexcept;
+
+private:
+    CommandPool(VkCommandPool pool, Device const& device) noexcept;
+
+    std::optional<VkCommandPool> pool_;
+    gsl::not_null<Device const*> device_;
+};
+
 } // namespace vk 

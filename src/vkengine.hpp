@@ -22,6 +22,7 @@ private:
     void initVulkan();
     void createGraphicsPipeline();
     void createRenderPass();
+    void recordCommandBuffer(uint32_t imageIndex);
 
     Window window_;
     Instance instance_;
@@ -35,6 +36,8 @@ private:
     std::optional<InplacePipelineLayout> pipelineLayout_;
     std::optional<InplacePipeline> graphicsPipeline_;
     std::vector<Framebuffer> frameBuffers_;
+    std::optional<CommandPool> commandPool_;
+    std::optional<CommandBuffer> commandBuffer_;
 };
 
 }

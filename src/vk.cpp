@@ -726,4 +726,66 @@ Framebuffer::create(std::vector<ImageView> const& imageViews,
     return buffers;
 }
 
+CommandPool::CommandPool(VkCommandPool pool, Device const& device) noexcept
+    : pool_(pool)
+    , device_(std::addressof(device))
+{}
+
+CommandPool::~CommandPool() noexcept
+{
+    if (pool_) {
+        vkDestroyCommandPool(*device_, *pool_, nullptr);
+    }
+}
+
+CommandPool::CommandPool(CommandPool&& rhs) noexcept
+    : pool_(std::exchange(rhs.pool_, std::nullopt))
+    , device_(rhs.device_)
+{}
+    
+CommandPool& CommandPool::operator=(CommandPool&& rhs) noexcept
+{
+    if (this != std::addressof(rhs)) {
+        if (pool_) {
+            vkDestroyCommandPool(*device_, *pool_, nullptr);
+        }      
+        pool_ = std::exchange(rhs.pool_, std::nullopt);
+        device_ = rhs.device_; 
+    }
+    return *this;
+}
+
+tl::expected<CommandPool, std::runtime_error> 
+CommandPool::create(PhysicalDevice const& physicalDevice, Device const& device) noexcept
+{
+    spdlog::info("creating command pool");
+    VkCommandPoolCreateInfo poolInfo{};
+    poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+    poolInfo.queueFamilyIndex = physicalDevice.queueFamilyIndices().graphicsFamily.value();
+
+    VkCommandPool pool;
+    if (vkCreateCommandPool(device, &poolInfo, nullptr, &pool) != VK_SUCCESS) {
+        return tl::make_unexpected(std::runtime_error("failed to create command pool!"));
+    }
+
+    return CommandPool{pool, device};
+}
+
+tl::expected<CommandBuffer, std::runtime_error> CommandPool::createBuffer() const noexcept
+{
+    spdlog::info("create command buffer");
+    VkCommandBufferAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocInfo.commandPool = *pool_;
+    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandBufferCount = 1;
+
+    VkCommandBuffer buffer;
+    if (vkAllocateCommandBuffers(*device_, &allocInfo, &buffer) != VK_SUCCESS) {
+        return tl::make_unexpected(std::runtime_error("failed to allocate command buffers!"));
+    }
+    return CommandBuffer{buffer};
+}
+
 }
