@@ -23,6 +23,7 @@ private:
     void createGraphicsPipeline();
     void createRenderPass();
     void recordCommandBuffer(uint32_t imageIndex);
+    void drawFrame();
 
     Window window_;
     Instance instance_;
@@ -38,6 +39,12 @@ private:
     std::vector<Framebuffer> frameBuffers_;
     std::optional<CommandPool> commandPool_;
     std::optional<CommandBuffer> commandBuffer_;
+    std::optional<Semaphore> imageAvailableSemaphore_;
+    std::optional<Semaphore> renderFinishedSemaphore_;
+    std::optional<Fence> inflightFence_;
+    VkViewport viewport{};
+    VkRect2D scissor{};
+    VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
 };
 
 }

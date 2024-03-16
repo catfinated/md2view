@@ -272,6 +272,7 @@ Device& Device::operator=(Device&& rhs) noexcept
         }
         device_ = std::exchange(rhs.device_, std::nullopt);
         graphicsQueue_ = rhs.graphicsQueue_;
+        presentQueue_ = rhs.presentQueue_;
     }
     return *this;
 }
@@ -786,6 +787,89 @@ tl::expected<CommandBuffer, std::runtime_error> CommandPool::createBuffer() cons
         return tl::make_unexpected(std::runtime_error("failed to allocate command buffers!"));
     }
     return CommandBuffer{buffer};
+}
+
+Fence::Fence(VkFence fence, Device const& device) noexcept
+    : fence_(fence)
+    , device_(std::addressof(device))
+{}
+
+Fence::~Fence() noexcept
+{
+    if (fence_) {
+        vkDestroyFence(*device_, *fence_, nullptr);
+    }
+}
+
+Fence::Fence(Fence&& rhs) noexcept
+    : fence_(std::exchange(rhs.fence_, std::nullopt))
+    , device_(rhs.device_)
+{}
+
+Fence& Fence::operator=(Fence&& rhs) noexcept
+{
+    if (this != std::addressof(rhs)) {
+        if (fence_) {
+            vkDestroyFence(*device_, *fence_, nullptr);
+        }       
+        fence_ = std::exchange(rhs.fence_, std::nullopt);
+        device_ = rhs.device_; 
+    }
+    return *this;
+}
+
+tl::expected<Fence, std::runtime_error> Fence::create(Device const& device) noexcept
+{
+    VkFenceCreateInfo fenceInfo{};
+    fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+    VkFence fence;
+    if (vkCreateFence(device, &fenceInfo, nullptr, &fence) != VK_SUCCESS) {
+        return tl::make_unexpected(std::runtime_error("failed to create fence"));
+    }
+    return Fence{fence, device};
+}
+
+Semaphore::Semaphore(VkSemaphore semaphore, Device const& device) noexcept
+    : semaphore_(semaphore)
+    , device_(std::addressof(device))
+{}
+
+Semaphore::~Semaphore() noexcept
+{
+    if (semaphore_) {
+        vkDestroySemaphore(*device_, *semaphore_, nullptr);
+    }
+}
+
+Semaphore::Semaphore(Semaphore&& rhs) noexcept
+    : semaphore_(std::exchange(rhs.semaphore_, std::nullopt))
+    , device_(rhs.device_)
+{}
+
+Semaphore& Semaphore::operator=(Semaphore&& rhs) noexcept
+{
+    if (this != std::addressof(rhs)) {
+        if (semaphore_) {
+            vkDestroySemaphore(*device_, *semaphore_, nullptr);
+        }
+        semaphore_ = std::exchange(rhs.semaphore_, std::nullopt);
+        device_ = rhs.device_;
+    }
+    return *this;
+}
+
+tl::expected<Semaphore, std::runtime_error> Semaphore::create(Device const& device) noexcept
+{
+    VkSemaphoreCreateInfo semaphoreInfo{};
+    semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+    VkSemaphore semaphore;
+    if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &semaphore) != VK_SUCCESS) {
+        return tl::make_unexpected(std::runtime_error("failed to create semaphore"));
+    }
+    return Semaphore{semaphore, device};
 }
 
 }

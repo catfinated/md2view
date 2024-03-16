@@ -188,6 +188,7 @@ public:
     Device(Device&& rhs) noexcept
         : device_(std::exchange(rhs.device_, std::nullopt))
         , graphicsQueue_(rhs.graphicsQueue_)
+        , presentQueue_(rhs.presentQueue_)
     {}
 
     Device& operator=(Device&& rhs) noexcept;
@@ -197,6 +198,9 @@ public:
         gsl_Assert(device_);
         return *device_;
     }
+
+    VkQueue const& graphicsQueue() const noexcept { return graphicsQueue_; }
+    VkQueue const& presentQueue() const noexcept { return presentQueue_; }
 
     static tl::expected<Device, std::runtime_error> create(PhysicalDevice const& physicalDevice) noexcept;
 
@@ -401,6 +405,8 @@ public:
 
     operator VkCommandBuffer() const { return buffer_; }
 
+    VkCommandBuffer const * toPtr() const { return std::addressof(buffer_); }
+
 private:
     VkCommandBuffer buffer_;
 };
@@ -429,6 +435,64 @@ private:
     CommandPool(VkCommandPool pool, Device const& device) noexcept;
 
     std::optional<VkCommandPool> pool_;
+    gsl::not_null<Device const*> device_;
+};
+
+class Fence
+{
+public:
+    ~Fence() noexcept;
+    Fence(Fence const&) = delete;
+    Fence& operator=(Fence const&) = delete;
+    Fence(Fence&&) noexcept;
+    Fence& operator=(Fence&&) noexcept;
+
+    operator VkFence() const
+    {
+        gsl_Assert(fence_);
+        return *fence_;
+    }
+
+    void wait() const
+    {
+        vkWaitForFences(*device_, 1, std::addressof(fence_.value()), VK_TRUE, UINT64_MAX);
+    }
+
+    void reset()
+    {
+        vkResetFences(*device_, 1, std::addressof(fence_.value()));
+    }
+
+    static tl::expected<Fence, std::runtime_error> create(Device const& device) noexcept;
+
+private:
+    Fence(VkFence fence, Device const& device) noexcept;
+
+    std::optional<VkFence> fence_;
+    gsl::not_null<Device const*> device_;
+};
+
+class Semaphore
+{
+public:
+    ~Semaphore() noexcept;
+    Semaphore(Semaphore const&) = delete;
+    Semaphore& operator=(Semaphore const&) = delete;
+    Semaphore(Semaphore&&) noexcept;
+    Semaphore& operator=(Semaphore&&) noexcept;
+
+    operator VkSemaphore() const 
+    {
+        gsl_Assert(semaphore_);
+        return *semaphore_;
+    }
+
+    static tl::expected<Semaphore, std::runtime_error> create(Device const& device) noexcept;
+
+private:
+    Semaphore(VkSemaphore semaphore, Device const& device) noexcept;
+
+    std::optional<VkSemaphore> semaphore_;
     gsl::not_null<Device const*> device_;
 };
 

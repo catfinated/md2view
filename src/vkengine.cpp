@@ -52,6 +52,9 @@ void VKEngine::initVulkan()
     frameBuffers_ = forceUnwrap(Framebuffer::create(imageViews_, *renderPass_, swapChain_->extent(), device_));
     commandPool_ = forceUnwrap(CommandPool::create(physicalDevice_, device_));
     commandBuffer_ = forceUnwrap(commandPool_->createBuffer());
+    imageAvailableSemaphore_ = forceUnwrap(Semaphore::create(device_));
+    renderFinishedSemaphore_ = forceUnwrap(Semaphore::create(device_));
+    inflightFence_ = forceUnwrap(Fence::create(device_));
     spdlog::info("vulkan initialization complete. num views={}", imageViews_.size());
 }
 
@@ -195,6 +198,17 @@ void VKEngine::createRenderPass()
     renderPassInfo.subpassCount = 1;
     renderPassInfo.pSubpasses = &subpass;
 
+    VkSubpassDependency dependency{};
+    dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+    dependency.dstSubpass = 0;
+    dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dependency.srcAccessMask = 0;
+    dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+    renderPassInfo.dependencyCount = 1;
+    renderPassInfo.pDependencies = &dependency;
+
     VkRenderPass renderPass;
     if (vkCreateRenderPass(device_, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) {
         throw std::runtime_error("failed to create render pass!");
@@ -220,7 +234,7 @@ void VKEngine::recordCommandBuffer(uint32_t imageIndex)
     renderPassInfo.renderArea.offset = {0, 0};
     renderPassInfo.renderArea.extent = swapChain_->extent();
 
-    VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
+    clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
     renderPassInfo.clearValueCount = 1;
     renderPassInfo.pClearValues = &clearColor;
 
@@ -228,7 +242,6 @@ void VKEngine::recordCommandBuffer(uint32_t imageIndex)
 
     vkCmdBindPipeline(*commandBuffer_, VK_PIPELINE_BIND_POINT_GRAPHICS, *graphicsPipeline_);
 
-    VkViewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
     viewport.width = static_cast<float>(swapChain_->extent().width);
@@ -237,7 +250,6 @@ void VKEngine::recordCommandBuffer(uint32_t imageIndex)
     viewport.maxDepth = 1.0f;
     vkCmdSetViewport(*commandBuffer_, 0, 1, &viewport);
 
-    VkRect2D scissor{};
     scissor.offset = {0, 0};
     scissor.extent = swapChain_->extent();
     vkCmdSetScissor(*commandBuffer_, 0, 1, &scissor);
@@ -251,6 +263,50 @@ void VKEngine::recordCommandBuffer(uint32_t imageIndex)
     } 
 }
 
+void VKEngine::drawFrame()
+{
+    inflightFence_->wait();
+    inflightFence_->reset();
+
+    uint32_t imageIndex;
+    vkAcquireNextImageKHR(device_, *swapChain_, UINT64_MAX, *imageAvailableSemaphore_, VK_NULL_HANDLE, &imageIndex);
+    vkResetCommandBuffer(*commandBuffer_, 0);
+    recordCommandBuffer(imageIndex);
+
+    VkSubmitInfo submitInfo{};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+    VkSemaphore waitSemaphores[] = {*imageAvailableSemaphore_};
+    VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+    submitInfo.waitSemaphoreCount = 1;
+    submitInfo.pWaitSemaphores = waitSemaphores;
+    submitInfo.pWaitDstStageMask = waitStages;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = commandBuffer_->toPtr();
+
+    VkSemaphore signalSemaphores[] = {*renderFinishedSemaphore_};
+    submitInfo.signalSemaphoreCount = 1;
+    submitInfo.pSignalSemaphores = signalSemaphores;
+
+    if (vkQueueSubmit(device_.graphicsQueue(), 1, &submitInfo, *inflightFence_) != VK_SUCCESS) {
+        throw std::runtime_error("failed to submit draw command buffer!");
+    }
+
+    VkPresentInfoKHR presentInfo{};
+    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+
+    presentInfo.waitSemaphoreCount = 1;
+    presentInfo.pWaitSemaphores = signalSemaphores;
+
+    VkSwapchainKHR swapChains[] = {*swapChain_};
+    presentInfo.swapchainCount = 1;
+    presentInfo.pSwapchains = swapChains;
+    presentInfo.pImageIndices = &imageIndex;
+    presentInfo.pResults = nullptr; // Optional
+
+    vkQueuePresentKHR(device_.presentQueue(), &presentInfo);
+}
+
 void VKEngine::run_game()
 {
     initWindow();
@@ -258,7 +314,9 @@ void VKEngine::run_game()
 
     while(!window_.shouldClose()) {
         glfwPollEvents();
+        drawFrame();
     }
+    vkDeviceWaitIdle(device_);
 
     glfwTerminate();
 }
