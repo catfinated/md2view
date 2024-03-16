@@ -36,6 +36,15 @@ bool VKEngine::init(int argc, char const * argv[])
 void VKEngine::initWindow()
 {
     window_ = forceUnwrap(Window::create(width_, height_));    
+
+    auto framebufferResizeCallback = [](GLFWwindow * window, int width, int height) {
+        VKEngine * engine = static_cast<VKEngine *>(glfwGetWindowUserPointer(window));
+        gsl_Assert(engine);
+        engine->frameBufferResized_ = true;
+    };
+
+    glfwSetWindowUserPointer(window_.get(), this);
+    glfwSetFramebufferSizeCallback(window_.get(), framebufferResizeCallback);
 }
 
 void VKEngine::initVulkan()
@@ -58,6 +67,26 @@ void VKEngine::initVulkan()
     inflightFences_ = forceUnwrap(Fence::createVec(device_, kMaxFramesInFlight));
 
     spdlog::info("vulkan initialization complete. num views={}", imageViews_.size());
+}
+
+void VKEngine::recreateSwapChain()
+{
+    int width = 0, height = 0;
+    glfwGetFramebufferSize(window_.get(), &width, &height);
+    while (width == 0 || height == 0) {
+        if (window_.shouldClose()) return;
+        glfwGetFramebufferSize(window_.get(), &width, &height);
+        glfwWaitEvents();
+    }
+
+    vkDeviceWaitIdle(device_);
+    frameBuffers_.clear();
+    imageViews_.clear();
+    swapChain_.reset();
+
+    swapChain_ = forceUnwrap(SwapChain::create(physicalDevice_, device_, window_, *surface_));
+    imageViews_ = forceUnwrap(swapChain_->createImageViews(device_));
+    frameBuffers_ = forceUnwrap(Framebuffer::create(imageViews_, *renderPass_, swapChain_->extent(), device_));
 }
 
 void VKEngine::createGraphicsPipeline()
@@ -311,8 +340,15 @@ void VKEngine::drawFrame()
     presentInfo.pImageIndices = &imageIndex;
     presentInfo.pResults = nullptr; // Optional
 
-    vkQueuePresentKHR(device_.presentQueue(), &presentInfo);
+    auto const result = vkQueuePresentKHR(device_.presentQueue(), &presentInfo);
     currentFrame_ = (currentFrame_ + 1U) % kMaxFramesInFlight;
+
+    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || frameBufferResized_) {
+        frameBufferResized_ = false;
+        recreateSwapChain();
+    } else if (result != VK_SUCCESS) {
+        throw std::runtime_error("failed to acquire swap chain image!");
+    }
 }
 
 void VKEngine::run_game()

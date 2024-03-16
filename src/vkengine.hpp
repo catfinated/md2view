@@ -26,6 +26,7 @@ private:
     void createRenderPass();
     void recordCommandBuffer(CommandBuffer& commandBuffer, uint32_t imageIndex);
     void drawFrame();
+    void recreateSwapChain();
 
     Window window_;
     Instance instance_;
@@ -50,6 +51,7 @@ private:
     VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
 
     uint32_t currentFrame_{0U};
+    bool frameBufferResized_{false};
 };
 
 }

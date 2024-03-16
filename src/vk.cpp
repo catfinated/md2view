@@ -128,7 +128,6 @@ tl::expected<Window, std::runtime_error> Window::create(int width, int height) n
     gsl_Expects(width > 0);
     gsl_Expects(height > 0);
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     auto window = glfwCreateWindow(width, height, "vkmd2v", nullptr, nullptr);
 
     uint32_t extensionCount = 0;
