@@ -217,6 +217,12 @@ public:
     ImageView(ImageView&&) noexcept;
     ImageView& operator=(ImageView&&) noexcept;
 
+    operator VkImageView() const
+    {
+        gsl_Assert(view_);
+        return *view_;
+    }
+    
 private:
     std::optional<VkImageView> view_;
     gsl::not_null<Device const*> device_;
@@ -356,6 +362,33 @@ public:
 
 private:
     VkPipeline pipeline_;
+    gsl::not_null<Device const*> device_;
+};
+
+class Framebuffer 
+{
+public:
+    Framebuffer(VkFramebuffer buffer, Device const& device) noexcept;
+    ~Framebuffer() noexcept;
+    Framebuffer(Framebuffer const&) = delete;
+    Framebuffer& operator=(Framebuffer const&) = delete;
+    Framebuffer(Framebuffer&&) noexcept;
+    Framebuffer& operator=(Framebuffer&&) noexcept;
+
+    operator VkFramebuffer() const
+    {
+        gsl_Assert(buffer_);
+        return *buffer_;
+    }
+
+    static tl::expected<std::vector<Framebuffer>, std::runtime_error>
+    create(std::vector<ImageView> const& imageViews, 
+           InplaceRenderPass const& renderPass, 
+           VkExtent2D swapChainExtent,
+           Device const& device) noexcept;
+
+private:
+    std::optional<VkFramebuffer> buffer_;
     gsl::not_null<Device const*> device_;
 };
 

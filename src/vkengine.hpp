@@ -34,6 +34,7 @@ private:
     std::optional<InplaceRenderPass> renderPass_;
     std::optional<InplacePipelineLayout> pipelineLayout_;
     std::optional<InplacePipeline> graphicsPipeline_;
+    std::vector<Framebuffer> frameBuffers_;
 };
 
 }

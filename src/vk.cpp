@@ -664,4 +664,66 @@ ShaderModule::create(std::filesystem::path const& path, Device const& device)
     return ShaderModule{shaderModule, device};
 }
 
+Framebuffer::Framebuffer(VkFramebuffer buffer, Device const& device) noexcept
+    : buffer_(buffer)
+    , device_(std::addressof(device))
+{}
+
+Framebuffer::~Framebuffer() noexcept
+{
+    if (buffer_) {
+        vkDestroyFramebuffer(*device_, *buffer_, nullptr);
+    }
+}
+
+Framebuffer::Framebuffer(Framebuffer&& rhs) noexcept
+    : buffer_(std::exchange(rhs.buffer_, std::nullopt))
+    , device_(rhs.device_)
+{}
+
+Framebuffer& Framebuffer::operator=(Framebuffer&& rhs) noexcept
+{
+    if (this != std::addressof(rhs)) {
+        if (buffer_) {
+            vkDestroyFramebuffer(*device_, *buffer_, nullptr);
+        }        
+        buffer_ = std::exchange(rhs.buffer_, std::nullopt);
+        device_ = rhs.device_;
+    }
+    return *this;
+}
+
+tl::expected<std::vector<Framebuffer>, std::runtime_error>
+Framebuffer::create(std::vector<ImageView> const& imageViews, 
+                    InplaceRenderPass const& renderPass,
+                    VkExtent2D swapChainExtent,
+                    Device const& device) noexcept
+{
+    std::vector<VkFramebuffer> swapChainFramebuffers;
+    swapChainFramebuffers.resize(imageViews.size());
+
+    for (size_t i = 0; i < imageViews.size(); i++) {
+        VkImageView attachments[] = {imageViews[i]};
+        VkFramebufferCreateInfo framebufferInfo{};
+        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebufferInfo.renderPass = renderPass;
+        framebufferInfo.attachmentCount = 1;
+        framebufferInfo.pAttachments = attachments;
+        framebufferInfo.width = swapChainExtent.width;
+        framebufferInfo.height = swapChainExtent.height;
+        framebufferInfo.layers = 1;
+
+        if (vkCreateFramebuffer(device, &framebufferInfo, nullptr, &swapChainFramebuffers[i]) != VK_SUCCESS) {
+            return tl::make_unexpected(std::runtime_error("failed to create framebuffer!"));
+        }
+    }
+
+    std::vector<Framebuffer> buffers;
+    buffers.reserve(swapChainFramebuffers.size());
+    for (auto const scfb : swapChainFramebuffers) {
+        buffers.emplace_back(scfb, device);
+    }
+    return buffers;
+}
+
 }

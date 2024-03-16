@@ -49,6 +49,7 @@ void VKEngine::initVulkan()
     imageViews_ = forceUnwrap(swapChain_->createImageViews(device_));
     createRenderPass();
     createGraphicsPipeline();
+    frameBuffers_ = forceUnwrap(Framebuffer::create(imageViews_, *renderPass_, swapChain_->extent(), device_));
     spdlog::info("vulkan initialization complete. num views={}", imageViews_.size());
 }
 
