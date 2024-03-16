@@ -784,9 +784,27 @@ tl::expected<CommandBuffer, std::runtime_error> CommandPool::createBuffer() cons
 
     VkCommandBuffer buffer;
     if (vkAllocateCommandBuffers(*device_, &allocInfo, &buffer) != VK_SUCCESS) {
-        return tl::make_unexpected(std::runtime_error("failed to allocate command buffers!"));
+        return tl::make_unexpected(std::runtime_error("failed to allocate command buffer!"));
     }
     return CommandBuffer{buffer};
+}
+
+tl::expected<CommandBufferVec, std::runtime_error> 
+CommandPool::createBuffers(unsigned int numBuffers) const noexcept
+{
+    spdlog::info("create command buffers");
+    VkCommandBufferAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocInfo.commandPool = *pool_;
+    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandBufferCount = numBuffers;
+
+    CommandBufferVec buffers{numBuffers};
+    if (vkAllocateCommandBuffers(*device_, &allocInfo, buffers.data()) != VK_SUCCESS) {
+        return tl::make_unexpected(std::runtime_error("failed to allocate command buffers!"));
+    }   
+
+    return buffers;
 }
 
 Fence::Fence(VkFence fence, Device const& device) noexcept
@@ -831,6 +849,22 @@ tl::expected<Fence, std::runtime_error> Fence::create(Device const& device) noex
     return Fence{fence, device};
 }
 
+tl::expected<std::vector<Fence>, std::runtime_error> 
+Fence::createVec(Device const& device, unsigned int numFences) noexcept
+{
+    std::vector<Fence> fences;
+    fences.reserve(numFences);
+
+    for (auto i{0U}; i < numFences; ++i) {
+        auto expectedFence = create(device);
+        if (!expectedFence) {
+            return tl::make_unexpected(std::move(expectedFence).error());
+        }
+        fences.emplace_back(std::move(expectedFence).value());
+    }
+    return fences;
+}
+
 Semaphore::Semaphore(VkSemaphore semaphore, Device const& device) noexcept
     : semaphore_(semaphore)
     , device_(std::addressof(device))
@@ -870,6 +904,22 @@ tl::expected<Semaphore, std::runtime_error> Semaphore::create(Device const& devi
         return tl::make_unexpected(std::runtime_error("failed to create semaphore"));
     }
     return Semaphore{semaphore, device};
+}
+
+tl::expected<std::vector<Semaphore>, std::runtime_error>
+Semaphore::createVec(Device const& device, unsigned int numSemaphores) noexcept
+{
+    std::vector<Semaphore> semaphores;
+    semaphores.reserve(numSemaphores);
+
+    for (auto i{0U}; i < numSemaphores; ++i) {
+        auto expectedSemaphore = create(device);
+        if (!expectedSemaphore) {
+            return tl::make_unexpected(std::move(expectedSemaphore).error());
+        }
+        semaphores.emplace_back(std::move(expectedSemaphore).value());
+    }
+    return semaphores;   
 }
 
 }

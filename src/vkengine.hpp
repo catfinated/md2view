@@ -18,11 +18,13 @@ public:
     void run_game();
 
 private:
+    static constexpr unsigned int kMaxFramesInFlight{2U};
+
     void initWindow();
     void initVulkan();
     void createGraphicsPipeline();
     void createRenderPass();
-    void recordCommandBuffer(uint32_t imageIndex);
+    void recordCommandBuffer(CommandBuffer& commandBuffer, uint32_t imageIndex);
     void drawFrame();
 
     Window window_;
@@ -38,13 +40,16 @@ private:
     std::optional<InplacePipeline> graphicsPipeline_;
     std::vector<Framebuffer> frameBuffers_;
     std::optional<CommandPool> commandPool_;
-    std::optional<CommandBuffer> commandBuffer_;
-    std::optional<Semaphore> imageAvailableSemaphore_;
-    std::optional<Semaphore> renderFinishedSemaphore_;
-    std::optional<Fence> inflightFence_;
+    CommandBufferVec commandBuffers_;
+    std::vector<Semaphore> imageAvailableSemaphores_;
+    std::vector<Semaphore> renderFinishedSemaphores_;
+    std::vector<Fence> inflightFences_;
+
     VkViewport viewport{};
     VkRect2D scissor{};
     VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
+
+    uint32_t currentFrame_{0U};
 };
 
 }

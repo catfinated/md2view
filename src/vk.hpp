@@ -411,6 +411,8 @@ private:
     VkCommandBuffer buffer_;
 };
 
+using CommandBufferVec = std::vector<VkCommandBuffer>;
+
 class CommandPool
 {
 public:
@@ -427,6 +429,8 @@ public:
     }
 
     tl::expected<CommandBuffer, std::runtime_error> createBuffer() const noexcept;
+
+    tl::expected<CommandBufferVec, std::runtime_error> createBuffers(unsigned int numBuffers) const noexcept;
 
     static tl::expected<CommandPool, std::runtime_error> 
     create(PhysicalDevice const& physicalDevice, Device const& device) noexcept;
@@ -463,6 +467,9 @@ public:
         vkResetFences(*device_, 1, std::addressof(fence_.value()));
     }
 
+    static tl::expected<std::vector<Fence>, std::runtime_error>
+    createVec(Device const& device, unsigned int numFences) noexcept;
+
     static tl::expected<Fence, std::runtime_error> create(Device const& device) noexcept;
 
 private:
@@ -486,6 +493,9 @@ public:
         gsl_Assert(semaphore_);
         return *semaphore_;
     }
+
+    static tl::expected<std::vector<Semaphore>, std::runtime_error>
+    createVec(Device const& device, unsigned int numSemaphores) noexcept;
 
     static tl::expected<Semaphore, std::runtime_error> create(Device const& device) noexcept;
 
