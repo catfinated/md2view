@@ -3,6 +3,8 @@
 #include <GLFW/glfw3.h>
 #include <gsl/gsl-lite.hpp>
 #include <tl/expected.hpp>
+#include <vulkan/vulkan.hpp>
+#include <vulkan/vulkan_raii.hpp>
 
 #include <cstdint>
 #include <filesystem>
@@ -12,7 +14,7 @@
 #include <utility>
 #include <vector>
 
-namespace vk {
+namespace myvk {
 
 class Window 
 {
@@ -42,93 +44,6 @@ private:
     GLFWwindow * window_;
 };
 
-class Instance
-{
-public:
-    Instance() = default;
-    ~Instance() noexcept;
-    Instance(Instance const&) = delete;
-    Instance& operator=(Instance const&) = delete;
-
-    Instance(Instance&& rhs) noexcept
-        : handle_(std::exchange(rhs.handle_, std::nullopt))
-    {}
-
-    Instance& operator=(Instance&& rhs) noexcept;
-
-    operator VkInstance() const 
-    {
-        gsl_Expects(handle_); 
-        return *handle_; 
-    }
-
-    static tl::expected<Instance, std::runtime_error> create() noexcept;
-
-private:
-    Instance(VkInstance handle) noexcept;
-
-    std::optional<VkInstance> handle_;
-};
-
-class DebugMessenger 
-{
-public:
-    ~DebugMessenger() noexcept;
-    DebugMessenger(DebugMessenger const&) = delete;
-    DebugMessenger& operator=(DebugMessenger const&) = delete;
-
-    DebugMessenger(DebugMessenger&& rhs) noexcept 
-        : instance_(rhs.instance_)
-        , handle_(std::exchange(rhs.handle_, std::nullopt))
-    {}
-
-    DebugMessenger& operator=(DebugMessenger&& rhs) noexcept;
-
-    operator VkDebugUtilsMessengerEXT() const 
-    {
-        gsl_Expects(handle_); 
-        return *handle_; 
-    }
-
-     static tl::expected<DebugMessenger, std::runtime_error> create(Instance const&) noexcept;
-
-private:
-    DebugMessenger(Instance const&, VkDebugUtilsMessengerEXT handle) noexcept;
-
-    gsl::not_null<Instance const*> instance_;
-    std::optional<VkDebugUtilsMessengerEXT> handle_;
-};
-
-class Surface
-{
-public:
-    ~Surface() noexcept;
-    Surface(Surface const&) = delete;
-    Surface& operator=(Surface const&) = delete;
-    Surface(Surface&& rhs) noexcept
-        : instance_(rhs.instance_) 
-        , surface_(std::exchange(rhs.surface_, std::nullopt))
-    {}
-    Surface& operator=(Surface&& rhs) noexcept;
-
-    operator VkSurfaceKHR() const 
-    {
-        gsl_Assert(surface_);
-        return *surface_;
-    }
-
-    static tl::expected<Surface, std::runtime_error> create(Instance const& instance, Window const& window) noexcept;
-
-private:
-    Surface(Instance const& instance, VkSurfaceKHR surface)
-        : instance_(std::addressof(instance))
-        , surface_(surface)
-    {}
-
-    gsl::not_null<Instance const*> instance_;
-    std::optional<VkSurfaceKHR> surface_;
-};
-
 struct QueueFamilyIndices {
     std::optional<uint32_t> graphicsFamily;
     std::optional<uint32_t> presentFamily;
@@ -140,42 +55,16 @@ struct QueueFamilyIndices {
 };
 
 struct SwapChainSupportDetails {
-    VkSurfaceCapabilitiesKHR capabilities;
-    std::vector<VkSurfaceFormatKHR> formats;
-    std::vector<VkPresentModeKHR> presentModes;
+    vk::SurfaceCapabilitiesKHR capabilities;
+    std::vector<vk::SurfaceFormatKHR> formats;
+    std::vector<vk::PresentModeKHR> presentModes;
 };
 
-class PhysicalDevice
-{
-public:
-    PhysicalDevice() = default;
-    PhysicalDevice(VkPhysicalDevice physicalDevice, QueueFamilyIndices indices) noexcept
-        : physicalDevice_(physicalDevice)
-        , indices_(std::move(indices))
-    {}
-
-    operator VkPhysicalDevice() const 
-    {
-        return physicalDevice_;
-    }
-
-    QueueFamilyIndices const& queueFamilyIndices() const noexcept { return indices_; }
-
-    std::set<uint32_t> uniqueQueueFamilies() const
-    {
-        gsl_Expects(queueFamilyIndices().isComplete());
-        return {indices_.graphicsFamily.value(), indices_.presentFamily.value()};
-    }
-
-    SwapChainSupportDetails querySwapChainSupport(Surface const& surface) const noexcept;
-
-    static tl::expected<PhysicalDevice, std::runtime_error> 
-    pickPhysicalDevice(Instance const& instance, Surface const& surface) noexcept;
-
-private:
-    VkPhysicalDevice physicalDevice_;
-    QueueFamilyIndices indices_;
-};
+tl::expected<vk::raii::Instance, std::runtime_error> createInstance(vk::raii::Context&) noexcept;
+tl::expected<vk::raii::DebugUtilsMessengerEXT, std::runtime_error> createDebugUtilsMessenger(vk::raii::Instance&) noexcept;
+tl::expected<vk::raii::SurfaceKHR, std::runtime_error> createSurface(vk::raii::Instance&, Window const&) noexcept;
+tl::expected<std::pair<vk::raii::PhysicalDevice, QueueFamilyIndices>, std::runtime_error> 
+pickPhysicalDevice(vk::raii::Instance&, vk::SurfaceKHR const&) noexcept;
 
 class Device 
 {
@@ -202,10 +91,10 @@ public:
     VkQueue const& graphicsQueue() const noexcept { return graphicsQueue_; }
     VkQueue const& presentQueue() const noexcept { return presentQueue_; }
 
-    static tl::expected<Device, std::runtime_error> create(PhysicalDevice const& physicalDevice) noexcept;
+    static tl::expected<Device, std::runtime_error> create(vk::PhysicalDevice const& physicalDevice, QueueFamilyIndices const&) noexcept;
 
 private:
-    Device(VkDevice device, PhysicalDevice const& physicalDevice) noexcept;
+    Device(VkDevice device, QueueFamilyIndices const& indices) noexcept;
     std::optional<VkDevice> device_;
     VkQueue graphicsQueue_;
     VkQueue presentQueue_;
@@ -253,7 +142,7 @@ public:
     tl::expected<std::vector<ImageView>, std::runtime_error> createImageViews(Device const& device) const;
 
     static tl::expected<SwapChain, std::runtime_error>
-    create(PhysicalDevice const& physicalDevice, Device const& device, Window const& window, Surface const& surface) noexcept;
+    create(vk::PhysicalDevice const& physicalDevice, Device const& device, Window const& window, vk::SurfaceKHR const& surface) noexcept;
 
 private:
     SwapChain(VkSwapchainKHR swapChain, 
@@ -433,7 +322,7 @@ public:
     tl::expected<CommandBufferVec, std::runtime_error> createBuffers(unsigned int numBuffers) const noexcept;
 
     static tl::expected<CommandPool, std::runtime_error> 
-    create(PhysicalDevice const& physicalDevice, Device const& device) noexcept;
+    create(vk::PhysicalDevice const& physicalDevice, Device const& device, QueueFamilyIndices const& indices) noexcept;
 
 private:
     CommandPool(VkCommandPool pool, Device const& device) noexcept;

@@ -7,7 +7,7 @@
 #include <iostream>
 #include <stdexcept>
 
-namespace vk {
+namespace myvk {
 
 template <class T, class E>
 T forceUnwrap(tl::expected<T, E>&& expectedT)
@@ -19,6 +19,10 @@ T forceUnwrap(tl::expected<T, E>&& expectedT)
 }
 
 VKEngine::VKEngine()
+    : instance_(nullptr)
+    , debugMessenger_(nullptr)
+    , surface_(nullptr)
+    , physicalDevice_(nullptr)
 {
     gsl_Ensures(glfwInit() == GLFW_TRUE);
 }
@@ -49,17 +53,19 @@ void VKEngine::initWindow()
 
 void VKEngine::initVulkan()
 {
-    instance_ = forceUnwrap(Instance::create());
-    debugMessenger_ = forceUnwrap(DebugMessenger::create(instance_));
-    surface_ = forceUnwrap(Surface::create(instance_, window_));
-    physicalDevice_ = forceUnwrap(PhysicalDevice::pickPhysicalDevice(instance_, *surface_));
-    device_ = forceUnwrap(Device::create(physicalDevice_));
-    swapChain_ = forceUnwrap(SwapChain::create(physicalDevice_, device_, window_, *surface_));
+    instance_ = forceUnwrap(createInstance(context_));
+    debugMessenger_ = forceUnwrap(createDebugUtilsMessenger(instance_));
+    surface_ = forceUnwrap(createSurface(instance_, window_));
+    auto result = forceUnwrap(pickPhysicalDevice(instance_, *surface_));
+    physicalDevice_ = std::move(result.first);
+    queueFamilyIndices_ = result.second;
+    device_ = forceUnwrap(Device::create(*physicalDevice_, queueFamilyIndices_));
+    swapChain_ = forceUnwrap(SwapChain::create(*physicalDevice_, device_, window_, *surface_));
     imageViews_ = forceUnwrap(swapChain_->createImageViews(device_));
     createRenderPass();
     createGraphicsPipeline();
     frameBuffers_ = forceUnwrap(Framebuffer::create(imageViews_, *renderPass_, swapChain_->extent(), device_));
-    commandPool_ = forceUnwrap(CommandPool::create(physicalDevice_, device_));
+    commandPool_ = forceUnwrap(CommandPool::create(*physicalDevice_, device_, queueFamilyIndices_));
 
     commandBuffers_ = forceUnwrap(commandPool_->createBuffers(kMaxFramesInFlight));
     imageAvailableSemaphores_ = forceUnwrap(Semaphore::createVec(device_, kMaxFramesInFlight));
@@ -84,7 +90,7 @@ void VKEngine::recreateSwapChain()
     imageViews_.clear();
     swapChain_.reset();
 
-    swapChain_ = forceUnwrap(SwapChain::create(physicalDevice_, device_, window_, *surface_));
+    swapChain_ = forceUnwrap(SwapChain::create(*physicalDevice_, device_, window_, *surface_));
     imageViews_ = forceUnwrap(swapChain_->createImageViews(device_));
     frameBuffers_ = forceUnwrap(Framebuffer::create(imageViews_, *renderPass_, swapChain_->extent(), device_));
 }

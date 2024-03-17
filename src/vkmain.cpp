@@ -4,7 +4,7 @@
 
 int main(int argc, char const * argv[])
 {
-    vk::VKEngine engine;
+    myvk::VKEngine engine;
     engine.init(argc, argv);
     try {
         engine.run_game();

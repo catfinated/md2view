@@ -6,7 +6,7 @@
 
 #include <optional>
 
-namespace vk {
+namespace myvk {
 
 class VKEngine : public Engine
 {
@@ -29,10 +29,13 @@ private:
     void recreateSwapChain();
 
     Window window_;
-    Instance instance_;
-    std::optional<DebugMessenger> debugMessenger_;
-    std::optional<Surface> surface_;
-    PhysicalDevice physicalDevice_;
+    vk::raii::Context context_;
+    vk::raii::Instance instance_;
+    vk::raii::DebugUtilsMessengerEXT debugMessenger_;
+    vk::raii::SurfaceKHR surface_;
+    vk::raii::PhysicalDevice physicalDevice_;
+    QueueFamilyIndices queueFamilyIndices_;
+    
     Device device_;
     std::optional<SwapChain> swapChain_;
     std::vector<ImageView> imageViews_;
