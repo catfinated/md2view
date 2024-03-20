@@ -65,45 +65,12 @@ tl::expected<vk::raii::DebugUtilsMessengerEXT, std::runtime_error> createDebugUt
 tl::expected<vk::raii::SurfaceKHR, std::runtime_error> createSurface(vk::raii::Instance&, Window const&) noexcept;
 tl::expected<std::pair<vk::raii::PhysicalDevice, QueueFamilyIndices>, std::runtime_error> 
 pickPhysicalDevice(vk::raii::Instance&, vk::SurfaceKHR const&) noexcept;
-
-class Device 
-{
-public:
-    Device() = default;
-    ~Device() noexcept;
-    Device(Device const&) = delete;
-    Device& operator=(Device const&) = delete;
-
-    Device(Device&& rhs) noexcept
-        : device_(std::exchange(rhs.device_, std::nullopt))
-        , graphicsQueue_(rhs.graphicsQueue_)
-        , presentQueue_(rhs.presentQueue_)
-    {}
-
-    Device& operator=(Device&& rhs) noexcept;
-
-    operator VkDevice() const
-    {
-        gsl_Assert(device_);
-        return *device_;
-    }
-
-    VkQueue const& graphicsQueue() const noexcept { return graphicsQueue_; }
-    VkQueue const& presentQueue() const noexcept { return presentQueue_; }
-
-    static tl::expected<Device, std::runtime_error> create(vk::PhysicalDevice const& physicalDevice, QueueFamilyIndices const&) noexcept;
-
-private:
-    Device(VkDevice device, QueueFamilyIndices const& indices) noexcept;
-    std::optional<VkDevice> device_;
-    VkQueue graphicsQueue_;
-    VkQueue presentQueue_;
-};
+tl::expected<vk::raii::Device, std::runtime_error> createDevice(vk::raii::PhysicalDevice const& physicalDevice, QueueFamilyIndices const&) noexcept;
 
 class ImageView
 {
 public:
-    ImageView(VkImageView, Device const& device) noexcept;
+    ImageView(VkImageView, vk::Device const& device) noexcept;
     ~ImageView() noexcept;
     ImageView(ImageView const&) = delete;
     ImageView& operator=(ImageView const&) = delete;
@@ -118,7 +85,7 @@ public:
     
 private:
     std::optional<VkImageView> view_;
-    gsl::not_null<Device const*> device_;
+    vk::Device device_;
 };
 
 class SwapChain
@@ -139,23 +106,23 @@ public:
     VkExtent2D extent() const noexcept { return swapChainExtent_; }
     VkFormat imageFormat() const noexcept { return swapChainImageFormat_; }
 
-    tl::expected<std::vector<ImageView>, std::runtime_error> createImageViews(Device const& device) const;
+    tl::expected<std::vector<ImageView>, std::runtime_error> createImageViews(vk::Device const& device) const;
 
     static tl::expected<SwapChain, std::runtime_error>
-    create(vk::PhysicalDevice const& physicalDevice, Device const& device, Window const& window, vk::SurfaceKHR const& surface) noexcept;
+    create(vk::PhysicalDevice const& physicalDevice, vk::Device const& device, Window const& window, vk::SurfaceKHR const& surface) noexcept;
 
 private:
     SwapChain(VkSwapchainKHR swapChain, 
               VkFormat swapChainImageFormat,
               VkExtent2D swapChainExtent,
               std::vector<VkImage> images, 
-              Device const& device) noexcept;
+              vk::Device const& device) noexcept;
 
     std::optional<VkSwapchainKHR> swapChain_;
     std::vector<VkImage> images_;
     VkFormat swapChainImageFormat_;
     VkExtent2D swapChainExtent_;
-    gsl::not_null<Device const*> device_;
+    vk::Device device_;
 };
 
 class ShaderModule 
@@ -174,26 +141,26 @@ public:
     }
 
     static tl::expected<ShaderModule, std::runtime_error> 
-    create(std::filesystem::path const& path, Device const& device);
+    create(std::filesystem::path const& path, vk::Device const& device);
                                                     
 private:
-    ShaderModule(VkShaderModule module, Device const& device) noexcept;
+    ShaderModule(VkShaderModule module, vk::Device const& device) noexcept;
 
     std::optional<VkShaderModule> module_;
-    gsl::not_null<Device const*> device_;
+    vk::Device device_;
 };
 
 class InplaceRenderPass
 {
 public:
-    InplaceRenderPass(VkRenderPass renderPass, Device const& device)
+    InplaceRenderPass(VkRenderPass renderPass, vk::Device const& device)
         : renderPass_(renderPass)
-        , device_(std::addressof(device))
+        , device_(device)
     {}
 
     ~InplaceRenderPass()
     {
-        vkDestroyRenderPass(*device_, renderPass_, nullptr);
+        vkDestroyRenderPass(device_, renderPass_, nullptr);
     }
 
     InplaceRenderPass(InplaceRenderPass const&) = delete;
@@ -205,20 +172,20 @@ public:
 
 private:
     VkRenderPass renderPass_;
-    gsl::not_null<Device const*> device_;
+    vk::Device device_;
 };
 
 class InplacePipelineLayout
 {
 public:
-    InplacePipelineLayout(VkPipelineLayout pipelineLayout, Device const& device)
+    InplacePipelineLayout(VkPipelineLayout pipelineLayout, vk::Device const& device)
         : pipelineLayout_(pipelineLayout)
-        , device_(std::addressof(device))
+        , device_(device)
     {}
 
     ~InplacePipelineLayout()
     {
-        vkDestroyPipelineLayout(*device_, pipelineLayout_, nullptr);
+        vkDestroyPipelineLayout(device_, pipelineLayout_, nullptr);
     }
 
     InplacePipelineLayout(InplacePipelineLayout const&) = delete;
@@ -230,20 +197,20 @@ public:
 
 private:
     VkPipelineLayout pipelineLayout_;
-    gsl::not_null<Device const*> device_;
+    vk::Device device_;
 };
 
 class InplacePipeline
 {
 public:
-    InplacePipeline(VkPipeline pipeline, Device const& device)
+    InplacePipeline(VkPipeline pipeline, vk::Device const& device)
         : pipeline_(pipeline)
-        , device_(std::addressof(device))
+        , device_(device)
     {}
 
     ~InplacePipeline()
     {
-        vkDestroyPipeline(*device_, pipeline_, nullptr);
+        vkDestroyPipeline(device_, pipeline_, nullptr);
     }
 
     InplacePipeline(InplacePipeline const&) = delete;
@@ -255,13 +222,13 @@ public:
 
 private:
     VkPipeline pipeline_;
-    gsl::not_null<Device const*> device_;
+    vk::Device device_;
 };
 
 class Framebuffer 
 {
 public:
-    Framebuffer(VkFramebuffer buffer, Device const& device) noexcept;
+    Framebuffer(VkFramebuffer buffer, vk::Device const& device) noexcept;
     ~Framebuffer() noexcept;
     Framebuffer(Framebuffer const&) = delete;
     Framebuffer& operator=(Framebuffer const&) = delete;
@@ -278,11 +245,11 @@ public:
     create(std::vector<ImageView> const& imageViews, 
            InplaceRenderPass const& renderPass, 
            VkExtent2D swapChainExtent,
-           Device const& device) noexcept;
+           vk::Device const& device) noexcept;
 
 private:
     std::optional<VkFramebuffer> buffer_;
-    gsl::not_null<Device const*> device_;
+    vk::Device device_;
 };
 
 class CommandBuffer
@@ -322,13 +289,13 @@ public:
     tl::expected<CommandBufferVec, std::runtime_error> createBuffers(unsigned int numBuffers) const noexcept;
 
     static tl::expected<CommandPool, std::runtime_error> 
-    create(vk::PhysicalDevice const& physicalDevice, Device const& device, QueueFamilyIndices const& indices) noexcept;
+    create(vk::PhysicalDevice const& physicalDevice, vk::Device const& device, QueueFamilyIndices const& indices) noexcept;
 
 private:
-    CommandPool(VkCommandPool pool, Device const& device) noexcept;
+    CommandPool(VkCommandPool pool, vk::Device const& device) noexcept;
 
     std::optional<VkCommandPool> pool_;
-    gsl::not_null<Device const*> device_;
+    vk::Device device_;
 };
 
 class Fence
@@ -348,24 +315,24 @@ public:
 
     void wait() const
     {
-        vkWaitForFences(*device_, 1, std::addressof(fence_.value()), VK_TRUE, UINT64_MAX);
+        vkWaitForFences(device_, 1, std::addressof(fence_.value()), VK_TRUE, UINT64_MAX);
     }
 
     void reset()
     {
-        vkResetFences(*device_, 1, std::addressof(fence_.value()));
+        vkResetFences(device_, 1, std::addressof(fence_.value()));
     }
 
     static tl::expected<std::vector<Fence>, std::runtime_error>
-    createVec(Device const& device, unsigned int numFences) noexcept;
+    createVec(vk::Device const& device, unsigned int numFences) noexcept;
 
-    static tl::expected<Fence, std::runtime_error> create(Device const& device) noexcept;
+    static tl::expected<Fence, std::runtime_error> create(vk::Device const& device) noexcept;
 
 private:
-    Fence(VkFence fence, Device const& device) noexcept;
+    Fence(VkFence fence, vk::Device const& device) noexcept;
 
     std::optional<VkFence> fence_;
-    gsl::not_null<Device const*> device_;
+    vk::Device device_;
 };
 
 class Semaphore
@@ -384,15 +351,15 @@ public:
     }
 
     static tl::expected<std::vector<Semaphore>, std::runtime_error>
-    createVec(Device const& device, unsigned int numSemaphores) noexcept;
+    createVec(vk::Device const& device, unsigned int numSemaphores) noexcept;
 
-    static tl::expected<Semaphore, std::runtime_error> create(Device const& device) noexcept;
+    static tl::expected<Semaphore, std::runtime_error> create(vk::Device const& device) noexcept;
 
 private:
-    Semaphore(VkSemaphore semaphore, Device const& device) noexcept;
+    Semaphore(VkSemaphore semaphore, vk::Device const& device) noexcept;
 
     std::optional<VkSemaphore> semaphore_;
-    gsl::not_null<Device const*> device_;
+    vk::Device device_;
 };
 
 } // namespace vk 

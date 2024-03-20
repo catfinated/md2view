@@ -23,6 +23,7 @@ VKEngine::VKEngine()
     , debugMessenger_(nullptr)
     , surface_(nullptr)
     , physicalDevice_(nullptr)
+    , device_(nullptr)
 {
     gsl_Ensures(glfwInit() == GLFW_TRUE);
 }
@@ -59,18 +60,22 @@ void VKEngine::initVulkan()
     auto result = forceUnwrap(pickPhysicalDevice(instance_, *surface_));
     physicalDevice_ = std::move(result.first);
     queueFamilyIndices_ = result.second;
-    device_ = forceUnwrap(Device::create(*physicalDevice_, queueFamilyIndices_));
-    swapChain_ = forceUnwrap(SwapChain::create(*physicalDevice_, device_, window_, *surface_));
-    imageViews_ = forceUnwrap(swapChain_->createImageViews(device_));
+    device_ = forceUnwrap(createDevice(physicalDevice_, queueFamilyIndices_));
+
+    graphicsQueue_ = device_.getQueue(queueFamilyIndices_.graphicsFamily.value(), 0);
+    presentQueue_ = device_.getQueue(queueFamilyIndices_.presentFamily.value(), 0);
+
+    swapChain_ = forceUnwrap(SwapChain::create(*physicalDevice_, *device_, window_, *surface_));
+    imageViews_ = forceUnwrap(swapChain_->createImageViews(*device_));
     createRenderPass();
     createGraphicsPipeline();
-    frameBuffers_ = forceUnwrap(Framebuffer::create(imageViews_, *renderPass_, swapChain_->extent(), device_));
-    commandPool_ = forceUnwrap(CommandPool::create(*physicalDevice_, device_, queueFamilyIndices_));
+    frameBuffers_ = forceUnwrap(Framebuffer::create(imageViews_, *renderPass_, swapChain_->extent(), *device_));
+    commandPool_ = forceUnwrap(CommandPool::create(*physicalDevice_, *device_, queueFamilyIndices_));
 
     commandBuffers_ = forceUnwrap(commandPool_->createBuffers(kMaxFramesInFlight));
-    imageAvailableSemaphores_ = forceUnwrap(Semaphore::createVec(device_, kMaxFramesInFlight));
-    renderFinishedSemaphores_ = forceUnwrap(Semaphore::createVec(device_, kMaxFramesInFlight));
-    inflightFences_ = forceUnwrap(Fence::createVec(device_, kMaxFramesInFlight));
+    imageAvailableSemaphores_ = forceUnwrap(Semaphore::createVec(*device_, kMaxFramesInFlight));
+    renderFinishedSemaphores_ = forceUnwrap(Semaphore::createVec(*device_, kMaxFramesInFlight));
+    inflightFences_ = forceUnwrap(Fence::createVec(*device_, kMaxFramesInFlight));
 
     spdlog::info("vulkan initialization complete. num views={}", imageViews_.size());
 }
@@ -85,21 +90,21 @@ void VKEngine::recreateSwapChain()
         glfwWaitEvents();
     }
 
-    vkDeviceWaitIdle(device_);
+    vkDeviceWaitIdle(*device_);
     frameBuffers_.clear();
     imageViews_.clear();
     swapChain_.reset();
 
-    swapChain_ = forceUnwrap(SwapChain::create(*physicalDevice_, device_, window_, *surface_));
-    imageViews_ = forceUnwrap(swapChain_->createImageViews(device_));
-    frameBuffers_ = forceUnwrap(Framebuffer::create(imageViews_, *renderPass_, swapChain_->extent(), device_));
+    swapChain_ = forceUnwrap(SwapChain::create(*physicalDevice_, *device_, window_, *surface_));
+    imageViews_ = forceUnwrap(swapChain_->createImageViews(*device_));
+    frameBuffers_ = forceUnwrap(Framebuffer::create(imageViews_, *renderPass_, swapChain_->extent(), *device_));
 }
 
 void VKEngine::createGraphicsPipeline()
 {
     spdlog::info("creating graphics pipeline");
-    auto vertShaderModule = forceUnwrap(ShaderModule::create("data/shaders/vert.spv", device_));
-    auto fragShaderModule = forceUnwrap(ShaderModule::create("data/shaders/frag.spv", device_));
+    auto vertShaderModule = forceUnwrap(ShaderModule::create("data/shaders/vert.spv", *device_));
+    auto fragShaderModule = forceUnwrap(ShaderModule::create("data/shaders/frag.spv", *device_));
 
     VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
     vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -175,10 +180,10 @@ void VKEngine::createGraphicsPipeline()
     pipelineLayoutInfo.pushConstantRangeCount = 0;
 
     VkPipelineLayout pipelineLayout;
-    if (vkCreatePipelineLayout(device_, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
+    if (vkCreatePipelineLayout(*device_, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline layout!");
     }
-    pipelineLayout_.emplace(pipelineLayout, device_);
+    pipelineLayout_.emplace(pipelineLayout, *device_);
 
     VkGraphicsPipelineCreateInfo pipelineInfo{};
     pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -199,11 +204,11 @@ void VKEngine::createGraphicsPipeline()
     pipelineInfo.basePipelineIndex = -1; // Optional
 
     VkPipeline pipeline;
-    if (vkCreateGraphicsPipelines(device_, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline) != VK_SUCCESS) {
+    if (vkCreateGraphicsPipelines(*device_, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline) != VK_SUCCESS) {
         throw std::runtime_error("failed to create graphics pipeline!");
     }
 
-    graphicsPipeline_.emplace(pipeline, device_);
+    graphicsPipeline_.emplace(pipeline, *device_);
 }
 
 void VKEngine::createRenderPass() 
@@ -247,10 +252,10 @@ void VKEngine::createRenderPass()
     renderPassInfo.pDependencies = &dependency;
 
     VkRenderPass renderPass;
-    if (vkCreateRenderPass(device_, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) {
+    if (vkCreateRenderPass(*device_, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) {
         throw std::runtime_error("failed to create render pass!");
     }
-    renderPass_.emplace(renderPass, device_);
+    renderPass_.emplace(renderPass, *device_);
 }
 
 void VKEngine::recordCommandBuffer(CommandBuffer& commandBuffer, uint32_t imageIndex)
@@ -308,7 +313,7 @@ void VKEngine::drawFrame()
 
     auto& imageAvailableSemaphore = imageAvailableSemaphores_.at(currentFrame_);
     uint32_t imageIndex;
-    vkAcquireNextImageKHR(device_, *swapChain_, UINT64_MAX, imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+    vkAcquireNextImageKHR(*device_, *swapChain_, UINT64_MAX, imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
 
     auto commandBuffer = CommandBuffer{commandBuffers_.at(currentFrame_)};
     vkResetCommandBuffer(commandBuffer, 0);
@@ -330,7 +335,7 @@ void VKEngine::drawFrame()
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
 
-    if (vkQueueSubmit(device_.graphicsQueue(), 1, &submitInfo, fence) != VK_SUCCESS) {
+    if (vkQueueSubmit(*graphicsQueue_, 1, &submitInfo, fence) != VK_SUCCESS) {
         throw std::runtime_error("failed to submit draw command buffer!");
     }
 
@@ -346,7 +351,7 @@ void VKEngine::drawFrame()
     presentInfo.pImageIndices = &imageIndex;
     presentInfo.pResults = nullptr; // Optional
 
-    auto const result = vkQueuePresentKHR(device_.presentQueue(), &presentInfo);
+    auto const result = vkQueuePresentKHR(*presentQueue_, &presentInfo);
     currentFrame_ = (currentFrame_ + 1U) % kMaxFramesInFlight;
 
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || frameBufferResized_) {
@@ -366,7 +371,7 @@ void VKEngine::run_game()
         glfwPollEvents();
         drawFrame();
     }
-    vkDeviceWaitIdle(device_);
+    vkDeviceWaitIdle(*device_);
 
     glfwTerminate();
 }

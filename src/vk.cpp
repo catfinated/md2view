@@ -194,71 +194,28 @@ tl::expected<vk::raii::DebugUtilsMessengerEXT, std::runtime_error> createDebugUt
     }
 }
 
-Device::Device(VkDevice device, QueueFamilyIndices const& indices) noexcept
-    : device_(device)
-{
-    vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue_);
-    vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue_);
-}
-
-Device::~Device() noexcept
-{
-    if (device_) {
-        vkDestroyDevice(*device_, nullptr);
-    }   
-}
-
-Device& Device::operator=(Device&& rhs) noexcept
-{
-    if (this != std::addressof(rhs)) {
-        if (device_) {
-            vkDestroyDevice(*device_, nullptr);
-        }
-        device_ = std::exchange(rhs.device_, std::nullopt);
-        graphicsQueue_ = rhs.graphicsQueue_;
-        presentQueue_ = rhs.presentQueue_;
-    }
-    return *this;
-}
-
-tl::expected<Device, std::runtime_error> 
-Device::create(vk::PhysicalDevice const& physicalDevice, QueueFamilyIndices const& queueFamilyIndices) noexcept
+tl::expected<vk::raii::Device, std::runtime_error> 
+createDevice(vk::raii::PhysicalDevice const& physicalDevice, QueueFamilyIndices const& queueFamilyIndices) noexcept
 {
     spdlog::info("create logical device {} {}", 
         queueFamilyIndices.graphicsFamily.value(),
         queueFamilyIndices.presentFamily.value());
     static constexpr float queuePriority = 1.0f;
 
-    VkPhysicalDeviceFeatures deviceFeatures{};
+    vk::PhysicalDeviceFeatures deviceFeatures{};
 
-    std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
     std::set<uint32_t> uniqueQueueFamilies = {queueFamilyIndices.graphicsFamily.value(), 
-                                             queueFamilyIndices.presentFamily.value()};
+                                              queueFamilyIndices.presentFamily.value()};
 
+    std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
+    queueCreateInfos.reserve(uniqueQueueFamilies.size());
     for (uint32_t queueFamily : uniqueQueueFamilies) {
-        VkDeviceQueueCreateInfo queueCreateInfo{};
-        queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-        queueCreateInfo.queueFamilyIndex = queueFamily;
-        queueCreateInfo.queueCount = 1;
-        queueCreateInfo.pQueuePriorities = &queuePriority;
+        vk::DeviceQueueCreateInfo queueCreateInfo{{}, queueFamily, 1, &queuePriority};
         queueCreateInfos.push_back(queueCreateInfo);
     }
 
-    VkDeviceCreateInfo createInfo{};
-    createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-    createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
-    createInfo.pQueueCreateInfos = queueCreateInfos.data();
-    createInfo.pEnabledFeatures = &deviceFeatures; 
-    createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
-    createInfo.ppEnabledExtensionNames = deviceExtensions.data();
-    createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-    createInfo.ppEnabledLayerNames = validationLayers.data();
-
-    VkDevice device;
-    if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device) != VK_SUCCESS) {
-       tl::make_unexpected(std::runtime_error("failed to create logical device!"));
-    }
-    return Device{device, queueFamilyIndices};
+    vk::DeviceCreateInfo createInfo{{}, queueCreateInfos, validationLayers, deviceExtensions};
+    return vk::raii::Device{physicalDevice, createInfo};
 }
 
 SwapChainSupportDetails querySwapChainSupport(vk::PhysicalDevice physicalDevice, vk::SurfaceKHR const& surface) noexcept
@@ -361,18 +318,18 @@ SwapChain::SwapChain(VkSwapchainKHR swapChain,
               VkFormat swapChainImageFormat,
               VkExtent2D swapChainExtent,
               std::vector<VkImage> images, 
-              Device const& device) noexcept
+              vk::Device const& device) noexcept
     : swapChainImageFormat_(swapChainImageFormat)
     , swapChainExtent_(swapChainExtent)
     , swapChain_(swapChain)
     , images_(std::move(images))
-    , device_(std::addressof(device))
+    , device_(device)
 {}
 
 SwapChain::~SwapChain() noexcept
 {
     if (swapChain_) {
-        vkDestroySwapchainKHR(*device_, *swapChain_, nullptr);
+        vkDestroySwapchainKHR(device_, *swapChain_, nullptr);
     }
 }
 
@@ -388,7 +345,7 @@ SwapChain& SwapChain::operator=(SwapChain&& rhs) noexcept
 {
     if (this != std::addressof(rhs)) {
         if (swapChain_) {
-            vkDestroySwapchainKHR(*device_, *swapChain_, nullptr);
+            vkDestroySwapchainKHR(device_, *swapChain_, nullptr);
         }
         swapChain_ = std::exchange(rhs.swapChain_, std::nullopt);  
         swapChainImageFormat_ = rhs.swapChainImageFormat_;
@@ -400,7 +357,7 @@ SwapChain& SwapChain::operator=(SwapChain&& rhs) noexcept
 }
 
 tl::expected<SwapChain, std::runtime_error>
-SwapChain::create(vk::PhysicalDevice const& physicalDevice, Device const& device, Window const& window, vk::SurfaceKHR const& surface) noexcept
+SwapChain::create(vk::PhysicalDevice const& physicalDevice, vk::Device const& device, Window const& window, vk::SurfaceKHR const& surface) noexcept
 {
     spdlog::info("create swap chain");
     auto const swapChainSupport = querySwapChainSupport(physicalDevice, surface);
@@ -455,7 +412,7 @@ SwapChain::create(vk::PhysicalDevice const& physicalDevice, Device const& device
     return SwapChain{swapChain, surfaceFormat.format, extent, std::move(swapChainImages), device};
 }
 
-tl::expected<std::vector<ImageView>, std::runtime_error> SwapChain::createImageViews(Device const& device) const
+tl::expected<std::vector<ImageView>, std::runtime_error> SwapChain::createImageViews(vk::Device const& device) const
 {
     std::vector<VkImageView> swapChainImageViews;
     swapChainImageViews.resize(images_.size());
@@ -489,15 +446,15 @@ tl::expected<std::vector<ImageView>, std::runtime_error> SwapChain::createImageV
     return views;
 }
 
-ImageView::ImageView(VkImageView view, Device const& device) noexcept
+ImageView::ImageView(VkImageView view, vk::Device const& device) noexcept
     : view_(view)
-    , device_(std::addressof(device))
+    , device_(device)
 {}
 
 ImageView::~ImageView() noexcept
 {
     if (view_) {
-        vkDestroyImageView(*device_, *view_, nullptr);
+        vkDestroyImageView(device_, *view_, nullptr);
     }
 }
 
@@ -510,7 +467,7 @@ ImageView& ImageView::operator=(ImageView&& rhs) noexcept
 {
     if (this != std::addressof(rhs)) {
         if (view_) {
-            vkDestroyImageView(*device_, *view_, nullptr); 
+            vkDestroyImageView(device_, *view_, nullptr); 
         }
         view_ = std::exchange(rhs.view_, std::nullopt);
         device_ = rhs.device_;
@@ -518,15 +475,15 @@ ImageView& ImageView::operator=(ImageView&& rhs) noexcept
     return *this;
 }
 
-ShaderModule::ShaderModule(VkShaderModule module, Device const& device) noexcept
+ShaderModule::ShaderModule(VkShaderModule module, vk::Device const& device) noexcept
     : module_(module)
-    , device_(std::addressof(device))
+    , device_(device)
 {}
 
 ShaderModule::~ShaderModule() noexcept
 {
     if (module_) {
-        vkDestroyShaderModule(*device_, *module_, nullptr);
+        vkDestroyShaderModule(device_, *module_, nullptr);
     }
 }
 
@@ -539,7 +496,7 @@ ShaderModule& ShaderModule::operator=(ShaderModule&& rhs) noexcept
 {
     if (this != std::addressof(rhs)) {
         if (module_) {
-            vkDestroyShaderModule(*device_, *module_, nullptr);
+            vkDestroyShaderModule(device_, *module_, nullptr);
         }
         module_ = std::exchange(rhs.module_, std::nullopt);
         device_ = rhs.device_;        
@@ -548,7 +505,7 @@ ShaderModule& ShaderModule::operator=(ShaderModule&& rhs) noexcept
 }
 
 tl::expected<ShaderModule, std::runtime_error> 
-ShaderModule::create(std::filesystem::path const& path, Device const& device)
+ShaderModule::create(std::filesystem::path const& path, vk::Device const& device)
 {
     std::vector<char> buffer;
     {
@@ -578,15 +535,15 @@ ShaderModule::create(std::filesystem::path const& path, Device const& device)
     return ShaderModule{shaderModule, device};
 }
 
-Framebuffer::Framebuffer(VkFramebuffer buffer, Device const& device) noexcept
+Framebuffer::Framebuffer(VkFramebuffer buffer, vk::Device const& device) noexcept
     : buffer_(buffer)
-    , device_(std::addressof(device))
+    , device_(device)
 {}
 
 Framebuffer::~Framebuffer() noexcept
 {
     if (buffer_) {
-        vkDestroyFramebuffer(*device_, *buffer_, nullptr);
+        vkDestroyFramebuffer(device_, *buffer_, nullptr);
     }
 }
 
@@ -599,7 +556,7 @@ Framebuffer& Framebuffer::operator=(Framebuffer&& rhs) noexcept
 {
     if (this != std::addressof(rhs)) {
         if (buffer_) {
-            vkDestroyFramebuffer(*device_, *buffer_, nullptr);
+            vkDestroyFramebuffer(device_, *buffer_, nullptr);
         }        
         buffer_ = std::exchange(rhs.buffer_, std::nullopt);
         device_ = rhs.device_;
@@ -611,7 +568,7 @@ tl::expected<std::vector<Framebuffer>, std::runtime_error>
 Framebuffer::create(std::vector<ImageView> const& imageViews, 
                     InplaceRenderPass const& renderPass,
                     VkExtent2D swapChainExtent,
-                    Device const& device) noexcept
+                    vk::Device const& device) noexcept
 {
     std::vector<VkFramebuffer> swapChainFramebuffers;
     swapChainFramebuffers.resize(imageViews.size());
@@ -640,15 +597,15 @@ Framebuffer::create(std::vector<ImageView> const& imageViews,
     return buffers;
 }
 
-CommandPool::CommandPool(VkCommandPool pool, Device const& device) noexcept
+CommandPool::CommandPool(VkCommandPool pool, vk::Device const& device) noexcept
     : pool_(pool)
-    , device_(std::addressof(device))
+    , device_(device)
 {}
 
 CommandPool::~CommandPool() noexcept
 {
     if (pool_) {
-        vkDestroyCommandPool(*device_, *pool_, nullptr);
+        vkDestroyCommandPool(device_, *pool_, nullptr);
     }
 }
 
@@ -661,7 +618,7 @@ CommandPool& CommandPool::operator=(CommandPool&& rhs) noexcept
 {
     if (this != std::addressof(rhs)) {
         if (pool_) {
-            vkDestroyCommandPool(*device_, *pool_, nullptr);
+            vkDestroyCommandPool(device_, *pool_, nullptr);
         }      
         pool_ = std::exchange(rhs.pool_, std::nullopt);
         device_ = rhs.device_; 
@@ -670,7 +627,7 @@ CommandPool& CommandPool::operator=(CommandPool&& rhs) noexcept
 }
 
 tl::expected<CommandPool, std::runtime_error> 
-CommandPool::create(vk::PhysicalDevice const& physicalDevice, Device const& device, QueueFamilyIndices const& indices) noexcept
+CommandPool::create(vk::PhysicalDevice const& physicalDevice, vk::Device const& device, QueueFamilyIndices const& indices) noexcept
 {
     spdlog::info("creating command pool");
     VkCommandPoolCreateInfo poolInfo{};
@@ -696,7 +653,7 @@ tl::expected<CommandBuffer, std::runtime_error> CommandPool::createBuffer() cons
     allocInfo.commandBufferCount = 1;
 
     VkCommandBuffer buffer;
-    if (vkAllocateCommandBuffers(*device_, &allocInfo, &buffer) != VK_SUCCESS) {
+    if (vkAllocateCommandBuffers(device_, &allocInfo, &buffer) != VK_SUCCESS) {
         return tl::make_unexpected(std::runtime_error("failed to allocate command buffer!"));
     }
     return CommandBuffer{buffer};
@@ -713,22 +670,22 @@ CommandPool::createBuffers(unsigned int numBuffers) const noexcept
     allocInfo.commandBufferCount = numBuffers;
 
     CommandBufferVec buffers{numBuffers};
-    if (vkAllocateCommandBuffers(*device_, &allocInfo, buffers.data()) != VK_SUCCESS) {
+    if (vkAllocateCommandBuffers(device_, &allocInfo, buffers.data()) != VK_SUCCESS) {
         return tl::make_unexpected(std::runtime_error("failed to allocate command buffers!"));
     }   
 
     return buffers;
 }
 
-Fence::Fence(VkFence fence, Device const& device) noexcept
+Fence::Fence(VkFence fence, vk::Device const& device) noexcept
     : fence_(fence)
-    , device_(std::addressof(device))
+    , device_(device)
 {}
 
 Fence::~Fence() noexcept
 {
     if (fence_) {
-        vkDestroyFence(*device_, *fence_, nullptr);
+        vkDestroyFence(device_, *fence_, nullptr);
     }
 }
 
@@ -741,7 +698,7 @@ Fence& Fence::operator=(Fence&& rhs) noexcept
 {
     if (this != std::addressof(rhs)) {
         if (fence_) {
-            vkDestroyFence(*device_, *fence_, nullptr);
+            vkDestroyFence(device_, *fence_, nullptr);
         }       
         fence_ = std::exchange(rhs.fence_, std::nullopt);
         device_ = rhs.device_; 
@@ -749,7 +706,7 @@ Fence& Fence::operator=(Fence&& rhs) noexcept
     return *this;
 }
 
-tl::expected<Fence, std::runtime_error> Fence::create(Device const& device) noexcept
+tl::expected<Fence, std::runtime_error> Fence::create(vk::Device const& device) noexcept
 {
     VkFenceCreateInfo fenceInfo{};
     fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
@@ -763,7 +720,7 @@ tl::expected<Fence, std::runtime_error> Fence::create(Device const& device) noex
 }
 
 tl::expected<std::vector<Fence>, std::runtime_error> 
-Fence::createVec(Device const& device, unsigned int numFences) noexcept
+Fence::createVec(vk::Device const& device, unsigned int numFences) noexcept
 {
     std::vector<Fence> fences;
     fences.reserve(numFences);
@@ -778,15 +735,15 @@ Fence::createVec(Device const& device, unsigned int numFences) noexcept
     return fences;
 }
 
-Semaphore::Semaphore(VkSemaphore semaphore, Device const& device) noexcept
+Semaphore::Semaphore(VkSemaphore semaphore, vk::Device const& device) noexcept
     : semaphore_(semaphore)
-    , device_(std::addressof(device))
+    , device_(device)
 {}
 
 Semaphore::~Semaphore() noexcept
 {
     if (semaphore_) {
-        vkDestroySemaphore(*device_, *semaphore_, nullptr);
+        vkDestroySemaphore(device_, *semaphore_, nullptr);
     }
 }
 
@@ -799,7 +756,7 @@ Semaphore& Semaphore::operator=(Semaphore&& rhs) noexcept
 {
     if (this != std::addressof(rhs)) {
         if (semaphore_) {
-            vkDestroySemaphore(*device_, *semaphore_, nullptr);
+            vkDestroySemaphore(device_, *semaphore_, nullptr);
         }
         semaphore_ = std::exchange(rhs.semaphore_, std::nullopt);
         device_ = rhs.device_;
@@ -807,7 +764,7 @@ Semaphore& Semaphore::operator=(Semaphore&& rhs) noexcept
     return *this;
 }
 
-tl::expected<Semaphore, std::runtime_error> Semaphore::create(Device const& device) noexcept
+tl::expected<Semaphore, std::runtime_error> Semaphore::create(vk::Device const& device) noexcept
 {
     VkSemaphoreCreateInfo semaphoreInfo{};
     semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -820,7 +777,7 @@ tl::expected<Semaphore, std::runtime_error> Semaphore::create(Device const& devi
 }
 
 tl::expected<std::vector<Semaphore>, std::runtime_error>
-Semaphore::createVec(Device const& device, unsigned int numSemaphores) noexcept
+Semaphore::createVec(vk::Device const& device, unsigned int numSemaphores) noexcept
 {
     std::vector<Semaphore> semaphores;
     semaphores.reserve(numSemaphores);

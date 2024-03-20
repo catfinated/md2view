@@ -35,8 +35,11 @@ private:
     vk::raii::SurfaceKHR surface_;
     vk::raii::PhysicalDevice physicalDevice_;
     QueueFamilyIndices queueFamilyIndices_;
-    
-    Device device_;
+    vk::raii::Device device_;
+    vk::raii::Queue graphicsQueue_{nullptr};
+    vk::raii::Queue presentQueue_{nullptr};
+
+
     std::optional<SwapChain> swapChain_;
     std::vector<ImageView> imageViews_;
     std::optional<InplaceRenderPass> renderPass_;
