@@ -42,8 +42,8 @@ private:
     std::vector<vk::Image> swapChainImages_;
     SwapChainSupportDetails swapChainSupportDetails_;
     std::vector<vk::raii::ImageView> imageViews_;
+    vk::raii::RenderPass renderPass_{nullptr};
     
-    std::optional<InplaceRenderPass> renderPass_;
     std::optional<InplacePipelineLayout> pipelineLayout_;
     std::optional<InplacePipeline> graphicsPipeline_;
     std::vector<Framebuffer> frameBuffers_;

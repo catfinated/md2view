@@ -84,55 +84,8 @@ tl::expected<std::pair<vk::raii::SwapchainKHR, SwapChainSupportDetails>, std::ru
  tl::expected<std::vector<vk::raii::ImageView>, std::runtime_error> 
     createImageViews(vk::raii::Device const& device, std::vector<vk::Image>& images, SwapChainSupportDetails const& support);
 
-class ShaderModule 
-{
-public:
-    ~ShaderModule() noexcept;
-    ShaderModule(ShaderModule const&) = delete;
-    ShaderModule& operator=(ShaderModule const&) = delete;
-    ShaderModule(ShaderModule&&) noexcept;
-    ShaderModule& operator=(ShaderModule&&) noexcept;
-
-    operator VkShaderModule() const
-    {
-        gsl_Assert(module_);
-        return *module_;
-    }
-
-    static tl::expected<ShaderModule, std::runtime_error> 
-    create(std::filesystem::path const& path, vk::Device const& device);
-                                                    
-private:
-    ShaderModule(VkShaderModule module, vk::Device const& device) noexcept;
-
-    std::optional<VkShaderModule> module_;
-    vk::Device device_;
-};
-
-class InplaceRenderPass
-{
-public:
-    InplaceRenderPass(VkRenderPass renderPass, vk::Device const& device)
-        : renderPass_(renderPass)
-        , device_(device)
-    {}
-
-    ~InplaceRenderPass()
-    {
-        vkDestroyRenderPass(device_, renderPass_, nullptr);
-    }
-
-    InplaceRenderPass(InplaceRenderPass const&) = delete;
-    InplaceRenderPass& operator=(InplaceRenderPass const&) = delete;
-    InplaceRenderPass(InplaceRenderPass&&) = delete;
-    InplaceRenderPass& operator=(InplaceRenderPass&&) = delete;
-
-    operator VkRenderPass() const { return renderPass_; }
-
-private:
-    VkRenderPass renderPass_;
-    vk::Device device_;
-};
+tl::expected<vk::raii::ShaderModule, std::runtime_error> 
+    createShaderModule(std::filesystem::path const& path, vk::raii::Device const& device) noexcept;
 
 class InplacePipelineLayout
 {
@@ -202,7 +155,7 @@ public:
 
     static tl::expected<std::vector<Framebuffer>, std::runtime_error>
     create(std::vector<vk::raii::ImageView> const& imageViews, 
-           InplaceRenderPass const& renderPass, 
+           vk::raii::RenderPass const& renderPass, 
            vk::Extent2D swapChainExtent,
            vk::Device const& device) noexcept;
 

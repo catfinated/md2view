@@ -398,38 +398,10 @@ createImageViews(vk::raii::Device const& device, std::vector<vk::Image>& images,
     return views;
 }
 
-ShaderModule::ShaderModule(VkShaderModule module, vk::Device const& device) noexcept
-    : module_(module)
-    , device_(device)
-{}
-
-ShaderModule::~ShaderModule() noexcept
+tl::expected<vk::raii::ShaderModule, std::runtime_error> 
+    createShaderModule(std::filesystem::path const& path, vk::raii::Device const& device) noexcept
 {
-    if (module_) {
-        vkDestroyShaderModule(device_, *module_, nullptr);
-    }
-}
-
-ShaderModule::ShaderModule(ShaderModule&& rhs) noexcept
-    : module_(std::exchange(rhs.module_, std::nullopt))
-    , device_(rhs.device_)
-{}
-
-ShaderModule& ShaderModule::operator=(ShaderModule&& rhs) noexcept
-{
-    if (this != std::addressof(rhs)) {
-        if (module_) {
-            vkDestroyShaderModule(device_, *module_, nullptr);
-        }
-        module_ = std::exchange(rhs.module_, std::nullopt);
-        device_ = rhs.device_;        
-    }
-    return *this;
-}
-
-tl::expected<ShaderModule, std::runtime_error> 
-ShaderModule::create(std::filesystem::path const& path, vk::Device const& device)
-{
+    spdlog::info("creating shader module for {}", path);
     std::vector<char> buffer;
     {
         std::ifstream inf(path, std::ios::ate | std::ios::binary);
@@ -445,17 +417,9 @@ ShaderModule::create(std::filesystem::path const& path, vk::Device const& device
         inf.read(buffer.data(), fileSize);
     }
 
-    VkShaderModuleCreateInfo createInfo{};
-    createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-    createInfo.codeSize = buffer.size();
-    createInfo.pCode = reinterpret_cast<uint32_t const*>(buffer.data());
+    vk::ShaderModuleCreateInfo createInfo{{}, buffer.size(), reinterpret_cast<uint32_t const*>(buffer.data())};
 
-    VkShaderModule shaderModule;
-    if (vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
-        return tl::make_unexpected(std::runtime_error("failed to create shader module!"));
-    }
-
-    return ShaderModule{shaderModule, device};
+    return device.createShaderModule(createInfo);
 }
 
 Framebuffer::Framebuffer(VkFramebuffer buffer, vk::Device const& device) noexcept
@@ -489,7 +453,7 @@ Framebuffer& Framebuffer::operator=(Framebuffer&& rhs) noexcept
 
 tl::expected<std::vector<Framebuffer>, std::runtime_error>
 Framebuffer::create(std::vector<vk::raii::ImageView> const& imageViews, 
-                    InplaceRenderPass const& renderPass,
+                    vk::raii::RenderPass const& renderPass,
                     vk::Extent2D swapChainExtent,
                     vk::Device const& device) noexcept
 {
@@ -501,7 +465,7 @@ Framebuffer::create(std::vector<vk::raii::ImageView> const& imageViews,
         VkImageView attachments[] = {*imageViews[i]};
         VkFramebufferCreateInfo framebufferInfo{};
         framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        framebufferInfo.renderPass = renderPass;
+        framebufferInfo.renderPass = *renderPass;
         framebufferInfo.attachmentCount = 1;
         framebufferInfo.pAttachments = attachments;
         framebufferInfo.width = swapChainExtent.width;

@@ -57,9 +57,7 @@ void VKEngine::initVulkan()
     instance_ = forceUnwrap(createInstance(context_));
     debugMessenger_ = forceUnwrap(createDebugUtilsMessenger(instance_));
     surface_ = forceUnwrap(createSurface(instance_, window_));
-    auto result = forceUnwrap(pickPhysicalDevice(instance_, *surface_));
-    physicalDevice_ = std::move(result.first);
-    queueFamilyIndices_ = result.second;
+    std::tie(physicalDevice_, queueFamilyIndices_) = forceUnwrap(pickPhysicalDevice(instance_, *surface_));
     device_ = forceUnwrap(createDevice(physicalDevice_, queueFamilyIndices_));
 
     graphicsQueue_ = device_.getQueue(queueFamilyIndices_.graphicsFamily.value(), 0);
@@ -71,7 +69,7 @@ void VKEngine::initVulkan()
 
     createRenderPass();
     createGraphicsPipeline();
-    frameBuffers_ = forceUnwrap(Framebuffer::create(imageViews_, *renderPass_, swapChainSupportDetails_.extent, *device_));
+    frameBuffers_ = forceUnwrap(Framebuffer::create(imageViews_, renderPass_, swapChainSupportDetails_.extent, *device_));
     commandPool_ = forceUnwrap(createCommandPool(device_, queueFamilyIndices_));
 
     vk::CommandBufferAllocateInfo allocInfo{*commandPool_, vk::CommandBufferLevel::ePrimary, kMaxFramesInFlight};
@@ -101,26 +99,26 @@ void VKEngine::recreateSwapChain()
     std::tie(swapChain_, swapChainSupportDetails_) = forceUnwrap(createSwapChain(physicalDevice_, device_, window_, *surface_));
     swapChainImages_ = swapChain_.getImages();
     imageViews_ = forceUnwrap(createImageViews(device_, swapChainImages_, swapChainSupportDetails_));
-    frameBuffers_ = forceUnwrap(Framebuffer::create(imageViews_, *renderPass_, swapChainSupportDetails_.extent, *device_));
+    frameBuffers_ = forceUnwrap(Framebuffer::create(imageViews_, renderPass_, swapChainSupportDetails_.extent, *device_));
     spdlog::info("recreated swap chain");
 }
 
 void VKEngine::createGraphicsPipeline()
 {
     spdlog::info("creating graphics pipeline");
-    auto vertShaderModule = forceUnwrap(ShaderModule::create("data/shaders/vert.spv", *device_));
-    auto fragShaderModule = forceUnwrap(ShaderModule::create("data/shaders/frag.spv", *device_));
+    auto vertShaderModule = forceUnwrap(createShaderModule("data/shaders/vert.spv", device_));
+    auto fragShaderModule = forceUnwrap(createShaderModule("data/shaders/frag.spv", device_));
 
     VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
     vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-    vertShaderStageInfo.module = vertShaderModule;
+    vertShaderStageInfo.module = *vertShaderModule;
     vertShaderStageInfo.pName = "main";
 
     VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
     fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-    fragShaderStageInfo.module = fragShaderModule;
+    fragShaderStageInfo.module = *fragShaderModule;
     fragShaderStageInfo.pName = "main";
 
     VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
@@ -219,48 +217,44 @@ void VKEngine::createGraphicsPipeline()
 void VKEngine::createRenderPass() 
 {
     spdlog::info("create render pass");
-    VkAttachmentDescription colorAttachment{};
-    colorAttachment.format = static_cast<VkFormat>(swapChainSupportDetails_.surfaceFormat.format); // swapChain_->imageFormat();
-    colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-    colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    vk::AttachmentDescription colorAttachment{};
+    colorAttachment.format = swapChainSupportDetails_.surfaceFormat.format;
+    colorAttachment.samples = vk::SampleCountFlagBits::e1; // VK_SAMPLE_COUNT_1_BIT;
+    colorAttachment.loadOp = vk::AttachmentLoadOp::eClear; // VK_ATTACHMENT_LOAD_OP_CLEAR;
+    colorAttachment.storeOp = vk::AttachmentStoreOp::eStore; // VK_ATTACHMENT_STORE_OP_STORE;
+    colorAttachment.stencilLoadOp = vk::AttachmentLoadOp::eDontCare; // VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    colorAttachment.stencilStoreOp = vk::AttachmentStoreOp::eDontCare; // VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    colorAttachment.initialLayout = vk::ImageLayout::eUndefined; // VK_IMAGE_LAYOUT_UNDEFINED;
+    colorAttachment.finalLayout = vk::ImageLayout::ePresentSrcKHR; // VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-    VkAttachmentReference colorAttachmentRef{};
+    vk::AttachmentReference colorAttachmentRef{};
     colorAttachmentRef.attachment = 0;
-    colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    colorAttachmentRef.layout = vk::ImageLayout::eColorAttachmentOptimal; // VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-    VkSubpassDescription subpass{};
-    subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+    vk::SubpassDescription subpass{};
+    subpass.pipelineBindPoint = vk::PipelineBindPoint::eGraphics; // VK_PIPELINE_BIND_POINT_GRAPHICS;
     subpass.colorAttachmentCount = 1;
     subpass.pColorAttachments = &colorAttachmentRef;
 
-    VkRenderPassCreateInfo renderPassInfo{};
-    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+    vk::RenderPassCreateInfo renderPassInfo{};
+    //renderPassInfo.sType = vk::StructureType::eRenderPassCreateInfo;  VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
     renderPassInfo.attachmentCount = 1;
     renderPassInfo.pAttachments = &colorAttachment;
     renderPassInfo.subpassCount = 1;
     renderPassInfo.pSubpasses = &subpass;
 
-    VkSubpassDependency dependency{};
-    dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+    vk::SubpassDependency dependency{};
+    dependency.srcSubpass = vk::SubpassExternal; // VK_SUBPASS_EXTERNAL;
     dependency.dstSubpass = 0;
-    dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    dependency.srcAccessMask = 0;
-    dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    dependency.srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput; // VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dependency.srcAccessMask = vk::AccessFlagBits::eNone;
+    dependency.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput; //  VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite; // VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
     renderPassInfo.dependencyCount = 1;
     renderPassInfo.pDependencies = &dependency;
 
-    VkRenderPass renderPass;
-    if (vkCreateRenderPass(*device_, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create render pass!");
-    }
-    renderPass_.emplace(renderPass, *device_);
+    renderPass_ = device_.createRenderPass(renderPassInfo);
 }
 
 void VKEngine::recordCommandBuffer(vk::raii::CommandBuffer& commandBuffer, uint32_t imageIndex)
