@@ -58,7 +58,12 @@ struct SwapChainSupportDetails {
     vk::SurfaceCapabilitiesKHR capabilities;
     std::vector<vk::SurfaceFormatKHR> formats;
     std::vector<vk::PresentModeKHR> presentModes;
+
+    vk::SurfaceFormatKHR surfaceFormat;
+    vk::Extent2D extent;
 };
+
+[[nodiscard]] SwapChainSupportDetails querySwapChainSupport(vk::PhysicalDevice, vk::SurfaceKHR const& surface) noexcept;
 
 tl::expected<vk::raii::Instance, std::runtime_error> createInstance(vk::raii::Context&) noexcept;
 tl::expected<vk::raii::DebugUtilsMessengerEXT, std::runtime_error> createDebugUtilsMessenger(vk::raii::Instance&) noexcept;
@@ -73,63 +78,11 @@ tl::expected<std::vector<vk::raii::Fence>, std::runtime_error>
 tl::expected<vk::raii::CommandPool, std::runtime_error> 
     createCommandPool(vk::raii::Device const& device, QueueFamilyIndices const& indices) noexcept;
 
-class ImageView
-{
-public:
-    ImageView(VkImageView, vk::Device const& device) noexcept;
-    ~ImageView() noexcept;
-    ImageView(ImageView const&) = delete;
-    ImageView& operator=(ImageView const&) = delete;
-    ImageView(ImageView&&) noexcept;
-    ImageView& operator=(ImageView&&) noexcept;
+tl::expected<std::pair<vk::raii::SwapchainKHR, SwapChainSupportDetails>, std::runtime_error>
+    createSwapChain(vk::raii::PhysicalDevice const& physicalDevice, vk::raii::Device const& device, Window const& window, vk::SurfaceKHR const& surface) noexcept;
 
-    operator VkImageView() const
-    {
-        gsl_Assert(view_);
-        return *view_;
-    }
-    
-private:
-    std::optional<VkImageView> view_;
-    vk::Device device_;
-};
-
-class SwapChain
-{
-public:
-    ~SwapChain() noexcept;
-    SwapChain(SwapChain const&) = delete;
-    SwapChain& operator=(SwapChain const&) = delete;
-    SwapChain(SwapChain&& rhs) noexcept;
-    SwapChain& operator=(SwapChain&& rhs) noexcept;
-
-    operator VkSwapchainKHR() const 
-    {
-        gsl_Assert(swapChain_);
-        return *swapChain_; 
-    }
-
-    VkExtent2D extent() const noexcept { return swapChainExtent_; }
-    VkFormat imageFormat() const noexcept { return swapChainImageFormat_; }
-
-    tl::expected<std::vector<ImageView>, std::runtime_error> createImageViews(vk::Device const& device) const;
-
-    static tl::expected<SwapChain, std::runtime_error>
-    create(vk::PhysicalDevice const& physicalDevice, vk::Device const& device, Window const& window, vk::SurfaceKHR const& surface) noexcept;
-
-private:
-    SwapChain(VkSwapchainKHR swapChain, 
-              VkFormat swapChainImageFormat,
-              VkExtent2D swapChainExtent,
-              std::vector<VkImage> images, 
-              vk::Device const& device) noexcept;
-
-    std::optional<VkSwapchainKHR> swapChain_;
-    std::vector<VkImage> images_;
-    VkFormat swapChainImageFormat_;
-    VkExtent2D swapChainExtent_;
-    vk::Device device_;
-};
+ tl::expected<std::vector<vk::raii::ImageView>, std::runtime_error> 
+    createImageViews(vk::raii::Device const& device, std::vector<vk::Image>& images, SwapChainSupportDetails const& support);
 
 class ShaderModule 
 {
@@ -248,9 +201,9 @@ public:
     }
 
     static tl::expected<std::vector<Framebuffer>, std::runtime_error>
-    create(std::vector<ImageView> const& imageViews, 
+    create(std::vector<vk::raii::ImageView> const& imageViews, 
            InplaceRenderPass const& renderPass, 
-           VkExtent2D swapChainExtent,
+           vk::Extent2D swapChainExtent,
            vk::Device const& device) noexcept;
 
 private:

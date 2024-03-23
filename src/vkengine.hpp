@@ -38,9 +38,11 @@ private:
     vk::raii::Device device_;
     vk::raii::Queue graphicsQueue_{nullptr};
     vk::raii::Queue presentQueue_{nullptr};
-
-    std::optional<SwapChain> swapChain_;
-    std::vector<ImageView> imageViews_;
+    vk::raii::SwapchainKHR swapChain_{nullptr};
+    std::vector<vk::Image> swapChainImages_;
+    SwapChainSupportDetails swapChainSupportDetails_;
+    std::vector<vk::raii::ImageView> imageViews_;
+    
     std::optional<InplaceRenderPass> renderPass_;
     std::optional<InplacePipelineLayout> pipelineLayout_;
     std::optional<InplacePipeline> graphicsPipeline_;

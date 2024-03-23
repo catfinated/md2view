@@ -65,16 +65,17 @@ void VKEngine::initVulkan()
     graphicsQueue_ = device_.getQueue(queueFamilyIndices_.graphicsFamily.value(), 0);
     presentQueue_ = device_.getQueue(queueFamilyIndices_.presentFamily.value(), 0);
 
-    swapChain_ = forceUnwrap(SwapChain::create(*physicalDevice_, *device_, window_, *surface_));
-    imageViews_ = forceUnwrap(swapChain_->createImageViews(*device_));
+    std::tie(swapChain_, swapChainSupportDetails_) = forceUnwrap(createSwapChain(physicalDevice_, device_, window_, *surface_));
+    swapChainImages_ = swapChain_.getImages();
+    imageViews_ = forceUnwrap(createImageViews(device_, swapChainImages_, swapChainSupportDetails_));
+
     createRenderPass();
     createGraphicsPipeline();
-    frameBuffers_ = forceUnwrap(Framebuffer::create(imageViews_, *renderPass_, swapChain_->extent(), *device_));
+    frameBuffers_ = forceUnwrap(Framebuffer::create(imageViews_, *renderPass_, swapChainSupportDetails_.extent, *device_));
     commandPool_ = forceUnwrap(createCommandPool(device_, queueFamilyIndices_));
 
     vk::CommandBufferAllocateInfo allocInfo{*commandPool_, vk::CommandBufferLevel::ePrimary, kMaxFramesInFlight};
     commandBuffers_ = device_.allocateCommandBuffers(allocInfo);
-    //forceUnwrap(commandPool_->createBuffers(kMaxFramesInFght));
     imageAvailableSemaphores_ = forceUnwrap(createSemaphores(device_, kMaxFramesInFlight));
     renderFinishedSemaphores_ = forceUnwrap(createSemaphores(device_, kMaxFramesInFlight));
     inflightFences_ = forceUnwrap(createFences(device_, kMaxFramesInFlight));
@@ -92,14 +93,16 @@ void VKEngine::recreateSwapChain()
         glfwWaitEvents();
     }
 
-    vkDeviceWaitIdle(*device_);
+    device_.waitIdle();
     frameBuffers_.clear();
     imageViews_.clear();
-    swapChain_.reset();
+    swapChain_ = nullptr; // NB: must destroy previous swap chain first!
 
-    swapChain_ = forceUnwrap(SwapChain::create(*physicalDevice_, *device_, window_, *surface_));
-    imageViews_ = forceUnwrap(swapChain_->createImageViews(*device_));
-    frameBuffers_ = forceUnwrap(Framebuffer::create(imageViews_, *renderPass_, swapChain_->extent(), *device_));
+    std::tie(swapChain_, swapChainSupportDetails_) = forceUnwrap(createSwapChain(physicalDevice_, device_, window_, *surface_));
+    swapChainImages_ = swapChain_.getImages();
+    imageViews_ = forceUnwrap(createImageViews(device_, swapChainImages_, swapChainSupportDetails_));
+    frameBuffers_ = forceUnwrap(Framebuffer::create(imageViews_, *renderPass_, swapChainSupportDetails_.extent, *device_));
+    spdlog::info("recreated swap chain");
 }
 
 void VKEngine::createGraphicsPipeline()
@@ -217,7 +220,7 @@ void VKEngine::createRenderPass()
 {
     spdlog::info("create render pass");
     VkAttachmentDescription colorAttachment{};
-    colorAttachment.format = swapChain_->imageFormat();
+    colorAttachment.format = static_cast<VkFormat>(swapChainSupportDetails_.surfaceFormat.format); // swapChain_->imageFormat();
     colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
     colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -276,7 +279,7 @@ void VKEngine::recordCommandBuffer(vk::raii::CommandBuffer& commandBuffer, uint3
     renderPassInfo.renderPass = *renderPass_;
     renderPassInfo.framebuffer = frameBuffers_.at(imageIndex);
     renderPassInfo.renderArea.offset = {0, 0};
-    renderPassInfo.renderArea.extent = swapChain_->extent();
+    renderPassInfo.renderArea.extent = swapChainSupportDetails_.extent;
 
     clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
     renderPassInfo.clearValueCount = 1;
@@ -288,14 +291,14 @@ void VKEngine::recordCommandBuffer(vk::raii::CommandBuffer& commandBuffer, uint3
 
     viewport.x = 0.0f;
     viewport.y = 0.0f;
-    viewport.width = static_cast<float>(swapChain_->extent().width);
-    viewport.height = static_cast<float>(swapChain_->extent().height);
+    viewport.width = static_cast<float>(swapChainSupportDetails_.extent.width);
+    viewport.height = static_cast<float>(swapChainSupportDetails_.extent.height);
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
     vkCmdSetViewport(*commandBuffer, 0, 1, &viewport);
 
     scissor.offset = {0, 0};
-    scissor.extent = swapChain_->extent();
+    scissor.extent = swapChainSupportDetails_.extent;
     vkCmdSetScissor(*commandBuffer, 0, 1, &scissor);
 
     vkCmdDraw(*commandBuffer, 3, 1, 0, 0); 
