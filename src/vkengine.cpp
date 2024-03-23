@@ -64,7 +64,7 @@ void VKEngine::initVulkan()
 
     createRenderPass();
     createGraphicsPipeline();
-    frameBuffers_ = forceUnwrap(Framebuffer::create(imageViews_, renderPass_, swapChainSupportDetails_.extent, *device_));
+    frameBuffers_ = forceUnwrap(createFrameBuffers(imageViews_, renderPass_, swapChainSupportDetails_.extent, device_));
     commandPool_ = forceUnwrap(createCommandPool(device_, queueFamilyIndices_));
 
     vk::CommandBufferAllocateInfo allocInfo{*commandPool_, vk::CommandBufferLevel::ePrimary, kMaxFramesInFlight};
@@ -94,7 +94,7 @@ void VKEngine::recreateSwapChain()
     std::tie(swapChain_, swapChainSupportDetails_) = forceUnwrap(createSwapChain(physicalDevice_, device_, window_, *surface_));
     swapChainImages_ = swapChain_.getImages();
     imageViews_ = forceUnwrap(createImageViews(device_, swapChainImages_, swapChainSupportDetails_));
-    frameBuffers_ = forceUnwrap(Framebuffer::create(imageViews_, renderPass_, swapChainSupportDetails_.extent, *device_));
+    frameBuffers_ = forceUnwrap(createFrameBuffers(imageViews_, renderPass_, swapChainSupportDetails_.extent, device_));
     spdlog::info("recreated swap chain");
 }
 
@@ -165,8 +165,6 @@ void VKEngine::createGraphicsPipeline()
     };
 
     vk::PipelineDynamicStateCreateInfo dynamicState{{}, static_cast<uint32_t>(dynamicStates.size()), dynamicStates.data()};
-    //dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
-    //dynamicState.pDynamicStates = dynamicStates.data();
 
     vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.setLayoutCount = 0;
@@ -239,49 +237,38 @@ void VKEngine::createRenderPass()
 
 void VKEngine::recordCommandBuffer(vk::raii::CommandBuffer& commandBuffer, uint32_t imageIndex)
 {
-    VkCommandBufferBeginInfo beginInfo{};
-    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    beginInfo.flags = 0; // Optional
+    vk::CommandBufferBeginInfo beginInfo{};
     beginInfo.pInheritanceInfo = nullptr; // Optional
 
-    if (vkBeginCommandBuffer(*commandBuffer, &beginInfo) != VK_SUCCESS) {
-        throw std::runtime_error("failed to begin recording command buffer!");
-    }
+    commandBuffer.begin(beginInfo);
 
-    VkRenderPassBeginInfo renderPassInfo{};
-    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    renderPassInfo.renderPass = *renderPass_;
-    renderPassInfo.framebuffer = frameBuffers_.at(imageIndex);
-    renderPassInfo.renderArea.offset = {0, 0};
-    renderPassInfo.renderArea.extent = swapChainSupportDetails_.extent;
+    clearValue_.color = vk::ClearColorValue{0.0f, 0.0f, 0.0f, 1.0f};
+    vk::RenderPassBeginInfo renderPassInfo{*renderPass_, 
+                                           *(frameBuffers_.at(imageIndex)), 
+                                           vk::Rect2D{vk::Offset2D{0, 0}, swapChainSupportDetails_.extent},
+                                           clearValue_
+                                           };
 
-    clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
-    renderPassInfo.clearValueCount = 1;
-    renderPassInfo.pClearValues = &clearColor;
+    commandBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *graphicsPipeline_);
 
-    vkCmdBeginRenderPass(*commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-    vkCmdBindPipeline(*commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *graphicsPipeline_);
-
+    vk::Viewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
     viewport.width = static_cast<float>(swapChainSupportDetails_.extent.width);
     viewport.height = static_cast<float>(swapChainSupportDetails_.extent.height);
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
-    vkCmdSetViewport(*commandBuffer, 0, 1, &viewport);
+    commandBuffer.setViewport(0, {viewport});
 
-    scissor.offset = {0, 0};
+    vk::Rect2D scissor{};
+    scissor.offset = vk::Offset2D{0, 0};
     scissor.extent = swapChainSupportDetails_.extent;
-    vkCmdSetScissor(*commandBuffer, 0, 1, &scissor);
+    commandBuffer.setScissor(0, {scissor});
 
-    vkCmdDraw(*commandBuffer, 3, 1, 0, 0); 
-
-    vkCmdEndRenderPass(*commandBuffer); 
-
-    if (vkEndCommandBuffer(*commandBuffer) != VK_SUCCESS) {
-        throw std::runtime_error("failed to record command buffer!");
-    } 
+    commandBuffer.draw(3, 1, 0, 0);
+    commandBuffer.endRenderPass();
+    commandBuffer.end();
 }
 
 void VKEngine::drawFrame()

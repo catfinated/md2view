@@ -45,17 +45,14 @@ private:
     vk::raii::RenderPass renderPass_{nullptr};
     vk::raii::PipelineLayout pipelineLayout_{nullptr};
     vk::raii::Pipeline graphicsPipeline_{nullptr};
-    std::vector<Framebuffer> frameBuffers_;
-
+    std::vector<vk::raii::Framebuffer> frameBuffers_;
     vk::raii::CommandPool commandPool_{nullptr};
     std::vector<vk::raii::CommandBuffer> commandBuffers_;
     std::vector<vk::raii::Semaphore> imageAvailableSemaphores_;
     std::vector<vk::raii::Semaphore> renderFinishedSemaphores_;
     std::vector<vk::raii::Fence> inflightFences_;
 
-    VkViewport viewport{};
-    VkRect2D scissor{};
-    VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
+    vk::ClearValue clearValue_;
 
     uint32_t currentFrame_{0U};
     bool frameBufferResized_{false};

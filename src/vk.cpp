@@ -422,49 +422,19 @@ tl::expected<vk::raii::ShaderModule, std::runtime_error>
     return device.createShaderModule(createInfo);
 }
 
-Framebuffer::Framebuffer(VkFramebuffer buffer, vk::Device const& device) noexcept
-    : buffer_(buffer)
-    , device_(device)
-{}
-
-Framebuffer::~Framebuffer() noexcept
-{
-    if (buffer_) {
-        vkDestroyFramebuffer(device_, *buffer_, nullptr);
-    }
-}
-
-Framebuffer::Framebuffer(Framebuffer&& rhs) noexcept
-    : buffer_(std::exchange(rhs.buffer_, std::nullopt))
-    , device_(rhs.device_)
-{}
-
-Framebuffer& Framebuffer::operator=(Framebuffer&& rhs) noexcept
-{
-    if (this != std::addressof(rhs)) {
-        if (buffer_) {
-            vkDestroyFramebuffer(device_, *buffer_, nullptr);
-        }        
-        buffer_ = std::exchange(rhs.buffer_, std::nullopt);
-        device_ = rhs.device_;
-    }
-    return *this;
-}
-
-tl::expected<std::vector<Framebuffer>, std::runtime_error>
-Framebuffer::create(std::vector<vk::raii::ImageView> const& imageViews, 
-                    vk::raii::RenderPass const& renderPass,
-                    vk::Extent2D swapChainExtent,
-                    vk::Device const& device) noexcept
+tl::expected<std::vector<vk::raii::Framebuffer>, std::runtime_error>
+    createFrameBuffers(std::vector<vk::raii::ImageView> const& imageViews, 
+           vk::raii::RenderPass const& renderPass, 
+           vk::Extent2D swapChainExtent,
+           vk::raii::Device const& device) noexcept
 {
     spdlog::info("create frame buffer");
-    std::vector<VkFramebuffer> swapChainFramebuffers;
-    swapChainFramebuffers.resize(imageViews.size());
+    std::vector<vk::raii::Framebuffer> frameBuffers;
+    frameBuffers.reserve(imageViews.size());
 
     for (size_t i = 0; i < imageViews.size(); i++) {
-        VkImageView attachments[] = {*imageViews[i]};
-        VkFramebufferCreateInfo framebufferInfo{};
-        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        vk::ImageView attachments[] = {*imageViews[i]};
+        vk::FramebufferCreateInfo framebufferInfo{};
         framebufferInfo.renderPass = *renderPass;
         framebufferInfo.attachmentCount = 1;
         framebufferInfo.pAttachments = attachments;
@@ -472,17 +442,10 @@ Framebuffer::create(std::vector<vk::raii::ImageView> const& imageViews,
         framebufferInfo.height = swapChainExtent.height;
         framebufferInfo.layers = 1;
 
-        if (vkCreateFramebuffer(device, &framebufferInfo, nullptr, &swapChainFramebuffers[i]) != VK_SUCCESS) {
-            return tl::make_unexpected(std::runtime_error("failed to create framebuffer!"));
-        }
+        frameBuffers.emplace_back(device.createFramebuffer(framebufferInfo));
     }
 
-    std::vector<Framebuffer> buffers;
-    buffers.reserve(swapChainFramebuffers.size());
-    for (auto const scfb : swapChainFramebuffers) {
-        buffers.emplace_back(scfb, device);
-    }
-    return buffers;
+    return frameBuffers;
 }
 
 tl::expected<vk::raii::CommandPool, std::runtime_error> 

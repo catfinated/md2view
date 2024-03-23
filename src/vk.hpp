@@ -95,32 +95,11 @@ tl::expected<std::pair<vk::raii::SwapchainKHR, SwapChainSupportDetails>, std::ru
 tl::expected<vk::raii::ShaderModule, std::runtime_error> 
     createShaderModule(std::filesystem::path const& path, vk::raii::Device const& device) noexcept;
 
-class Framebuffer 
-{
-public:
-    Framebuffer(VkFramebuffer buffer, vk::Device const& device) noexcept;
-    ~Framebuffer() noexcept;
-    Framebuffer(Framebuffer const&) = delete;
-    Framebuffer& operator=(Framebuffer const&) = delete;
-    Framebuffer(Framebuffer&&) noexcept;
-    Framebuffer& operator=(Framebuffer&&) noexcept;
-
-    operator VkFramebuffer() const
-    {
-        gsl_Assert(buffer_);
-        return *buffer_;
-    }
-
-    static tl::expected<std::vector<Framebuffer>, std::runtime_error>
-    create(std::vector<vk::raii::ImageView> const& imageViews, 
+tl::expected<std::vector<vk::raii::Framebuffer>, std::runtime_error>
+    createFrameBuffers(std::vector<vk::raii::ImageView> const& imageViews, 
            vk::raii::RenderPass const& renderPass, 
            vk::Extent2D swapChainExtent,
-           vk::Device const& device) noexcept;
-
-private:
-    std::optional<VkFramebuffer> buffer_;
-    vk::Device device_;
-};
+           vk::raii::Device const& device) noexcept;
 
 } // namespace vk 
 
