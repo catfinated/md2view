@@ -66,15 +66,23 @@ struct SwapChainSupportDetails {
 [[nodiscard]] SwapChainSupportDetails querySwapChainSupport(vk::PhysicalDevice, vk::SurfaceKHR const& surface) noexcept;
 
 tl::expected<vk::raii::Instance, std::runtime_error> createInstance(vk::raii::Context&) noexcept;
+
 tl::expected<vk::raii::DebugUtilsMessengerEXT, std::runtime_error> createDebugUtilsMessenger(vk::raii::Instance&) noexcept;
+
 tl::expected<vk::raii::SurfaceKHR, std::runtime_error> createSurface(vk::raii::Instance&, Window const&) noexcept;
+
 tl::expected<std::pair<vk::raii::PhysicalDevice, QueueFamilyIndices>, std::runtime_error> 
-pickPhysicalDevice(vk::raii::Instance&, vk::SurfaceKHR const&) noexcept;
-tl::expected<vk::raii::Device, std::runtime_error> createDevice(vk::raii::PhysicalDevice const& physicalDevice, QueueFamilyIndices const&) noexcept;
+    pickPhysicalDevice(vk::raii::Instance&, vk::SurfaceKHR const&) noexcept;
+
+tl::expected<vk::raii::Device, std::runtime_error> 
+    createDevice(vk::raii::PhysicalDevice const& physicalDevice, QueueFamilyIndices const&) noexcept;
+
 tl::expected<std::vector<vk::raii::Semaphore>, std::runtime_error>
     createSemaphores(vk::raii::Device const& device, unsigned int numSemaphores) noexcept;
+
 tl::expected<std::vector<vk::raii::Fence>, std::runtime_error>
     createFences(vk::raii::Device const& device, unsigned int numFences) noexcept;
+
 tl::expected<vk::raii::CommandPool, std::runtime_error> 
     createCommandPool(vk::raii::Device const& device, QueueFamilyIndices const& indices) noexcept;
 
@@ -86,56 +94,6 @@ tl::expected<std::pair<vk::raii::SwapchainKHR, SwapChainSupportDetails>, std::ru
 
 tl::expected<vk::raii::ShaderModule, std::runtime_error> 
     createShaderModule(std::filesystem::path const& path, vk::raii::Device const& device) noexcept;
-
-class InplacePipelineLayout
-{
-public:
-    InplacePipelineLayout(VkPipelineLayout pipelineLayout, vk::Device const& device)
-        : pipelineLayout_(pipelineLayout)
-        , device_(device)
-    {}
-
-    ~InplacePipelineLayout()
-    {
-        vkDestroyPipelineLayout(device_, pipelineLayout_, nullptr);
-    }
-
-    InplacePipelineLayout(InplacePipelineLayout const&) = delete;
-    InplacePipelineLayout& operator=(InplacePipelineLayout const&) = delete;
-    InplacePipelineLayout(InplacePipelineLayout&&) = delete;
-    InplacePipelineLayout& operator=(InplacePipelineLayout&&) = delete;
-
-    operator VkPipelineLayout() const { return pipelineLayout_; }
-
-private:
-    VkPipelineLayout pipelineLayout_;
-    vk::Device device_;
-};
-
-class InplacePipeline
-{
-public:
-    InplacePipeline(VkPipeline pipeline, vk::Device const& device)
-        : pipeline_(pipeline)
-        , device_(device)
-    {}
-
-    ~InplacePipeline()
-    {
-        vkDestroyPipeline(device_, pipeline_, nullptr);
-    }
-
-    InplacePipeline(InplacePipeline const&) = delete;
-    InplacePipeline& operator=(InplacePipeline const&) = delete;
-    InplacePipeline(InplacePipeline&&) = delete;
-    InplacePipeline& operator=(InplacePipeline&&) = delete;
-
-    operator VkPipeline() const { return pipeline_; }
-
-private:
-    VkPipeline pipeline_;
-    vk::Device device_;
-};
 
 class Framebuffer 
 {
