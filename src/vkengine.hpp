@@ -24,7 +24,7 @@ private:
     void initVulkan();
     void createGraphicsPipeline();
     void createRenderPass();
-    void recordCommandBuffer(CommandBuffer& commandBuffer, uint32_t imageIndex);
+    void recordCommandBuffer(vk::raii::CommandBuffer& commandBuffer, uint32_t imageIndex);
     void drawFrame();
     void recreateSwapChain();
 
@@ -39,16 +39,15 @@ private:
     vk::raii::Queue graphicsQueue_{nullptr};
     vk::raii::Queue presentQueue_{nullptr};
 
-
     std::optional<SwapChain> swapChain_;
     std::vector<ImageView> imageViews_;
     std::optional<InplaceRenderPass> renderPass_;
     std::optional<InplacePipelineLayout> pipelineLayout_;
     std::optional<InplacePipeline> graphicsPipeline_;
     std::vector<Framebuffer> frameBuffers_;
-    std::optional<CommandPool> commandPool_;
-    CommandBufferVec commandBuffers_;
 
+    vk::raii::CommandPool commandPool_{nullptr};
+    std::vector<vk::raii::CommandBuffer> commandBuffers_;
     std::vector<vk::raii::Semaphore> imageAvailableSemaphores_;
     std::vector<vk::raii::Semaphore> renderFinishedSemaphores_;
     std::vector<vk::raii::Fence> inflightFences_;

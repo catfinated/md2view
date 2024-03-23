@@ -70,9 +70,11 @@ void VKEngine::initVulkan()
     createRenderPass();
     createGraphicsPipeline();
     frameBuffers_ = forceUnwrap(Framebuffer::create(imageViews_, *renderPass_, swapChain_->extent(), *device_));
-    commandPool_ = forceUnwrap(CommandPool::create(*physicalDevice_, *device_, queueFamilyIndices_));
+    commandPool_ = forceUnwrap(createCommandPool(device_, queueFamilyIndices_));
 
-    commandBuffers_ = forceUnwrap(commandPool_->createBuffers(kMaxFramesInFlight));
+    vk::CommandBufferAllocateInfo allocInfo{*commandPool_, vk::CommandBufferLevel::ePrimary, kMaxFramesInFlight};
+    commandBuffers_ = device_.allocateCommandBuffers(allocInfo);
+    //forceUnwrap(commandPool_->createBuffers(kMaxFramesInFght));
     imageAvailableSemaphores_ = forceUnwrap(createSemaphores(device_, kMaxFramesInFlight));
     renderFinishedSemaphores_ = forceUnwrap(createSemaphores(device_, kMaxFramesInFlight));
     inflightFences_ = forceUnwrap(createFences(device_, kMaxFramesInFlight));
@@ -258,14 +260,14 @@ void VKEngine::createRenderPass()
     renderPass_.emplace(renderPass, *device_);
 }
 
-void VKEngine::recordCommandBuffer(CommandBuffer& commandBuffer, uint32_t imageIndex)
+void VKEngine::recordCommandBuffer(vk::raii::CommandBuffer& commandBuffer, uint32_t imageIndex)
 {
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     beginInfo.flags = 0; // Optional
     beginInfo.pInheritanceInfo = nullptr; // Optional
 
-    if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
+    if (vkBeginCommandBuffer(*commandBuffer, &beginInfo) != VK_SUCCESS) {
         throw std::runtime_error("failed to begin recording command buffer!");
     }
 
@@ -280,9 +282,9 @@ void VKEngine::recordCommandBuffer(CommandBuffer& commandBuffer, uint32_t imageI
     renderPassInfo.clearValueCount = 1;
     renderPassInfo.pClearValues = &clearColor;
 
-    vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    vkCmdBeginRenderPass(*commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *graphicsPipeline_);
+    vkCmdBindPipeline(*commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *graphicsPipeline_);
 
     viewport.x = 0.0f;
     viewport.y = 0.0f;
@@ -290,17 +292,17 @@ void VKEngine::recordCommandBuffer(CommandBuffer& commandBuffer, uint32_t imageI
     viewport.height = static_cast<float>(swapChain_->extent().height);
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
-    vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+    vkCmdSetViewport(*commandBuffer, 0, 1, &viewport);
 
     scissor.offset = {0, 0};
     scissor.extent = swapChain_->extent();
-    vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+    vkCmdSetScissor(*commandBuffer, 0, 1, &scissor);
 
-    vkCmdDraw(commandBuffer, 3, 1, 0, 0); 
+    vkCmdDraw(*commandBuffer, 3, 1, 0, 0); 
 
-    vkCmdEndRenderPass(commandBuffer); 
+    vkCmdEndRenderPass(*commandBuffer); 
 
-    if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
+    if (vkEndCommandBuffer(*commandBuffer) != VK_SUCCESS) {
         throw std::runtime_error("failed to record command buffer!");
     } 
 }
@@ -315,20 +317,21 @@ void VKEngine::drawFrame()
     uint32_t imageIndex;
     vkAcquireNextImageKHR(*device_, *swapChain_, UINT64_MAX, *imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
 
-    auto commandBuffer = CommandBuffer{commandBuffers_.at(currentFrame_)};
-    vkResetCommandBuffer(commandBuffer, 0);
+    auto& commandBuffer = commandBuffers_.at(currentFrame_);
+    commandBuffer.reset();
     recordCommandBuffer(commandBuffer, imageIndex);
 
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
     VkSemaphore waitSemaphores[] = {*imageAvailableSemaphore};
+    VkCommandBuffer commandBuffers[] = {*commandBuffer};
     VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
     submitInfo.waitSemaphoreCount = 1;
     submitInfo.pWaitSemaphores = waitSemaphores;
     submitInfo.pWaitDstStageMask = waitStages;
     submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = commandBuffer.toPtr();
+    submitInfo.pCommandBuffers = commandBuffers;
 
     auto& renderFinishedSemaphore = renderFinishedSemaphores_.at(currentFrame_);
     VkSemaphore signalSemaphores[] = {*renderFinishedSemaphore};

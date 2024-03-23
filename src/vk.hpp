@@ -70,7 +70,8 @@ tl::expected<std::vector<vk::raii::Semaphore>, std::runtime_error>
     createSemaphores(vk::raii::Device const& device, unsigned int numSemaphores) noexcept;
 tl::expected<std::vector<vk::raii::Fence>, std::runtime_error>
     createFences(vk::raii::Device const& device, unsigned int numFences) noexcept;
-
+tl::expected<vk::raii::CommandPool, std::runtime_error> 
+    createCommandPool(vk::raii::Device const& device, QueueFamilyIndices const& indices) noexcept;
 
 class ImageView
 {
@@ -254,52 +255,6 @@ public:
 
 private:
     std::optional<VkFramebuffer> buffer_;
-    vk::Device device_;
-};
-
-class CommandBuffer
-{
-public:
-    CommandBuffer(VkCommandBuffer buffer)
-        : buffer_(buffer)
-    {}
-
-    operator VkCommandBuffer() const { return buffer_; }
-
-    VkCommandBuffer const * toPtr() const { return std::addressof(buffer_); }
-
-private:
-    VkCommandBuffer buffer_;
-};
-
-using CommandBufferVec = std::vector<VkCommandBuffer>;
-
-class CommandPool
-{
-public:
-    ~CommandPool() noexcept;
-    CommandPool(CommandPool const&) = delete;
-    CommandPool& operator=(CommandPool const&) = delete;
-    CommandPool(CommandPool&&) noexcept;
-    CommandPool& operator=(CommandPool&&) noexcept;
-
-    operator VkCommandPool() const
-    {
-        gsl_Assert(pool_);
-        return *pool_;
-    }
-
-    tl::expected<CommandBuffer, std::runtime_error> createBuffer() const noexcept;
-
-    tl::expected<CommandBufferVec, std::runtime_error> createBuffers(unsigned int numBuffers) const noexcept;
-
-    static tl::expected<CommandPool, std::runtime_error> 
-    create(vk::PhysicalDevice const& physicalDevice, vk::Device const& device, QueueFamilyIndices const& indices) noexcept;
-
-private:
-    CommandPool(VkCommandPool pool, vk::Device const& device) noexcept;
-
-    std::optional<VkCommandPool> pool_;
     vk::Device device_;
 };
 
