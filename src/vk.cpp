@@ -677,117 +677,34 @@ CommandPool::createBuffers(unsigned int numBuffers) const noexcept
     return buffers;
 }
 
-Fence::Fence(VkFence fence, vk::Device const& device) noexcept
-    : fence_(fence)
-    , device_(device)
-{}
-
-Fence::~Fence() noexcept
+tl::expected<std::vector<vk::raii::Fence>, std::runtime_error>
+    createFences(vk::raii::Device const& device, unsigned int numFences) noexcept
 {
-    if (fence_) {
-        vkDestroyFence(device_, *fence_, nullptr);
-    }
-}
-
-Fence::Fence(Fence&& rhs) noexcept
-    : fence_(std::exchange(rhs.fence_, std::nullopt))
-    , device_(rhs.device_)
-{}
-
-Fence& Fence::operator=(Fence&& rhs) noexcept
-{
-    if (this != std::addressof(rhs)) {
-        if (fence_) {
-            vkDestroyFence(device_, *fence_, nullptr);
-        }       
-        fence_ = std::exchange(rhs.fence_, std::nullopt);
-        device_ = rhs.device_; 
-    }
-    return *this;
-}
-
-tl::expected<Fence, std::runtime_error> Fence::create(vk::Device const& device) noexcept
-{
-    VkFenceCreateInfo fenceInfo{};
-    fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-    fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-    VkFence fence;
-    if (vkCreateFence(device, &fenceInfo, nullptr, &fence) != VK_SUCCESS) {
-        return tl::make_unexpected(std::runtime_error("failed to create fence"));
-    }
-    return Fence{fence, device};
-}
-
-tl::expected<std::vector<Fence>, std::runtime_error> 
-Fence::createVec(vk::Device const& device, unsigned int numFences) noexcept
-{
-    std::vector<Fence> fences;
+    std::vector<vk::raii::Fence> fences;
     fences.reserve(numFences);
 
     for (auto i{0U}; i < numFences; ++i) {
-        auto expectedFence = create(device);
-        if (!expectedFence) {
-            return tl::make_unexpected(std::move(expectedFence).error());
+        try {
+            fences.emplace_back(device.createFence(vk::FenceCreateInfo{vk::FenceCreateFlagBits::eSignaled}));
+        } catch (std::runtime_error const& excp) {
+            return tl::make_unexpected(excp);
         }
-        fences.emplace_back(std::move(expectedFence).value());
     }
     return fences;
 }
 
-Semaphore::Semaphore(VkSemaphore semaphore, vk::Device const& device) noexcept
-    : semaphore_(semaphore)
-    , device_(device)
-{}
-
-Semaphore::~Semaphore() noexcept
+tl::expected<std::vector<vk::raii::Semaphore>, std::runtime_error>
+    createSemaphores(vk::raii::Device const& device, unsigned int numSemaphores) noexcept
 {
-    if (semaphore_) {
-        vkDestroySemaphore(device_, *semaphore_, nullptr);
-    }
-}
-
-Semaphore::Semaphore(Semaphore&& rhs) noexcept
-    : semaphore_(std::exchange(rhs.semaphore_, std::nullopt))
-    , device_(rhs.device_)
-{}
-
-Semaphore& Semaphore::operator=(Semaphore&& rhs) noexcept
-{
-    if (this != std::addressof(rhs)) {
-        if (semaphore_) {
-            vkDestroySemaphore(device_, *semaphore_, nullptr);
-        }
-        semaphore_ = std::exchange(rhs.semaphore_, std::nullopt);
-        device_ = rhs.device_;
-    }
-    return *this;
-}
-
-tl::expected<Semaphore, std::runtime_error> Semaphore::create(vk::Device const& device) noexcept
-{
-    VkSemaphoreCreateInfo semaphoreInfo{};
-    semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-    VkSemaphore semaphore;
-    if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &semaphore) != VK_SUCCESS) {
-        return tl::make_unexpected(std::runtime_error("failed to create semaphore"));
-    }
-    return Semaphore{semaphore, device};
-}
-
-tl::expected<std::vector<Semaphore>, std::runtime_error>
-Semaphore::createVec(vk::Device const& device, unsigned int numSemaphores) noexcept
-{
-    std::vector<Semaphore> semaphores;
+    std::vector<vk::raii::Semaphore> semaphores;
     semaphores.reserve(numSemaphores);
 
     for (auto i{0U}; i < numSemaphores; ++i) {
-        auto expectedSemaphore = create(device);
-        if (!expectedSemaphore) {
-            return tl::make_unexpected(std::move(expectedSemaphore).error());
+        try {
+            semaphores.emplace_back(device.createSemaphore(vk::SemaphoreCreateInfo{}));
+        } catch (std::runtime_error const& excp) {
+            return tl::make_unexpected(excp);
         }
-        semaphores.emplace_back(std::move(expectedSemaphore).value());
     }
     return semaphores;   
 }

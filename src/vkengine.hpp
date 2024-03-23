@@ -48,9 +48,10 @@ private:
     std::vector<Framebuffer> frameBuffers_;
     std::optional<CommandPool> commandPool_;
     CommandBufferVec commandBuffers_;
-    std::vector<Semaphore> imageAvailableSemaphores_;
-    std::vector<Semaphore> renderFinishedSemaphores_;
-    std::vector<Fence> inflightFences_;
+
+    std::vector<vk::raii::Semaphore> imageAvailableSemaphores_;
+    std::vector<vk::raii::Semaphore> renderFinishedSemaphores_;
+    std::vector<vk::raii::Fence> inflightFences_;
 
     VkViewport viewport{};
     VkRect2D scissor{};

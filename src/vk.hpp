@@ -66,6 +66,11 @@ tl::expected<vk::raii::SurfaceKHR, std::runtime_error> createSurface(vk::raii::I
 tl::expected<std::pair<vk::raii::PhysicalDevice, QueueFamilyIndices>, std::runtime_error> 
 pickPhysicalDevice(vk::raii::Instance&, vk::SurfaceKHR const&) noexcept;
 tl::expected<vk::raii::Device, std::runtime_error> createDevice(vk::raii::PhysicalDevice const& physicalDevice, QueueFamilyIndices const&) noexcept;
+tl::expected<std::vector<vk::raii::Semaphore>, std::runtime_error>
+    createSemaphores(vk::raii::Device const& device, unsigned int numSemaphores) noexcept;
+tl::expected<std::vector<vk::raii::Fence>, std::runtime_error>
+    createFences(vk::raii::Device const& device, unsigned int numFences) noexcept;
+
 
 class ImageView
 {
@@ -298,68 +303,5 @@ private:
     vk::Device device_;
 };
 
-class Fence
-{
-public:
-    ~Fence() noexcept;
-    Fence(Fence const&) = delete;
-    Fence& operator=(Fence const&) = delete;
-    Fence(Fence&&) noexcept;
-    Fence& operator=(Fence&&) noexcept;
-
-    operator VkFence() const
-    {
-        gsl_Assert(fence_);
-        return *fence_;
-    }
-
-    void wait() const
-    {
-        vkWaitForFences(device_, 1, std::addressof(fence_.value()), VK_TRUE, UINT64_MAX);
-    }
-
-    void reset()
-    {
-        vkResetFences(device_, 1, std::addressof(fence_.value()));
-    }
-
-    static tl::expected<std::vector<Fence>, std::runtime_error>
-    createVec(vk::Device const& device, unsigned int numFences) noexcept;
-
-    static tl::expected<Fence, std::runtime_error> create(vk::Device const& device) noexcept;
-
-private:
-    Fence(VkFence fence, vk::Device const& device) noexcept;
-
-    std::optional<VkFence> fence_;
-    vk::Device device_;
-};
-
-class Semaphore
-{
-public:
-    ~Semaphore() noexcept;
-    Semaphore(Semaphore const&) = delete;
-    Semaphore& operator=(Semaphore const&) = delete;
-    Semaphore(Semaphore&&) noexcept;
-    Semaphore& operator=(Semaphore&&) noexcept;
-
-    operator VkSemaphore() const 
-    {
-        gsl_Assert(semaphore_);
-        return *semaphore_;
-    }
-
-    static tl::expected<std::vector<Semaphore>, std::runtime_error>
-    createVec(vk::Device const& device, unsigned int numSemaphores) noexcept;
-
-    static tl::expected<Semaphore, std::runtime_error> create(vk::Device const& device) noexcept;
-
-private:
-    Semaphore(VkSemaphore semaphore, vk::Device const& device) noexcept;
-
-    std::optional<VkSemaphore> semaphore_;
-    vk::Device device_;
-};
-
 } // namespace vk 
+

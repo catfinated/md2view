@@ -73,9 +73,9 @@ void VKEngine::initVulkan()
     commandPool_ = forceUnwrap(CommandPool::create(*physicalDevice_, *device_, queueFamilyIndices_));
 
     commandBuffers_ = forceUnwrap(commandPool_->createBuffers(kMaxFramesInFlight));
-    imageAvailableSemaphores_ = forceUnwrap(Semaphore::createVec(*device_, kMaxFramesInFlight));
-    renderFinishedSemaphores_ = forceUnwrap(Semaphore::createVec(*device_, kMaxFramesInFlight));
-    inflightFences_ = forceUnwrap(Fence::createVec(*device_, kMaxFramesInFlight));
+    imageAvailableSemaphores_ = forceUnwrap(createSemaphores(device_, kMaxFramesInFlight));
+    renderFinishedSemaphores_ = forceUnwrap(createSemaphores(device_, kMaxFramesInFlight));
+    inflightFences_ = forceUnwrap(createFences(device_, kMaxFramesInFlight));
 
     spdlog::info("vulkan initialization complete. num views={}", imageViews_.size());
 }
@@ -308,12 +308,12 @@ void VKEngine::recordCommandBuffer(CommandBuffer& commandBuffer, uint32_t imageI
 void VKEngine::drawFrame()
 {
     auto& fence = inflightFences_.at(currentFrame_);
-    fence.wait();
-    fence.reset();
+    gsl_Assert(device_.waitForFences({*fence}, true, UINT64_MAX) == vk::Result::eSuccess);
+    device_.resetFences({*fence});
 
     auto& imageAvailableSemaphore = imageAvailableSemaphores_.at(currentFrame_);
     uint32_t imageIndex;
-    vkAcquireNextImageKHR(*device_, *swapChain_, UINT64_MAX, imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+    vkAcquireNextImageKHR(*device_, *swapChain_, UINT64_MAX, *imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
 
     auto commandBuffer = CommandBuffer{commandBuffers_.at(currentFrame_)};
     vkResetCommandBuffer(commandBuffer, 0);
@@ -322,7 +322,7 @@ void VKEngine::drawFrame()
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-    VkSemaphore waitSemaphores[] = {imageAvailableSemaphore};
+    VkSemaphore waitSemaphores[] = {*imageAvailableSemaphore};
     VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
     submitInfo.waitSemaphoreCount = 1;
     submitInfo.pWaitSemaphores = waitSemaphores;
@@ -331,11 +331,11 @@ void VKEngine::drawFrame()
     submitInfo.pCommandBuffers = commandBuffer.toPtr();
 
     auto& renderFinishedSemaphore = renderFinishedSemaphores_.at(currentFrame_);
-    VkSemaphore signalSemaphores[] = {renderFinishedSemaphore};
+    VkSemaphore signalSemaphores[] = {*renderFinishedSemaphore};
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
 
-    if (vkQueueSubmit(*graphicsQueue_, 1, &submitInfo, fence) != VK_SUCCESS) {
+    if (vkQueueSubmit(*graphicsQueue_, 1, &submitInfo, *fence) != VK_SUCCESS) {
         throw std::runtime_error("failed to submit draw command buffer!");
     }
 
