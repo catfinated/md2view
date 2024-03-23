@@ -9,7 +9,7 @@ int main(int argc, char const * argv[])
     try {
         engine.run_game();
     } catch (std::exception const& excp) {
-        spdlog::error("{}", excp.what());
+        spdlog::error("exception caught in main: {}", excp.what());
     }
     return 0;
 }

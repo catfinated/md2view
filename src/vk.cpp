@@ -27,28 +27,12 @@ static constexpr std::array<char const*, 1> deviceExtensions = {
 VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
     VkDebugUtilsMessageTypeFlagsEXT messageType,
-    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+    VkDebugUtilsMessengerCallbackDataEXT const* pCallbackData,
     void* pUserData) {
 
     spdlog::info("validation layer: {}", pCallbackData->pMessage);
 
     return VK_FALSE;
-}
-
-VkResult createDebugUtilsMessenger(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
-    auto func = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
-    if (func != nullptr) {
-        return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
-    } else {
-        return VK_ERROR_EXTENSION_NOT_PRESENT;
-    }
-}
-
-void destroyDebugUtilsMessenger(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator) {
-    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
-    if (func != nullptr) {
-        func(instance, debugMessenger, pAllocator);
-    }
 }
 
 void populateDebugMessengerCreateInfo(vk::DebugUtilsMessengerCreateInfoEXT& createInfo) 
@@ -101,8 +85,8 @@ vk::Extent2D chooseSwapExtent(vk::SurfaceCapabilitiesKHR const& capabilities, Wi
     }
 }
 
-[[nodiscard]] QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, vk::SurfaceKHR const& surface) noexcept;
-[[nodiscard]] bool checkDeviceExtensionSupport(VkPhysicalDevice device) noexcept;
+[[nodiscard]] QueueFamilyIndices findQueueFamilies(vk::PhysicalDevice device, vk::SurfaceKHR const& surface) noexcept;
+[[nodiscard]] bool checkDeviceExtensionSupport(vk::PhysicalDevice device) noexcept;
 
 Window::Window(GLFWwindow * window) noexcept
     : window_(window)
@@ -196,9 +180,7 @@ tl::expected<vk::raii::DebugUtilsMessengerEXT, std::runtime_error> createDebugUt
 tl::expected<vk::raii::Device, std::runtime_error> 
 createDevice(vk::raii::PhysicalDevice const& physicalDevice, QueueFamilyIndices const& queueFamilyIndices) noexcept
 {
-    spdlog::info("create logical device {} {}", 
-        queueFamilyIndices.graphicsFamily.value(),
-        queueFamilyIndices.presentFamily.value());
+    spdlog::info("create logical device");
     static constexpr float queuePriority = 1.0f;
 
     vk::PhysicalDeviceFeatures deviceFeatures{};
@@ -270,22 +252,17 @@ tl::expected<vk::raii::SurfaceKHR, std::runtime_error> createSurface(vk::raii::I
     }
 }
 
-QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, vk::SurfaceKHR const& surface) noexcept
+QueueFamilyIndices findQueueFamilies(vk::PhysicalDevice device, vk::SurfaceKHR const& surface) noexcept
 {
     QueueFamilyIndices indices;
-    uint32_t queueFamilyCount = 0;
-    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
-    std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
-    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+    auto const queueFamilies = device.getQueueFamilyProperties();
 
     for (auto i{0}; i < queueFamilies.size(); ++i) {
         auto const& queueFamily = queueFamilies.at(i);
-        if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+        if (queueFamily.queueFlags & vk::QueueFlagBits::eGraphics) {
             indices.graphicsFamily = i;
         }
-        VkBool32 presentSupport = false;
-        vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
-        if (presentSupport) {
+        if (device.getSurfaceSupportKHR(i, surface)) {
             indices.presentFamily = i;
         }
         if (indices.isComplete()) {
@@ -296,14 +273,9 @@ QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, vk::SurfaceKHR con
     return indices;
 }
 
-bool checkDeviceExtensionSupport(VkPhysicalDevice device) noexcept
+bool checkDeviceExtensionSupport(vk::PhysicalDevice device) noexcept
 {
-    uint32_t extensionCount;
-    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
-
-    std::vector<VkExtensionProperties> availableExtensions(extensionCount);
-    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
-
+    auto const availableExtensions = device.enumerateDeviceExtensionProperties(); 
     std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
 
     for (const auto& extension : availableExtensions) {
@@ -317,7 +289,8 @@ tl::expected<std::pair<vk::raii::SwapchainKHR, SwapChainSupportDetails>, std::ru
     createSwapChain(vk::raii::PhysicalDevice const& physicalDevice, 
                     vk::raii::Device const& device, 
                     Window const& window, 
-                    vk::SurfaceKHR const& surface) noexcept
+                    vk::SurfaceKHR const& surface,
+                    QueueFamilyIndices const& queueFamilyIndices) noexcept
 {
     spdlog::info("create swap chain");
     auto swapChainSupport = querySwapChainSupport(*physicalDevice, surface);
@@ -339,13 +312,13 @@ tl::expected<std::pair<vk::raii::SwapchainKHR, SwapChainSupportDetails>, std::ru
     createInfo.imageArrayLayers = 1;
     createInfo.imageUsage = vk::ImageUsageFlagBits::eColorAttachment; // VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-    auto const indices = findQueueFamilies(*physicalDevice, surface);
-    std::array<uint32_t, 2> queueFamilyIndices = {indices.graphicsFamily.value(), indices.presentFamily.value()};
+    std::array<uint32_t, 2> indices = {queueFamilyIndices.graphicsFamily.value(), 
+                                       queueFamilyIndices.presentFamily.value()};
 
-    if (indices.graphicsFamily != indices.presentFamily) {
+    if (queueFamilyIndices.graphicsFamily != queueFamilyIndices.presentFamily) {
         createInfo.imageSharingMode = vk::SharingMode::eConcurrent; 
-        createInfo.queueFamilyIndexCount = queueFamilyIndices.size();
-        createInfo.pQueueFamilyIndices = queueFamilyIndices.data();
+        createInfo.queueFamilyIndexCount = indices.size();
+        createInfo.pQueueFamilyIndices = indices.data();
     } else {
         createInfo.imageSharingMode = vk::SharingMode::eExclusive; 
         createInfo.queueFamilyIndexCount = 0; // Optional

@@ -58,7 +58,8 @@ void VKEngine::initVulkan()
     graphicsQueue_ = device_.getQueue(queueFamilyIndices_.graphicsFamily.value(), 0);
     presentQueue_ = device_.getQueue(queueFamilyIndices_.presentFamily.value(), 0);
 
-    std::tie(swapChain_, swapChainSupportDetails_) = forceUnwrap(createSwapChain(physicalDevice_, device_, window_, *surface_));
+    std::tie(swapChain_, swapChainSupportDetails_) = forceUnwrap(
+        createSwapChain(physicalDevice_, device_, window_, *surface_, queueFamilyIndices_));
     swapChainImages_ = swapChain_.getImages();
     imageViews_ = forceUnwrap(createImageViews(device_, swapChainImages_, swapChainSupportDetails_));
 
@@ -91,7 +92,8 @@ void VKEngine::recreateSwapChain()
     imageViews_.clear();
     swapChain_ = nullptr; // NB: must destroy previous swap chain first!
 
-    std::tie(swapChain_, swapChainSupportDetails_) = forceUnwrap(createSwapChain(physicalDevice_, device_, window_, *surface_));
+    std::tie(swapChain_, swapChainSupportDetails_) = forceUnwrap(
+        createSwapChain(physicalDevice_, device_, window_, *surface_, queueFamilyIndices_));
     swapChainImages_ = swapChain_.getImages();
     imageViews_ = forceUnwrap(createImageViews(device_, swapChainImages_, swapChainSupportDetails_));
     frameBuffers_ = forceUnwrap(createFrameBuffers(imageViews_, renderPass_, swapChainSupportDetails_.extent, device_));
@@ -279,18 +281,18 @@ void VKEngine::drawFrame()
 
     auto& imageAvailableSemaphore = imageAvailableSemaphores_.at(currentFrame_);
     uint32_t imageIndex;
-    vkAcquireNextImageKHR(*device_, *swapChain_, UINT64_MAX, *imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+  
+    std::tie(std::ignore, imageIndex) = swapChain_.acquireNextImage(UINT64_MAX, *imageAvailableSemaphore);
 
     auto& commandBuffer = commandBuffers_.at(currentFrame_);
     commandBuffer.reset();
     recordCommandBuffer(commandBuffer, imageIndex);
 
-    VkSubmitInfo submitInfo{};
-    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    vk::Semaphore waitSemaphores[] = {*imageAvailableSemaphore};
+    vk::CommandBuffer commandBuffers[] = {*commandBuffer};
+    vk::PipelineStageFlags waitStages[] = {vk::PipelineStageFlagBits::eColorAttachmentOutput}; 
 
-    VkSemaphore waitSemaphores[] = {*imageAvailableSemaphore};
-    VkCommandBuffer commandBuffers[] = {*commandBuffer};
-    VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+    vk::SubmitInfo submitInfo{};
     submitInfo.waitSemaphoreCount = 1;
     submitInfo.pWaitSemaphores = waitSemaphores;
     submitInfo.pWaitDstStageMask = waitStages;
@@ -298,33 +300,33 @@ void VKEngine::drawFrame()
     submitInfo.pCommandBuffers = commandBuffers;
 
     auto& renderFinishedSemaphore = renderFinishedSemaphores_.at(currentFrame_);
-    VkSemaphore signalSemaphores[] = {*renderFinishedSemaphore};
+    vk::Semaphore signalSemaphores[] = {*renderFinishedSemaphore};
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
 
-    if (vkQueueSubmit(*graphicsQueue_, 1, &submitInfo, *fence) != VK_SUCCESS) {
-        throw std::runtime_error("failed to submit draw command buffer!");
-    }
+    graphicsQueue_.submit({submitInfo}, *fence);
 
-    VkPresentInfoKHR presentInfo{};
-    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-
+    vk::PresentInfoKHR presentInfo{};
     presentInfo.waitSemaphoreCount = 1;
     presentInfo.pWaitSemaphores = signalSemaphores;
 
-    VkSwapchainKHR swapChains[] = {*swapChain_};
+    vk::SwapchainKHR swapChains[] = {*swapChain_};
     presentInfo.swapchainCount = 1;
     presentInfo.pSwapchains = swapChains;
     presentInfo.pImageIndices = &imageIndex;
     presentInfo.pResults = nullptr; // Optional
 
-    auto const result = vkQueuePresentKHR(*presentQueue_, &presentInfo);
+    // vk hpp throws exception on OutOfDateKHR result
+    // https://github.com/KhronosGroup/Vulkan-Hpp/issues/599
+    auto const result= static_cast<vk::Result>(presentQueue_.getDispatcher()->vkQueuePresentKHR(
+      static_cast<VkQueue>(*presentQueue_), reinterpret_cast<const VkPresentInfoKHR *>(&presentInfo)));
+
     currentFrame_ = (currentFrame_ + 1U) % kMaxFramesInFlight;
 
-    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || frameBufferResized_) {
+    if (result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR || frameBufferResized_) {
         frameBufferResized_ = false;
         recreateSwapChain();
-    } else if (result != VK_SUCCESS) {
+    } else if (result != vk::Result::eSuccess) {
         throw std::runtime_error("failed to acquire swap chain image!");
     }
 }
@@ -338,8 +340,7 @@ void VKEngine::run_game()
         glfwPollEvents();
         drawFrame();
     }
-    vkDeviceWaitIdle(*device_);
-
+    device_.waitIdle();
     glfwTerminate();
 }
 

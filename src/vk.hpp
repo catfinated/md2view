@@ -87,7 +87,11 @@ tl::expected<vk::raii::CommandPool, std::runtime_error>
     createCommandPool(vk::raii::Device const& device, QueueFamilyIndices const& indices) noexcept;
 
 tl::expected<std::pair<vk::raii::SwapchainKHR, SwapChainSupportDetails>, std::runtime_error>
-    createSwapChain(vk::raii::PhysicalDevice const& physicalDevice, vk::raii::Device const& device, Window const& window, vk::SurfaceKHR const& surface) noexcept;
+    createSwapChain(vk::raii::PhysicalDevice const& physicalDevice, 
+                    vk::raii::Device const& device, 
+                    Window const& window, 
+                    vk::SurfaceKHR const& surface,
+                    QueueFamilyIndices const& queueFamilyIndices) noexcept;
 
  tl::expected<std::vector<vk::raii::ImageView>, std::runtime_error> 
     createImageViews(vk::raii::Device const& device, std::vector<vk::Image>& images, SwapChainSupportDetails const& support);
