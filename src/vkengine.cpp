@@ -3,11 +3,22 @@
 #include <GLFW/glfw3.h>
 #include <spdlog/spdlog.h>
 
+#include <array>
 #include <cstdint>
 #include <iostream>
 #include <stdexcept>
 
 namespace myvk {
+
+static std::vector<Vertex> const vertices = {
+   // {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+   // {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+   // {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+    {{0.0f, -0.5f}, {1.0f, 1.0f, 1.0f}},
+    {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+    {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+};
+
 
 template <class T, class E>
 T forceUnwrap(tl::expected<T, E>&& expectedT)
@@ -73,6 +84,14 @@ void VKEngine::initVulkan()
     imageAvailableSemaphores_ = forceUnwrap(createSemaphores(device_, kMaxFramesInFlight));
     renderFinishedSemaphores_ = forceUnwrap(createSemaphores(device_, kMaxFramesInFlight));
     inflightFences_ = forceUnwrap(createFences(device_, kMaxFramesInFlight));
+    
+    auto const bufSize = sizeof(Vertex) * vertices.size();
+    vertexBuffer_ = forceUnwrap(createVertexBuffer(device_, bufSize));
+    vertexBufferMemory_ = allocateVertexBufferMemory(device_, vertexBuffer_, physicalDevice_);
+    vertexBuffer_.bindMemory(*vertexBufferMemory_, 0UL);
+    auto data = vertexBufferMemory_.mapMemory(0U, bufSize);
+    std::memcpy(data, vertices.data(), bufSize);
+    vertexBufferMemory_.unmapMemory();
 
     spdlog::info("vulkan initialization complete. num views={}", imageViews_.size());
 }
@@ -118,9 +137,14 @@ void VKEngine::createGraphicsPipeline()
 
     vk::PipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
 
+    auto bindingDescription = Vertex::getBindingDescription();
+    auto attributeDescriptions = Vertex::getAttributeDescriptions();
+
     vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
-    vertexInputInfo.vertexBindingDescriptionCount = 0;
-    vertexInputInfo.vertexAttributeDescriptionCount = 0;
+    vertexInputInfo.vertexBindingDescriptionCount = 1;
+    vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+    vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+    vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
     vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
     inputAssembly.topology = vk::PrimitiveTopology::eTriangleList; // VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
@@ -268,7 +292,11 @@ void VKEngine::recordCommandBuffer(vk::raii::CommandBuffer& commandBuffer, uint3
     scissor.extent = swapChainSupportDetails_.extent;
     commandBuffer.setScissor(0, {scissor});
 
-    commandBuffer.draw(3, 1, 0, 0);
+    vk::Buffer vertexBuffers[] = {*vertexBuffer_};
+    vk::DeviceSize offsets[] = {0};
+    commandBuffer.bindVertexBuffers(0, vertexBuffers, offsets);
+    commandBuffer.draw(vertices.size(), 1, 0, 0);
+
     commandBuffer.endRenderPass();
     commandBuffer.end();
 }

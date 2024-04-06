@@ -1,5 +1,6 @@
 #include "vk.hpp"
 
+#include <glm/glm.hpp>
 #include <range/v3/algorithm/find_if.hpp>
 #include <range/v3/algorithm/transform.hpp>
 #include <spdlog/spdlog.h>
@@ -463,6 +464,48 @@ tl::expected<std::vector<vk::raii::Semaphore>, std::runtime_error>
         }
     }
     return semaphores;   
+}
+
+tl::expected<vk::raii::Buffer, std::runtime_error> 
+    createVertexBuffer(vk::raii::Device const& device, std::size_t bufSize) noexcept
+{
+    vk::BufferCreateInfo bufferInfo{};
+    bufferInfo.size = bufSize;
+    bufferInfo.usage = vk::BufferUsageFlagBits::eVertexBuffer;
+    bufferInfo.sharingMode = vk::SharingMode::eExclusive;
+
+    try {
+        return device.createBuffer(bufferInfo);
+    } catch (std::runtime_error const& excp) {
+        return tl::make_unexpected(excp);
+    }
+}
+
+uint32_t findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties, vk::raii::PhysicalDevice const& physicalDevice) 
+{
+    auto const memProperties = physicalDevice.getMemoryProperties();
+
+    for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
+        if (typeFilter & (1 << i) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+            return i;
+        }
+    }
+
+    throw std::runtime_error("failed to find suitable memory type!");
+}
+
+vk::raii::DeviceMemory allocateVertexBufferMemory(
+    vk::raii::Device const& device, 
+    vk::raii::Buffer const& buffer, 
+    vk::raii::PhysicalDevice const& physicalDevice)
+{
+    auto const memRequirements = buffer.getMemoryRequirements();
+    vk::MemoryAllocateInfo allocInfo{};
+    allocInfo.allocationSize = memRequirements.size;
+    allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits,
+        vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, physicalDevice);
+
+    return device.allocateMemory(allocInfo);
 }
 
 }

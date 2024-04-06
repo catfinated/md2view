@@ -51,6 +51,8 @@ private:
     std::vector<vk::raii::Semaphore> imageAvailableSemaphores_;
     std::vector<vk::raii::Semaphore> renderFinishedSemaphores_;
     std::vector<vk::raii::Fence> inflightFences_;
+    vk::raii::Buffer vertexBuffer_{nullptr};
+    vk::raii::DeviceMemory vertexBufferMemory_{nullptr};
 
     vk::ClearValue clearValue_;
 
