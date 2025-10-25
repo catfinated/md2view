@@ -65,7 +65,7 @@ void ModelSelector::select_random_model()
     std::vector<tree<Node>::iterator> iters;
     for (auto i = tree_.begin_leaf(); i != tree_.end_leaf(); ++i) {
         if (i != selected_) {
-            iters.push_back(i);
+            iters.emplace_back(i);
         }
     }
 
@@ -93,7 +93,7 @@ bool ModelSelector::draw_ui()
     std::stack<tree<Node>::iterator> stack;
     stack.push(tree_.begin());
 
-    unsigned int lastDepth{0};
+    int lastDepth{0};
     while (!stack.empty()) {
         auto curr = stack.top();
         stack.pop();
@@ -123,7 +123,7 @@ bool ModelSelector::draw_ui()
         if (ImGui::TreeNodeEx(curr->name.c_str(), flags)) {
             if (!is_leaf) {
                 for (auto iter = tree_.begin(curr); iter != tree_.end(curr); ++iter) {
-                    stack.push(iter);
+                    stack.emplace(iter);
                 }
             } else if (ImGui::IsItemClicked()) {
                 spdlog::info("selected model={} {}", curr->name, curr->path);

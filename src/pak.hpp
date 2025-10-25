@@ -25,7 +25,7 @@ public:
         int32_t filelen;
     };
 
-    explicit PAK(std::filesystem::path const& fpath);
+    explicit PAK(std::filesystem::path fpath);
 
     std::filesystem::path const& fpath() const noexcept { return fpath_; }
 

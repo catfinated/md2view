@@ -10,14 +10,7 @@ find_package(Stb REQUIRED)
 find_package(gsl-lite REQUIRED)
 find_package(range-v3 CONFIG REQUIRED)
 find_path(TREEHH_INCLUDE_DIRS "treehh/tree.hh")
-find_package(Vulkan REQUIRED)
-
-#IF(APPLE)
-#   find_library(COCOA_LIBRARY Cocoa)
-#   find_library(IOKIT_LIBRARY IOKit)
-#   find_library(COREVIDEO_LIBRARY CoreVideo)
-#   SET(PLATFORM_LIBS ${COCOA_LIBRARY} ${IOKIT_LIBRARY} ${COREVIDEO_LIBRARY})
-#ENDIF(APPLE)
+#find_package(Vulkan REQUIRED)
 
 add_library(libmd2v
   md2view.cpp
@@ -33,12 +26,6 @@ add_library(libmd2v
   texture2D.cpp
   frame_buffer.cpp
   engine.cpp)
-
-set_target_properties(libmd2v PROPERTIES
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED YES
-    CXX_EXTENSIONS NO
-)
 
 target_link_libraries(libmd2v PUBLIC
    Boost::system 
@@ -65,20 +52,8 @@ add_executable(glmd2v main.cpp)
 
 target_link_libraries(glmd2v PRIVATE libmd2v)
 
-set_target_properties(glmd2v PROPERTIES
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED YES
-    CXX_EXTENSIONS NO
-)
+#add_executable(vkmd2v vk.cpp vkengine.cpp vkmain.cpp)
 
-add_executable(vkmd2v vk.cpp vkengine.cpp vkmain.cpp)
+#target_link_libraries(vkmd2v PRIVATE libmd2v Vulkan::Vulkan)
 
-target_link_libraries(vkmd2v PRIVATE libmd2v Vulkan::Vulkan)
-
-target_compile_options(vkmd2v PUBLIC -DGLFW_INCLUDE_VULKAN)
-
-set_target_properties(vkmd2v PROPERTIES
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED YES
-    CXX_EXTENSIONS NO
-)
+#target_compile_options(vkmd2v PUBLIC -DGLFW_INCLUDE_VULKAN)

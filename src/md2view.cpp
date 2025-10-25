@@ -5,6 +5,7 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/std.h>
 
+#include <array>
 #include <algorithm>
 #include <cstdlib>
 #include <cstdint>
@@ -156,8 +157,8 @@ void MD2View::render(Engine& engine)
 
     // render normal frame
     main_fb_->bind();  
-    GLenum draw_buffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
-    glDrawBuffers(2, draw_buffers);
+    std::array<GLenum, 2> draw_buffers{GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+    glDrawBuffers(draw_buffers.size(), draw_buffers.data());
     glCheckError();
 
     glClearBufferfv(GL_COLOR, 0, clear_color_.data());
@@ -210,7 +211,6 @@ void MD2View::render(Engine& engine)
 void MD2View::draw_ui(Engine& engine)
 {
     static float const vec4width = 275;
-    static int const precision = 5;
     // draw gui
     ImGui::Begin("MD2View");
 
@@ -339,7 +339,7 @@ void MD2View::set_vsync()
     glfwSwapInterval(vsync_enabled_ ? 1 : 0);
 }
 
-void MD2View::update(Engine& engine, GLfloat delta_time)
+void MD2View::update(Engine& /* engine */, GLfloat delta_time)
 {
     md2_->update(delta_time);
 }

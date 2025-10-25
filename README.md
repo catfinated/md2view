@@ -48,7 +48,12 @@ md2view has previously been tested the following systems but may no longer work:
 
 The screenshots above come from the Macbook which partly explains the low FPS.
 
-## Dependencies
+## Building
+
+* cmake -B build -S . --preset vcpkg
+* cmake --build build/ --verbose
+
+### Dependencies
 
 md2view is built using vcpkg to manage dependencies. These dependencies are:
 
@@ -73,6 +78,10 @@ md2view is built using vcpkg to manage dependencies. These dependencies are:
 [ranges-v3](https://github.com/ericniebler/range-v3)
 
 [tl-expected](https://github.com/TartanLlama/expected)
+
+### Running
+
+* build/src/glmd2v
 
 ## Attributions
 

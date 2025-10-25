@@ -1,0 +1,2 @@
+Checks:          'clang-diagnostic-*,clang-analyzer-*,modernize-*,-modernize-use-trailing-return-type'
+WarningsAsErrors: true

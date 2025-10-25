@@ -1,5 +1,6 @@
 #include "shader.hpp"
 
+#include <array>
 #include <fstream>
 #include <stdexcept>
 #include <utility>
@@ -124,9 +125,9 @@
     glGetShaderiv(handle, GL_COMPILE_STATUS, &success);
 
     if (!success) {
-        GLchar log[512];
-        glGetShaderInfoLog(handle, sizeof(log), nullptr, log);
-        spdlog::error("ERROR::SHADER::COMPILATION_FAILED: ('{}') - \n{}", path.string(), log);
+        std::array<GLchar, 512> log;
+        glGetShaderInfoLog(handle, log.size(), nullptr, log.data());
+        spdlog::error("ERROR::SHADER::COMPILATION_FAILED: ('{}') - \n{}", path.string(), log.data());
         return false;
     }
 
@@ -141,9 +142,9 @@
     glGetProgramiv(program_, GL_LINK_STATUS, &success);
 
     if (!success) {
-        GLchar log[512];
-        glGetProgramInfoLog(program_, sizeof(log), NULL, log);
-        spdlog::error("{}", log);
+        std::array<GLchar, 512> log;
+        glGetProgramInfoLog(program_, log.size(), nullptr, log.data());
+        spdlog::error("{}", log.data());
         return false;
     }
 

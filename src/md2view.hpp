@@ -26,7 +26,7 @@ public:
     void on_framebuffer_resized(int, int);
     void update(Engine& engine, GLfloat delta_time);
     void render(Engine& engine);
-    char const * const title() const { return "MD2View"; }
+    char const * title() const { return "MD2View"; }
 
 private:
     void reset_camera();

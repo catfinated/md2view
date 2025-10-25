@@ -10,7 +10,7 @@ class GLEngine : public Engine
 public:
     GLEngine() = default;
 
-    bool init(int argc, char const * argv[]);
+    bool init(gsl::span<char const *> args);
     void run_game();
 
 protected:

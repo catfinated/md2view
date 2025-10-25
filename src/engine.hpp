@@ -4,6 +4,7 @@
 #include "gui.hpp"
 
 #include <boost/program_options.hpp>
+#include <gsl/gsl-lite.hpp>
 
 #include <bitset>
 #include <random>
@@ -46,7 +47,7 @@ public:
     Mouse const& mouse() const { return mouse_; }  
 
 protected:
-    bool parse_args(int argc, char const * argv[]);
+    bool parse_args(gsl::span<char const *> args);
     
     int width_;
     int height_;

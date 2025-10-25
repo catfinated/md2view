@@ -4,9 +4,9 @@
 #include <spdlog/spdlog.h>
 
 template <typename Game>
-bool GLEngine<Game>::init(int argc, char const * argv[])
+bool GLEngine<Game>::init(gsl::span<char const *> args)
 {
-    if (!parse_args(argc, argv)) {
+    if (!parse_args(args)) {
         return false;
     }
 
@@ -35,7 +35,7 @@ bool GLEngine<Game>::init(int argc, char const * argv[])
     // TODO: Keyboard/InputManager classes
 
     // define the callbacks here as lambdas so they are not accessible to outside code
-    auto key_callback = [](GLFWwindow * window, int key, int scancode, int action, int mode) {
+    auto key_callback = [](GLFWwindow * window, int key, int /* scancode */, int action, int /* mode */) {
         using EngineType = GLEngine<Game>;
         EngineType * engine = static_cast<EngineType *>(glfwGetWindowUserPointer(window));
         gsl_Assert(engine);

@@ -2,6 +2,7 @@
 
 #include <spdlog/spdlog.h>
 
+#include <array>
 #include <cassert>
 #include <cstring>
 #include <iostream>
@@ -16,7 +17,6 @@ PCX::PCX(std::istream& ds)
     auto width = header_.xend - header_.xstart + 1;
     auto length = header_.yend - header_.ystart + 1;
     auto scan_line_length = header_.num_bit_planes * header_.bytes_per_line;
-    //auto line_padding_size = (scan_line_length * (8 / header_.bits_per_pixel)) - width;
 
     std::vector<ScanLine> scan_lines;
 
@@ -54,33 +54,25 @@ PCX::ScanLine PCX::read_scan_line(std::istream& ds, int32_t length)
 
     uint8_t runcount;
     uint8_t runvalue;
-    uint32_t total(0);
-    //bool runny{false};
-    //bool alwaysrunny{true};
-    uint32_t bytecount(0);
 
     while (index < length) {
         uint8_t byte;
         ds.read((char*)&byte, 1);
-        //ds >> byte;
-        //assert(ds.gcount() == 1);
-        ++bytecount;
+
         if ((byte & 0xc0) == 0xc0) {
             runcount = byte  & 0x3f;
-            //ds >> byte;
             ds.read((char*)&byte, 1);
             runvalue = byte;
-            //runny = true;
-            ++bytecount;
         }
         else {
             runcount = 1;
             runvalue = byte;
-            //alwaysrunny = false;
         }
 
-        for (total += runcount; runcount && index < length; --runcount, ++index) {
+        while (runcount > 0 && index < length) {
             scan_line[static_cast<size_t>(index)] = runvalue;
+            --runcount;
+            ++index;
         }
     }
 
@@ -95,14 +87,12 @@ std::vector<PCX::Color> PCX::read_palette(std::istream& ds)
         return colors;
     }
 
-    uint64_t count(1);
     uint8_t byte;
     ds.read(reinterpret_cast<char *>(&byte), 1);
 
     while (!ds.eof()) {
-        uint8_t rgb[3];
-        ds.read(reinterpret_cast<char *>(rgb), 3);
-        count += 3;
+        std::array<uint8_t, 3> rgb;
+        ds.read(reinterpret_cast<char *>(rgb.data()), 3);
         colors.emplace_back(rgb[0], rgb[1], rgb[2]);
     }
 

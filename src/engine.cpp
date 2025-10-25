@@ -13,7 +13,7 @@ bool Engine::check_key_pressed(unsigned int key)
     return false;
 }
 
-bool Engine::parse_args(int argc, char const * argv[])
+bool Engine::parse_args(gsl::span<char const *> args)
 {
     boost::program_options::options_description engine("Engine options");
     engine.add_options()
@@ -27,7 +27,7 @@ bool Engine::parse_args(int argc, char const * argv[])
     options_desc().add(engine);
 
     boost::program_options::store(
-        boost::program_options::parse_command_line(argc, argv, options_desc()), variables_map_);
+        boost::program_options::parse_command_line(args.size(), args.data(), options_desc()), variables_map_);
     boost::program_options::notify(variables_map_);
 
     if (variables_map_.count("help")) {

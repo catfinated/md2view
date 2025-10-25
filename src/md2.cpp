@@ -133,7 +133,7 @@ bool MD2::load_skins(std::ifstream& infile, size_t offset)
     skins.resize(hdr_.num_skins); // need resize so we actually push elements
     infile.seekg(offset + hdr_.offset_skins);
     infile.read(reinterpret_cast<char * >(skins.data()), sizeof(Skin) * skins.size());
-    assert(infile.gcount() == sizeof(Skin) * skins.size());
+    assert(static_cast<size_t>(infile.gcount()) == sizeof(Skin) * skins.size());
     assert(skins.size() == static_cast<size_t>(hdr_.num_skins));
     spdlog::info("num skins={}", skins.size());
 
@@ -286,7 +286,7 @@ void MD2::setup_buffers()
    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices[0], GL_DYNAMIC_DRAW);
 
    glEnableVertexAttribArray(0);
-   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
    static_assert(sizeof(glm::vec2) == 8, "bad vec2 size");
 
@@ -294,7 +294,7 @@ void MD2::setup_buffers()
    glBufferData(GL_ARRAY_BUFFER, scaled_texcoords_.size() * sizeof(glm::vec2), &scaled_texcoords_[0], GL_STATIC_DRAW);
 
    glEnableVertexAttribArray(1);
-   glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+   glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
 
    glBindVertexArray(0);
 
@@ -381,7 +381,7 @@ void MD2::update(float dt)
                    &interpolated_vertices_[0]);
 }
 
-void MD2::draw(Shader& shader)
+void MD2::draw(Shader& /* shader */)
 {
    glBindVertexArray(vao_);
    glDrawArrays(GL_TRIANGLES, 0, interpolated_vertices_.size());

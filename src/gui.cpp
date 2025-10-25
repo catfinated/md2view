@@ -2,6 +2,8 @@
 #include "engine.hpp"
 #include "shader.hpp"
 
+#include <array>
+
 Gui::Gui(Engine& engine, gsl::not_null<GLFWwindow *> window)
     : engine_(engine)
     , window_(window)
@@ -166,8 +168,8 @@ void Gui::render()
     GLint last_blend_dst_alpha; glGetIntegerv(GL_BLEND_DST_ALPHA, &last_blend_dst_alpha);
     GLint last_blend_equation_rgb; glGetIntegerv(GL_BLEND_EQUATION_RGB, &last_blend_equation_rgb);
     GLint last_blend_equation_alpha; glGetIntegerv(GL_BLEND_EQUATION_ALPHA, &last_blend_equation_alpha);
-    GLint last_viewport[4]; glGetIntegerv(GL_VIEWPORT, last_viewport);
-    GLint last_scissor_box[4]; glGetIntegerv(GL_SCISSOR_BOX, last_scissor_box);
+    std::array<GLint, 4> last_viewport; glGetIntegerv(GL_VIEWPORT, last_viewport.data());
+    std::array<GLint, 4> last_scissor_box; glGetIntegerv(GL_SCISSOR_BOX, last_scissor_box.data());
     GLboolean last_enable_blend = glIsEnabled(GL_BLEND);
     GLboolean last_enable_cull_face = glIsEnabled(GL_CULL_FACE);
     GLboolean last_enable_depth_test = glIsEnabled(GL_DEPTH_TEST);
@@ -202,7 +204,7 @@ void Gui::render()
     for (int n = 0; n < draw_data->CmdListsCount; n++)
     {
         const ImDrawList* cmd_list = draw_data->CmdLists[n];
-        const ImDrawIdx* idx_buffer_offset = 0;
+        const ImDrawIdx* idx_buffer_offset = nullptr;
 
         glBindBuffer(GL_ARRAY_BUFFER, glbuffers_[vertex]);
         glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)cmd_list->VtxBuffer.Size * sizeof(ImDrawVert),

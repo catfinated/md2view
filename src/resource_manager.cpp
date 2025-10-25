@@ -31,7 +31,7 @@ std::shared_ptr<Shader> ResourceManager::load_shader(std::string const& name,
     }
 
     std::shared_ptr<Shader> shader{new Shader{vertex_path, fragment_path, geometry_path}};
-    auto result = shaders_.emplace(std::make_pair(name, shader));
+    auto result = shaders_.emplace(name, shader);
 
     gsl_Assert(result.second);
     spdlog::info("loaded shader {}", name);
@@ -47,7 +47,7 @@ std::shared_ptr<Texture2D> ResourceManager::load_texture2D(std::string const& pa
         return iter->second;
     }
 
-    auto result = textures2D_.emplace(std::make_pair(key, Texture2D::load(pak(), path)));
+    auto result = textures2D_.emplace(key, Texture2D::load(pak(), path));
     return result.first->second;
 }
 
@@ -59,6 +59,6 @@ std::shared_ptr<MD2> ResourceManager::load_model(std::string const& path)
     }
 
     auto md2 =  std::make_shared<MD2>(path, pak());
-    auto result = models_.emplace(std::make_pair(path, std::move(md2)));
+    auto result = models_.emplace(path, std::move(md2));
     return result.first->second;
 }

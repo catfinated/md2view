@@ -28,8 +28,8 @@ struct Entry
 static_assert(sizeof(Header) == 12, "unexpected PackHeader size");
 static_assert(sizeof(Entry) == 64, "unexpected PackFile size");
 
-PAK::PAK(std::filesystem::path const& fpath)
-    : fpath_(fpath)
+PAK::PAK(std::filesystem::path fpath)
+    : fpath_(std::move(fpath))
 {
     if (!init()) {
         throw std::runtime_error("failed to load PAK file");
@@ -141,6 +141,6 @@ std::ifstream PAK::open_ifstream(std::filesystem::path const& filename) const
 
     auto const p = fpath_ / filename;
     spdlog::info("open file {}", p.string());
-    return std::ifstream(p, flags);
+    return {p, flags};
 }
 
