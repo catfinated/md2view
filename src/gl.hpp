@@ -4,28 +4,32 @@
 #include <GL/glew.h>
 #include <OpenGL/gl.h>
 #else
+// clang-format off
 #include <GL/glew.h>
 #include <GL/gl.h>
+// clang-format on
 #endif
 
 #include <spdlog/spdlog.h>
 
 #include <cassert>
 
-inline const char * glErrorToString(GLenum error)
-{
-    char const * str = "unknown error";
+inline const char* glErrorToString(GLenum error) {
+    char const* str = "unknown error";
 
     switch (error) {
-#define _TOK2CASE(token) case token: str = #token; break
-     _TOK2CASE(GL_NO_ERROR);
-     _TOK2CASE(GL_INVALID_ENUM);
-     _TOK2CASE(GL_INVALID_VALUE);
-     _TOK2CASE(GL_INVALID_OPERATION);
-     _TOK2CASE(GL_STACK_OVERFLOW);
-     _TOK2CASE(GL_STACK_UNDERFLOW);
-     _TOK2CASE(GL_OUT_OF_MEMORY);
-     _TOK2CASE(GL_INVALID_FRAMEBUFFER_OPERATION);
+#define _TOK2CASE(token)                                                       \
+    case token:                                                                \
+        str = #token;                                                          \
+        break
+        _TOK2CASE(GL_NO_ERROR);
+        _TOK2CASE(GL_INVALID_ENUM);
+        _TOK2CASE(GL_INVALID_VALUE);
+        _TOK2CASE(GL_INVALID_OPERATION);
+        _TOK2CASE(GL_STACK_OVERFLOW);
+        _TOK2CASE(GL_STACK_UNDERFLOW);
+        _TOK2CASE(GL_OUT_OF_MEMORY);
+        _TOK2CASE(GL_INVALID_FRAMEBUFFER_OPERATION);
 #undef _TOK2CASE
     default:
         break;
@@ -34,8 +38,7 @@ inline const char * glErrorToString(GLenum error)
     return str;
 }
 
-inline GLenum glCheckError(char const * file, int line)
-{
+inline GLenum glCheckError(char const* file, int line) {
     assert(file);
 
     GLenum error_code = glGetError();
@@ -50,4 +53,4 @@ inline GLenum glCheckError(char const * file, int line)
 
 #define glCheckError() glCheckError(__FILE__, __LINE__)
 
-#define GL_BUFFER_OFFSET(offset) (reinterpret_cast<void *>(offset))
+#define GL_BUFFER_OFFSET(offset) (reinterpret_cast<void*>(offset))

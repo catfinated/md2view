@@ -1,9 +1,8 @@
 #include "glengine.ipp"
 #include "md2view.hpp"
 
-int main(int argc, char const * argv[])
-{
-   GLEngine<MD2View> engine;
+int main(int argc, char const* argv[]) {
+    GLEngine<MD2View> engine;
 
     if (!engine.init(gsl::span{argv, static_cast<size_t>(argc)})) {
         return EXIT_FAILURE;

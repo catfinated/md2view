@@ -2,8 +2,7 @@
 
 #include <iostream>
 
-bool Engine::check_key_pressed(unsigned int key) 
-{
+bool Engine::check_key_pressed(unsigned int key) {
     gsl_Expects(key < max_keys);
 
     if (keys_[key] && !keys_pressed_[key]) {
@@ -13,21 +12,23 @@ bool Engine::check_key_pressed(unsigned int key)
     return false;
 }
 
-bool Engine::parse_args(gsl::span<char const *> args)
-{
+bool Engine::parse_args(gsl::span<char const*> args) {
     boost::program_options::options_description engine("Engine options");
-    engine.add_options()
-        ("help,h", "Show this help message")
-        ("width,W", boost::program_options::value<int>(&width_)->default_value(1280), "Screen width")
-        ("height,H", boost::program_options::value<int>(&height_)->default_value(800), "Screen height")
-        ("pak,p",
-         boost::program_options::value<std::string>(&pak_path_),
-         "PAK file or directory to emulate as a PAK"); 
+    engine.add_options()("help,h", "Show this help message")(
+        "width,W",
+        boost::program_options::value<int>(&width_)->default_value(1280),
+        "Screen width")(
+        "height,H",
+        boost::program_options::value<int>(&height_)->default_value(800),
+        "Screen height")("pak,p",
+                         boost::program_options::value<std::string>(&pak_path_),
+                         "PAK file or directory to emulate as a PAK");
 
     options_desc().add(engine);
 
-    boost::program_options::store(
-        boost::program_options::parse_command_line(args.size(), args.data(), options_desc()), variables_map_);
+    boost::program_options::store(boost::program_options::parse_command_line(
+                                      args.size(), args.data(), options_desc()),
+                                  variables_map_);
     boost::program_options::notify(variables_map_);
 
     if (variables_map_.count("help")) {

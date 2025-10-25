@@ -5,15 +5,9 @@
 #include <vector>
 
 // based on camera tutorial from https://learnopengl.com/Getting-started/Camera
-class Camera
-{
+class Camera {
 public:
-    enum Direction {
-        FORWARD,
-        BACKWARD,
-        LEFT,
-        RIGHT
-    };
+    enum Direction { FORWARD, BACKWARD, LEFT, RIGHT };
 
     static constexpr float YAW = -90.0f;
     static constexpr float PITCH = 0.0f;
@@ -28,7 +22,9 @@ public:
     float fov() const { return fov_; }
 
     void move(Direction direction, float delta_time);
-    void on_mouse_movement(float xoffset, float yoffset, bool constrain_pitch = true);
+    void on_mouse_movement(float xoffset,
+                           float yoffset,
+                           bool constrain_pitch = true);
     void on_mouse_scroll(double xoffset, double yoffset);
     void reset(glm::vec3 const&);
     void set_position(glm::vec3 const& pos) { position_ = pos; }

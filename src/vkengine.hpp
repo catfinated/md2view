@@ -8,13 +8,12 @@
 
 namespace myvk {
 
-class VKEngine : public Engine
-{
+class VKEngine : public Engine {
 public:
     VKEngine();
     ~VKEngine();
 
-    bool init(int argc, char const * argv[]);
+    bool init(int argc, char const* argv[]);
     void run_game();
 
 private:
@@ -24,7 +23,8 @@ private:
     void initVulkan();
     void createGraphicsPipeline();
     void createRenderPass();
-    void recordCommandBuffer(vk::raii::CommandBuffer& commandBuffer, uint32_t imageIndex);
+    void recordCommandBuffer(vk::raii::CommandBuffer& commandBuffer,
+                             uint32_t imageIndex);
     void drawFrame();
     void recreateSwapChain();
 
@@ -60,4 +60,4 @@ private:
     bool frameBufferResized_{false};
 };
 
-}
+} // namespace myvk

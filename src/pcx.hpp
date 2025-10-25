@@ -1,18 +1,16 @@
 #pragma once
 
 #include <array>
-#include <cstdint>
 #include <cstddef>
-#include <vector>
+#include <cstdint>
 #include <memory>
+#include <vector>
 
 // https://www.fileformat.info/format/pcx/egff.htm
-class PCX
-{
+class PCX {
 public:
 #pragma pack(push, 1)
-    struct Header
-    {
+    struct Header {
         uint8_t identifier;
         uint8_t version;
         uint8_t encoding;
@@ -42,8 +40,7 @@ public:
         Color(uint8_t _r, uint8_t _g, uint8_t _b)
             : r(_r)
             , g(_g)
-            , b(_b)
-        {}
+            , b(_b) {}
     };
 
     PCX() = default;

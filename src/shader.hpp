@@ -11,12 +11,11 @@
 #include <cassert>
 #include <filesystem>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <string_view>
-#include <sstream>
 
-class Shader
-{
+class Shader {
 public:
     Shader() = default;
     ~Shader();
@@ -36,19 +35,21 @@ public:
     GLuint program() const { return program_; }
     void use() const { glUseProgram(program()); }
 
-    void set_uniform_block_binding(gsl::not_null<char const *> block, GLuint binding_point);
+    void set_uniform_block_binding(gsl::not_null<char const*> block,
+                                   GLuint binding_point);
 
-    GLint uniform_location(gsl::not_null<GLchar const *> name) const;
-    GLint uniform_location(std::string const& name) const 
-    { 
-        return uniform_location(gsl::not_null<GLchar const*>(name.c_str())); 
+    GLint uniform_location(gsl::not_null<GLchar const*> name) const;
+    GLint uniform_location(std::string const& name) const {
+        return uniform_location(gsl::not_null<GLchar const*>(name.c_str()));
     }
 
     // maybe cache some of these
     GLint model_location() const { return uniform_location("model"); }
     GLint view_location() const { return uniform_location("view"); }
     GLint projection_location() const { return uniform_location("projection"); }
-    GLint camera_position_location() const { return uniform_location("cameraPos"); }
+    GLint camera_position_location() const {
+        return uniform_location("cameraPos");
+    }
 
     // type specific implementations
     void set_uniform(GLint location, glm::vec3 const& v);
@@ -61,44 +62,38 @@ public:
     void set_uniform(GLint location, GLfloat f);
 
     template <typename T>
-    void set_uniform(gsl::not_null<GLchar const *> name, T const& t)
-    {
+    void set_uniform(gsl::not_null<GLchar const*> name, T const& t) {
         set_uniform(uniform_location(name), t);
     }
 
     template <typename T>
-    void set_uniform(std::string const& name, T const& t)
-    {
+    void set_uniform(std::string const& name, T const& t) {
         set_uniform(uniform_location(name), t);
     }
 
     template <std::size_t N>
-    void set_uniform(GLint location, std::array<GLint, N> const& a)
-    {
+    void set_uniform(GLint location, std::array<GLint, N> const& a) {
         glUniform1iv(location, N, a.data());
     }
 
     template <std::size_t N>
-    void set_uniform(GLint location, std::array<GLfloat, N> const& a)
-    {
+    void set_uniform(GLint location, std::array<GLfloat, N> const& a) {
         glUniform1fv(location, N, a.data());
     }
 
     template <std::size_t N>
-    void set_uniform(GLint location, std::array<glm::vec2, N> const& a)
-    {
+    void set_uniform(GLint location, std::array<glm::vec2, N> const& a) {
         glUniform2fv(location, N, &a[0][0]);
     }
 
     template <std::size_t N>
-    void set_uniform(GLint location, std::array<glm::vec3, N> const& a)
-    {
+    void set_uniform(GLint location, std::array<glm::vec3, N> const& a) {
         glUniform3fv(location, N, &a[0][0]);
     }
 
     template <std::size_t N>
-    void set_uniform(gsl::not_null<GLchar const *> name, std::array<glm::mat4, N> const& a)
-    {
+    void set_uniform(gsl::not_null<GLchar const*> name,
+                     std::array<glm::mat4, N> const& a) {
         // do we need to set each element indvidually? seems slow
         for (size_t i = 0; i < a.size(); ++i) {
             std::ostringstream oss;
@@ -111,19 +106,24 @@ public:
     // ergonomic helpers
     void set_model(glm::mat4 const& m) { set_uniform(model_location(), m); }
     void set_view(glm::mat4 const& m) { set_uniform(view_location(), m); }
-    void set_projection(glm::mat4 const& m) { set_uniform(projection_location(), m); }
-    void set_view_position(glm::vec3 const& v) { set_uniform(camera_position_location(), v); }
+    void set_projection(glm::mat4 const& m) {
+        set_uniform(projection_location(), m);
+    }
+    void set_view_position(glm::vec3 const& v) {
+        set_uniform(camera_position_location(), v);
+    }
 
 private:
-    [[nodiscard]] bool init(std::filesystem::path const& vertex,
-                            std::filesystem::path const& fragment,
-                            std::optional<std::filesystem::path> const& geometry = {});
-    [[nodiscard]] bool compile_shader(GLenum shader_type, std::filesystem::path const& path, GLuint& handle);
+    [[nodiscard]] bool
+    init(std::filesystem::path const& vertex,
+         std::filesystem::path const& fragment,
+         std::optional<std::filesystem::path> const& geometry = {});
+    [[nodiscard]] bool compile_shader(GLenum shader_type,
+                                      std::filesystem::path const& path,
+                                      GLuint& handle);
     [[nodiscard]] bool link_program();
     void cleanup();
-    
 
 private:
     GLuint program_;
 };
-

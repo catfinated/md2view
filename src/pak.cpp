@@ -1,7 +1,7 @@
 #include "pak.hpp"
 
-#include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
 #include <gsl/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 
@@ -10,15 +10,13 @@
 #include <vector>
 
 #pragma pack(push, 1)
-struct Header
-{
+struct Header {
     std::array<char, 4> id;
     int32_t dirofs;
     int32_t dirlen;
 };
 
-struct Entry
-{
+struct Entry {
     std::array<char, 56> name;
     int32_t filepos;
     int32_t filelen;
@@ -29,15 +27,13 @@ static_assert(sizeof(Header) == 12, "unexpected PackHeader size");
 static_assert(sizeof(Entry) == 64, "unexpected PackFile size");
 
 PAK::PAK(std::filesystem::path fpath)
-    : fpath_(std::move(fpath))
-{
+    : fpath_(std::move(fpath)) {
     if (!init()) {
         throw std::runtime_error("failed to load PAK file");
     }
 }
 
-bool PAK::init()
-{
+bool PAK::init() {
     if (!std::filesystem::exists(fpath_)) {
         spdlog::error("'{}' does not exist!", fpath_.string());
         return false;
@@ -50,9 +46,9 @@ bool PAK::init()
     return true;
 }
 
-void PAK::init_from_directory()
-{
-    for (auto const& dir_entry : std::filesystem::recursive_directory_iterator(fpath_ )) {
+void PAK::init_from_directory() {
+    for (auto const& dir_entry :
+         std::filesystem::recursive_directory_iterator(fpath_)) {
         if (std::filesystem::is_regular_file(dir_entry.path())) {
             auto path = dir_entry.path().lexically_relative(fpath_).string();
             std::replace(path.begin(), path.end(), '\\', '/');
@@ -67,8 +63,7 @@ void PAK::init_from_directory()
     }
 }
 
-bool PAK::init_from_file()
-{
+bool PAK::init_from_file() {
     std::ifstream inf(fpath_, std::ios_base::in | std::ios_base::binary);
 
     if (!inf) {
@@ -77,15 +72,10 @@ bool PAK::init_from_file()
     }
 
     Header hdr;
-    inf.read(reinterpret_cast<char *>(&hdr), sizeof(hdr));
+    inf.read(reinterpret_cast<char*>(&hdr), sizeof(hdr));
 
-    spdlog::info("{}{}{}{} {} {}", 
-        hdr.id[0],
-        hdr.id[1],
-        hdr.id[2],
-        hdr.id[3],
-        hdr.dirofs,
-        hdr.dirlen);
+    spdlog::info("{}{}{}{} {} {}", hdr.id[0], hdr.id[1], hdr.id[2], hdr.id[3],
+                 hdr.dirofs, hdr.dirlen);
 
     std::string magic(hdr.id.data(), hdr.id.size());
 
@@ -96,27 +86,21 @@ bool PAK::init_from_file()
     // TODO: ensure dirofs/dirlen converted from little endian to host
     auto num_entries = static_cast<size_t>(hdr.dirlen) / sizeof(Entry);
 
-    spdlog::info("loaded pak file: {} {} {} {}", 
-        fpath_.string(),
-        hdr.dirofs,
-        hdr.dirlen,
-        num_entries);
+    spdlog::info("loaded pak file: {} {} {} {}", fpath_.string(), hdr.dirofs,
+                 hdr.dirlen, num_entries);
 
     inf.seekg(hdr.dirofs);
 
-    for (size_t i = 0; i < num_entries; ++ i) {
+    for (size_t i = 0; i < num_entries; ++i) {
         gsl_Assert(inf);
         Entry entry;
-        inf.read(reinterpret_cast<char *>(&entry), sizeof(entry));
+        inf.read(reinterpret_cast<char*>(&entry), sizeof(entry));
         // TODO: ensure filepos/filelen converted from little endian to host
 
         auto const fullname = std::string(entry.name.data());
         auto const path = std::filesystem::path(fullname);
 
-        spdlog::debug("file: {} {} {}",
-            fullname,
-            entry.filepos,
-            entry.filelen);
+        spdlog::debug("file: {} {} {}", fullname, entry.filepos, entry.filelen);
 
         Node node;
         node.name = path.stem().string();
@@ -128,8 +112,7 @@ bool PAK::init_from_file()
     return true;
 }
 
-std::ifstream PAK::open_ifstream(std::filesystem::path const& filename) const
-{
+std::ifstream PAK::open_ifstream(std::filesystem::path const& filename) const {
     auto const flags = std::ios_base::in | std::ios_base::binary;
 
     if (!is_directory()) {
@@ -143,4 +126,3 @@ std::ifstream PAK::open_ifstream(std::filesystem::path const& filename) const
     spdlog::info("open file {}", p.string());
     return {p, flags};
 }
-

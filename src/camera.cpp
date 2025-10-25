@@ -15,13 +15,11 @@ Camera::Camera(glm::vec3 const& position,
     , pitch_(pitch)
     , movement_speed_(3.0f)
     , mouse_sensitivity_(0.25)
-    , fov_(FOV)
-{
+    , fov_(FOV) {
     update_vectors();
 }
 
-void Camera::reset(glm::vec3 const& position)
-{
+void Camera::reset(glm::vec3 const& position) {
     position_ = position;
     front_ = glm::vec3(0.0f, 0.0f, -1.0f);
     world_up_ = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -32,13 +30,11 @@ void Camera::reset(glm::vec3 const& position)
     update_vectors();
 }
 
-glm::mat4 Camera::view_matrix() const
-{
+glm::mat4 Camera::view_matrix() const {
     return glm::lookAt(position_, position_ + front_, up_);
 }
 
-void Camera::move(Direction direction, float delta_time)
-{
+void Camera::move(Direction direction, float delta_time) {
     float velocity = movement_speed_ * delta_time;
 
     switch (direction) {
@@ -61,8 +57,9 @@ void Camera::move(Direction direction, float delta_time)
     view_dirty_ = true;
 }
 
-void Camera::on_mouse_movement(float xoffset, float yoffset, bool constrain_pitch)
-{
+void Camera::on_mouse_movement(float xoffset,
+                               float yoffset,
+                               bool constrain_pitch) {
     xoffset *= mouse_sensitivity_;
     yoffset *= mouse_sensitivity_;
 
@@ -76,8 +73,7 @@ void Camera::on_mouse_movement(float xoffset, float yoffset, bool constrain_pitc
     update_vectors();
 }
 
-void Camera::on_mouse_scroll(double, double yoffset)
-{
+void Camera::on_mouse_scroll(double, double yoffset) {
     if (fov_ >= 1.0f && fov_ <= 45.0f) {
         fov_ -= yoffset;
     }
@@ -86,8 +82,7 @@ void Camera::on_mouse_scroll(double, double yoffset)
     fov_dirty_ = true;
 }
 
-void Camera::update_vectors()
-{
+void Camera::update_vectors() {
     glm::vec3 front;
     front.x = cos(glm::radians(pitch_)) * cos(glm::radians(yaw_));
     front.y = sin(glm::radians(pitch_));
@@ -98,15 +93,20 @@ void Camera::update_vectors()
     view_dirty_ = true;
 }
 
-void Camera::draw_ui()
-{
-    ImGui::InputFloat3("Position", glm::value_ptr(position_), "%.3f", ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat3("Front", glm::value_ptr(front_), "%.3f", ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat3("Up", glm::value_ptr(up_), "%.3f", ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat3("Right", glm::value_ptr(right_), "%.3f", ImGuiInputTextFlags_ReadOnly);
+void Camera::draw_ui() {
+    ImGui::InputFloat3("Position", glm::value_ptr(position_), "%.3f",
+                       ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputFloat3("Front", glm::value_ptr(front_), "%.3f",
+                       ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputFloat3("Up", glm::value_ptr(up_), "%.3f",
+                       ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputFloat3("Right", glm::value_ptr(right_), "%.3f",
+                       ImGuiInputTextFlags_ReadOnly);
     if (ImGui::SliderFloat("fov", &fov_, 1.0f, 60.0f)) {
         fov_dirty_ = true;
     }
-    ImGui::InputFloat("Pitch", &pitch_, 0.0, 0.0, "%.3f", ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat("Yaw", &yaw_, 0.0, 0.0, "%.3f", ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputFloat("Pitch", &pitch_, 0.0, 0.0, "%.3f",
+                      ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputFloat("Yaw", &yaw_, 0.0, 0.0, "%.3f",
+                      ImGuiInputTextFlags_ReadOnly);
 }

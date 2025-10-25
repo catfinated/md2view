@@ -2,8 +2,7 @@
 
 #include <spdlog/spdlog.h>
 
-int main(int argc, char const * argv[])
-{
+int main(int argc, char const* argv[]) {
     myvk::VKEngine engine;
     engine.init(argc, argv);
     try {

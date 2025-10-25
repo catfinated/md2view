@@ -6,8 +6,7 @@
 
 class Shader;
 
-class ScreenQuad
-{
+class ScreenQuad {
 public:
     ScreenQuad();
     ~ScreenQuad();
@@ -25,4 +24,3 @@ private:
     GLuint vbo_;
     static std::array<GLfloat, 24> vertices_;
 };
-

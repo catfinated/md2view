@@ -5,14 +5,13 @@
 #include <array>
 #include <cassert>
 #include <cstring>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 
-PCX::PCX(std::istream& ds)
-{
+PCX::PCX(std::istream& ds) {
     auto header_ptr = std::addressof(header_);
     memset(header_ptr, 0, sizeof(header_));
-    ds.read(reinterpret_cast<char *>(header_ptr), sizeof(header_));
+    ds.read(reinterpret_cast<char*>(header_ptr), sizeof(header_));
 
     auto width = header_.xend - header_.xstart + 1;
     auto length = header_.yend - header_.ystart + 1;
@@ -45,8 +44,7 @@ PCX::PCX(std::istream& ds)
     }
 }
 
-PCX::ScanLine PCX::read_scan_line(std::istream& ds, int32_t length)
-{
+PCX::ScanLine PCX::read_scan_line(std::istream& ds, int32_t length) {
     ScanLine scan_line;
     scan_line.resize(static_cast<size_t>(length));
 
@@ -60,11 +58,10 @@ PCX::ScanLine PCX::read_scan_line(std::istream& ds, int32_t length)
         ds.read((char*)&byte, 1);
 
         if ((byte & 0xc0) == 0xc0) {
-            runcount = byte  & 0x3f;
+            runcount = byte & 0x3f;
             ds.read((char*)&byte, 1);
             runvalue = byte;
-        }
-        else {
+        } else {
             runcount = 1;
             runvalue = byte;
         }
@@ -79,8 +76,7 @@ PCX::ScanLine PCX::read_scan_line(std::istream& ds, int32_t length)
     return scan_line;
 }
 
-std::vector<PCX::Color> PCX::read_palette(std::istream& ds)
-{
+std::vector<PCX::Color> PCX::read_palette(std::istream& ds) {
     std::vector<PCX::Color> colors;
 
     if (ds.eof()) {
@@ -88,11 +84,11 @@ std::vector<PCX::Color> PCX::read_palette(std::istream& ds)
     }
 
     uint8_t byte;
-    ds.read(reinterpret_cast<char *>(&byte), 1);
+    ds.read(reinterpret_cast<char*>(&byte), 1);
 
     while (!ds.eof()) {
         std::array<uint8_t, 3> rgb;
-        ds.read(reinterpret_cast<char *>(rgb.data()), 3);
+        ds.read(reinterpret_cast<char*>(rgb.data()), 3);
         colors.emplace_back(rgb[0], rgb[1], rgb[2]);
     }
 
@@ -100,8 +96,7 @@ std::vector<PCX::Color> PCX::read_palette(std::istream& ds)
 }
 
 template <size_t N>
-std::ostream& operator<<(std::ostream& os, std::array<uint8_t, N> const& ary)
-{
+std::ostream& operator<<(std::ostream& os, std::array<uint8_t, N> const& ary) {
     constexpr auto cols_per_line = 8u;
     auto col = 0u;
 
@@ -120,26 +115,21 @@ std::ostream& operator<<(std::ostream& os, std::array<uint8_t, N> const& ary)
     return os;
 }
 
-std::ostream& operator<<(std::ostream& os, PCX::Header const& hdr)
-{
+std::ostream& operator<<(std::ostream& os, PCX::Header const& hdr) {
     os << "identifier:\t " << static_cast<uint32_t>(hdr.identifier)
        << "\nversion:\t" << static_cast<uint32_t>(hdr.version)
        << "\nencoding:\t" << static_cast<uint32_t>(hdr.encoding)
        << "\nbits per pixel:\t" << static_cast<uint32_t>(hdr.bits_per_pixel)
-       << "\nxstart:\t" << hdr.xstart
-       << "\nystart:\t" << hdr.ystart
-       << "\nxend:\t" << hdr.xend
-       << "\nyend:\t" << hdr.yend
-       << "\nhorzres:\t" << hdr.horzres
-       << "\nvertres:\t" << hdr.vertres
-       << "\npalette:\n" << hdr.palette
-       << "\nreserved1:\t" << static_cast<uint32_t>(hdr.reserved1)
-       << "\nnum bit planes:\t" << static_cast<uint32_t>(hdr.num_bit_planes)
-       << "\nbytes per line:\t" << hdr.bytes_per_line
-       << "\npalette type:\t" << hdr.palette_type
+       << "\nxstart:\t" << hdr.xstart << "\nystart:\t" << hdr.ystart
+       << "\nxend:\t" << hdr.xend << "\nyend:\t" << hdr.yend << "\nhorzres:\t"
+       << hdr.horzres << "\nvertres:\t" << hdr.vertres << "\npalette:\n"
+       << hdr.palette << "\nreserved1:\t"
+       << static_cast<uint32_t>(hdr.reserved1) << "\nnum bit planes:\t"
+       << static_cast<uint32_t>(hdr.num_bit_planes) << "\nbytes per line:\t"
+       << hdr.bytes_per_line << "\npalette type:\t" << hdr.palette_type
        << "\nhorz screen size:\t" << hdr.horz_screen_size
-       << "\nvert screensize:\t" << hdr.vert_screen_size
-       << "\nreserved2:\n" << hdr.reserved2;
+       << "\nvert screensize:\t" << hdr.vert_screen_size << "\nreserved2:\n"
+       << hdr.reserved2;
 
     return os;
 }

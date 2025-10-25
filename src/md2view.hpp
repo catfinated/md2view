@@ -1,21 +1,20 @@
 #pragma once
 
 #include "camera.hpp"
+#include "frame_buffer.hpp"
 #include "md2.hpp"
 #include "model_selector.hpp"
-#include "frame_buffer.hpp"
 #include "screen_quad.hpp"
 #include "texture2D.hpp"
 
 #include <glm/glm.hpp>
 
-#include <string>
 #include <memory>
+#include <string>
 
 class Engine;
 
-class MD2View
-{
+class MD2View {
 public:
     MD2View();
 
@@ -26,7 +25,7 @@ public:
     void on_framebuffer_resized(int, int);
     void update(Engine& engine, GLfloat delta_time);
     void render(Engine& engine);
-    char const * title() const { return "MD2View"; }
+    char const* title() const { return "MD2View"; }
 
 private:
     void reset_camera();

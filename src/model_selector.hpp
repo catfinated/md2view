@@ -7,14 +7,12 @@
 
 class PAK;
 
-class ModelSelector
-{
+class ModelSelector {
 public:
     ModelSelector(PAK const& pak)
-      : mt_(std::random_device{}())
-      {
+        : mt_(std::random_device{}()) {
         init(pak);
-      }
+    }
 
     ModelSelector(ModelSelector const&) = delete;
     ModelSelector& operator=(ModelSelector const&) = delete;

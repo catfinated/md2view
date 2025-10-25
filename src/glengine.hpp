@@ -4,13 +4,11 @@
 
 #include <GLFW/glfw3.h>
 
-template <typename Game>
-class GLEngine : public Engine
-{
+template <typename Game> class GLEngine : public Engine {
 public:
     GLEngine() = default;
 
-    bool init(gsl::span<char const *> args);
+    bool init(gsl::span<char const*> args);
     void run_game();
 
 protected:
@@ -26,10 +24,9 @@ protected:
 
 private:
     Game game_;
-    GLFWwindow * window_;
+    GLFWwindow* window_;
     std::unique_ptr<Gui> gui_;
     GLfloat delta_time_ = 0.0f;
     GLfloat last_frame_ = 0.0f;
     bool input_goes_to_game_ = false;
 };
-

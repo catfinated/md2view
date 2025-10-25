@@ -9,48 +9,45 @@
 
 #include <cstdint>
 #include <filesystem>
+#include <optional>
 #include <set>
 #include <stdexcept>
-#include <optional>
 #include <utility>
 #include <vector>
 
 namespace myvk {
 
-class Window 
-{
+class Window {
 public:
-    Window(GLFWwindow * window = nullptr) noexcept;
+    Window(GLFWwindow* window = nullptr) noexcept;
     ~Window() noexcept;
 
     Window(Window const&) = delete;
     Window& operator=(Window const&) = delete;
 
     Window(Window&& rhs) noexcept
-        : window_(std::exchange(rhs.window_, nullptr))
-    {}
+        : window_(std::exchange(rhs.window_, nullptr)) {}
 
     Window& operator=(Window&& rhs) noexcept;
 
-    [[nodiscard]] bool shouldClose() const noexcept 
-    {
+    [[nodiscard]] bool shouldClose() const noexcept {
         return glfwWindowShouldClose(window_) > 0;
     }
 
-    [[nodiscard]] GLFWwindow * get() const noexcept { return window_; }
+    [[nodiscard]] GLFWwindow* get() const noexcept { return window_; }
 
-    static tl::expected<Window, std::runtime_error> create(int width, int height) noexcept;
+    static tl::expected<Window, std::runtime_error> create(int width,
+                                                           int height) noexcept;
 
 private:
-    GLFWwindow * window_;
+    GLFWwindow* window_;
 };
 
 struct QueueFamilyIndices {
     std::optional<uint32_t> graphicsFamily;
     std::optional<uint32_t> presentFamily;
 
-    [[nodiscard]] bool isComplete() const noexcept
-    {
+    [[nodiscard]] bool isComplete() const noexcept {
         return graphicsFamily.has_value() && presentFamily.has_value();
     }
 };
@@ -64,47 +61,60 @@ struct SwapChainSupportDetails {
     vk::Extent2D extent;
 };
 
-[[nodiscard]] SwapChainSupportDetails querySwapChainSupport(vk::PhysicalDevice, vk::SurfaceKHR const& surface) noexcept;
+[[nodiscard]] SwapChainSupportDetails
+querySwapChainSupport(vk::PhysicalDevice,
+                      vk::SurfaceKHR const& surface) noexcept;
 
-tl::expected<vk::raii::Instance, std::runtime_error> createInstance(vk::raii::Context&) noexcept;
+tl::expected<vk::raii::Instance, std::runtime_error>
+createInstance(vk::raii::Context&) noexcept;
 
-tl::expected<vk::raii::DebugUtilsMessengerEXT, std::runtime_error> createDebugUtilsMessenger(vk::raii::Instance&) noexcept;
+tl::expected<vk::raii::DebugUtilsMessengerEXT, std::runtime_error>
+createDebugUtilsMessenger(vk::raii::Instance&) noexcept;
 
-tl::expected<vk::raii::SurfaceKHR, std::runtime_error> createSurface(vk::raii::Instance&, Window const&) noexcept;
+tl::expected<vk::raii::SurfaceKHR, std::runtime_error>
+createSurface(vk::raii::Instance&, Window const&) noexcept;
 
-tl::expected<std::pair<vk::raii::PhysicalDevice, QueueFamilyIndices>, std::runtime_error> 
-    pickPhysicalDevice(vk::raii::Instance&, vk::SurfaceKHR const&) noexcept;
+tl::expected<std::pair<vk::raii::PhysicalDevice, QueueFamilyIndices>,
+             std::runtime_error>
+pickPhysicalDevice(vk::raii::Instance&, vk::SurfaceKHR const&) noexcept;
 
-tl::expected<vk::raii::Device, std::runtime_error> 
-    createDevice(vk::raii::PhysicalDevice const& physicalDevice, QueueFamilyIndices const&) noexcept;
+tl::expected<vk::raii::Device, std::runtime_error>
+createDevice(vk::raii::PhysicalDevice const& physicalDevice,
+             QueueFamilyIndices const&) noexcept;
 
 tl::expected<std::vector<vk::raii::Semaphore>, std::runtime_error>
-    createSemaphores(vk::raii::Device const& device, unsigned int numSemaphores) noexcept;
+createSemaphores(vk::raii::Device const& device,
+                 unsigned int numSemaphores) noexcept;
 
 tl::expected<std::vector<vk::raii::Fence>, std::runtime_error>
-    createFences(vk::raii::Device const& device, unsigned int numFences) noexcept;
+createFences(vk::raii::Device const& device, unsigned int numFences) noexcept;
 
-tl::expected<vk::raii::CommandPool, std::runtime_error> 
-    createCommandPool(vk::raii::Device const& device, QueueFamilyIndices const& indices) noexcept;
+tl::expected<vk::raii::CommandPool, std::runtime_error>
+createCommandPool(vk::raii::Device const& device,
+                  QueueFamilyIndices const& indices) noexcept;
 
-tl::expected<std::pair<vk::raii::SwapchainKHR, SwapChainSupportDetails>, std::runtime_error>
-    createSwapChain(vk::raii::PhysicalDevice const& physicalDevice, 
-                    vk::raii::Device const& device, 
-                    Window const& window, 
-                    vk::SurfaceKHR const& surface,
-                    QueueFamilyIndices const& queueFamilyIndices) noexcept;
+tl::expected<std::pair<vk::raii::SwapchainKHR, SwapChainSupportDetails>,
+             std::runtime_error>
+createSwapChain(vk::raii::PhysicalDevice const& physicalDevice,
+                vk::raii::Device const& device,
+                Window const& window,
+                vk::SurfaceKHR const& surface,
+                QueueFamilyIndices const& queueFamilyIndices) noexcept;
 
- tl::expected<std::vector<vk::raii::ImageView>, std::runtime_error> 
-    createImageViews(vk::raii::Device const& device, std::vector<vk::Image>& images, SwapChainSupportDetails const& support);
+tl::expected<std::vector<vk::raii::ImageView>, std::runtime_error>
+createImageViews(vk::raii::Device const& device,
+                 std::vector<vk::Image>& images,
+                 SwapChainSupportDetails const& support);
 
-tl::expected<vk::raii::ShaderModule, std::runtime_error> 
-    createShaderModule(std::filesystem::path const& path, vk::raii::Device const& device) noexcept;
+tl::expected<vk::raii::ShaderModule, std::runtime_error>
+createShaderModule(std::filesystem::path const& path,
+                   vk::raii::Device const& device) noexcept;
 
 tl::expected<std::vector<vk::raii::Framebuffer>, std::runtime_error>
-    createFrameBuffers(std::vector<vk::raii::ImageView> const& imageViews, 
-           vk::raii::RenderPass const& renderPass, 
-           vk::Extent2D swapChainExtent,
-           vk::raii::Device const& device) noexcept;
+createFrameBuffers(std::vector<vk::raii::ImageView> const& imageViews,
+                   vk::raii::RenderPass const& renderPass,
+                   vk::Extent2D swapChainExtent,
+                   vk::raii::Device const& device) noexcept;
 
 struct Vertex {
     glm::vec2 pos;
@@ -118,8 +128,10 @@ struct Vertex {
         return bindingDescription;
     }
 
-    static std::array<vk::VertexInputAttributeDescription, 2> getAttributeDescriptions() {
-        std::array<vk::VertexInputAttributeDescription, 2> attributeDescriptions{};
+    static std::array<vk::VertexInputAttributeDescription, 2>
+    getAttributeDescriptions() {
+        std::array<vk::VertexInputAttributeDescription, 2>
+            attributeDescriptions{};
         attributeDescriptions[0].binding = 0;
         attributeDescriptions[0].location = 0;
         attributeDescriptions[0].format = vk::Format::eR32G32Sfloat;
@@ -132,12 +144,18 @@ struct Vertex {
     }
 };
 
-tl::expected<vk::raii::Buffer, std::runtime_error> 
-    createVertexBuffer(vk::raii::Device const& device, std::size_t bufSize) noexcept;
+tl::expected<vk::raii::Buffer, std::runtime_error>
+createVertexBuffer(vk::raii::Device const& device,
+                   std::size_t bufSize) noexcept;
 
-[[nodiscard]] uint32_t findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties, vk::raii::PhysicalDevice const& physicalDevice);
+[[nodiscard]] uint32_t
+findMemoryType(uint32_t typeFilter,
+               vk::MemoryPropertyFlags properties,
+               vk::raii::PhysicalDevice const& physicalDevice);
 
-vk::raii::DeviceMemory allocateVertexBufferMemory(vk::raii::Device const& device, vk::raii::Buffer const& vbuffer, vk::raii::PhysicalDevice const& physicalDevice);
+vk::raii::DeviceMemory
+allocateVertexBufferMemory(vk::raii::Device const& device,
+                           vk::raii::Buffer const& vbuffer,
+                           vk::raii::PhysicalDevice const& physicalDevice);
 
-} // namespace vk 
-
+} // namespace myvk
