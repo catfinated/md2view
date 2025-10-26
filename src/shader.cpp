@@ -143,11 +143,11 @@ bool Shader::link_program() {
     return true;
 }
 
-GLint Shader::uniform_location(gsl::not_null<GLchar const*> name) const {
+GLint Shader::uniform_location(gsl_lite::not_null<GLchar const*> name) const {
     return glGetUniformLocation(program(), name);
 }
 
-void Shader::set_uniform_block_binding(gsl::not_null<char const*> block,
+void Shader::set_uniform_block_binding(gsl_lite::not_null<char const*> block,
                                        GLuint binding_point) {
     GLuint index = glGetUniformBlockIndex(program(), block);
     glUniformBlockBinding(program(), index, binding_point);

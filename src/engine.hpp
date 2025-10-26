@@ -4,11 +4,11 @@
 #include "resource_manager.hpp"
 
 #include <boost/program_options.hpp>
-#include <gsl/gsl-lite.hpp>
 
 #include <bitset>
 #include <memory>
 #include <random>
+#include <span>
 
 class Engine {
 public:
@@ -51,7 +51,7 @@ public:
     Mouse const& mouse() const { return mouse_; }
 
 protected:
-    bool parse_args(gsl::span<char const*> args);
+    bool parse_args(std::span<char const*> args);
 
     int width_;
     int height_;

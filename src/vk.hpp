@@ -2,7 +2,7 @@
 
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
-#include <gsl/gsl-lite.hpp>
+#include <gsl-lite/gsl-lite.hpp>
 #include <tl/expected.hpp>
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_raii.hpp>

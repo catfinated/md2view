@@ -2,7 +2,7 @@
 #include "pak.hpp"
 #include "pcx.hpp"
 
-#include <gsl/gsl-lite.hpp>
+#include <gsl-lite/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -12,7 +12,7 @@
 
 Texture2D::Texture2D(GLuint width,
                      GLuint height,
-                     gsl::span<unsigned char const> data,
+                     std::span<unsigned char const> data,
                      bool alpha) {
     if (!init(width, height, data, alpha)) {
         throw std::runtime_error("failed to init Texture2D");
@@ -49,7 +49,7 @@ void Texture2D::cleanup() {
 
 bool Texture2D::init(GLuint width,
                      GLuint height,
-                     gsl::span<unsigned char const> data,
+                     std::span<unsigned char const> data,
                      bool alpha) {
     glGenTextures(1, &id_);
 
@@ -96,7 +96,7 @@ std::shared_ptr<Texture2D> Texture2D::load(PAK const& pak,
         gsl_Assert(inf.is_open());
         PCX pcx(inf);
         return std::make_shared<Texture2D>(pcx.width(), pcx.height(),
-                                           gsl::make_span(pcx.image()));
+                                           std::span{pcx.image()});
     }
 
     auto const abspath = (pak.fpath() / path).make_preferred();
@@ -106,7 +106,7 @@ std::shared_ptr<Texture2D> Texture2D::load(PAK const& pak,
         stbi_load(abspath.string().c_str(), &width, &height, &n, 3);
     gsl_Assert(image);
     auto texture = std::make_shared<Texture2D>(
-        width, height, gsl::make_span(image, width * height));
+        width, height, std::span{image, static_cast<size_t>(width * height)});
     spdlog::info("loaded 2D texture {} width: {} height: {}", path, width,
                  height);
     stbi_image_free(image);

@@ -4,7 +4,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <gsl/gsl-lite.hpp>
+#include <gsl-lite/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 
 #include <array>
@@ -35,12 +35,12 @@ public:
     GLuint program() const { return program_; }
     void use() const { glUseProgram(program()); }
 
-    void set_uniform_block_binding(gsl::not_null<char const*> block,
+    void set_uniform_block_binding(gsl_lite::not_null<char const*> block,
                                    GLuint binding_point);
 
-    GLint uniform_location(gsl::not_null<GLchar const*> name) const;
+    GLint uniform_location(gsl_lite::not_null<GLchar const*> name) const;
     GLint uniform_location(std::string const& name) const {
-        return uniform_location(gsl::not_null<GLchar const*>(name.c_str()));
+        return uniform_location(gsl_lite::not_null<GLchar const*>(name.c_str()));
     }
 
     // maybe cache some of these
@@ -62,7 +62,7 @@ public:
     void set_uniform(GLint location, GLfloat f);
 
     template <typename T>
-    void set_uniform(gsl::not_null<GLchar const*> name, T const& t) {
+    void set_uniform(gsl_lite::not_null<GLchar const*> name, T const& t) {
         set_uniform(uniform_location(name), t);
     }
 
@@ -92,7 +92,7 @@ public:
     }
 
     template <std::size_t N>
-    void set_uniform(gsl::not_null<GLchar const*> name,
+    void set_uniform(gsl_lite::not_null<GLchar const*> name,
                      std::array<glm::mat4, N> const& a) {
         // do we need to set each element indvidually? seems slow
         for (size_t i = 0; i < a.size(); ++i) {

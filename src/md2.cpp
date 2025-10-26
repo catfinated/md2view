@@ -4,13 +4,14 @@
 
 #include <fmt/ostream.h>
 #include <glm/gtx/compatibility.hpp>
-#include <gsl/gsl-lite.hpp>
+#include <gsl-lite/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 
 #include <cctype>
 #include <filesystem>
 #include <fstream>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 template <> struct fmt::formatter<MD2::Header> : ostream_formatter {};
@@ -40,7 +41,7 @@ MD2::MD2(std::string const& filename, PAK const& pak) {
 
 MD2::~MD2() {
     glDeleteVertexArrays(1, &vao_);
-    glDeleteBuffers(2, vbo_);
+    glDeleteBuffers(2, vbo_.data());
 }
 
 bool MD2::load(PAK const& pf, std::string const& filename) {
@@ -280,7 +281,7 @@ bool MD2::load_frames(std::ifstream& infile, size_t offset) {
 
 void MD2::setup_buffers() {
     glGenVertexArrays(1, &vao_);
-    glGenBuffers(2, vbo_);
+    glGenBuffers(2, vbo_.data());
 
     glBindVertexArray(vao_);
     spdlog::debug("vertex buffers: {} {}", vbo_[0], vbo_[1]);
@@ -323,7 +324,7 @@ void MD2::set_animation(std::string const& id) {
 void MD2::set_animation(size_t index) {
     assert(index < animations_.size());
 
-    if (current_animation_index_ != static_cast<int32_t>(index)) {
+    if (std::cmp_not_equal(current_animation_index_, index)) {
         auto const& anim = animations_[index];
         next_frame_ = anim.start_frame;
         current_animation_index_ = index;

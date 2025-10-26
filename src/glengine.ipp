@@ -1,10 +1,12 @@
 #include "glengine.hpp"
 
-#include <gsl/gsl-lite.hpp>
+#include <gsl-lite/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 
+#include <utility>
+
 template <typename Game>
-bool GLEngine<Game>::init(gsl::span<char const*> args) {
+bool GLEngine<Game>::init(std::span<char const*> args) {
     if (!parse_args(args)) {
         return false;
     }
@@ -40,7 +42,7 @@ bool GLEngine<Game>::init(gsl::span<char const*> args) {
     auto key_callback = [](GLFWwindow* window, int key, int /* scancode */,
                            int action, int /* mode */) {
         using EngineType = GLEngine<Game>;
-        EngineType* engine =
+        auto* engine =
             static_cast<EngineType*>(glfwGetWindowUserPointer(window));
         gsl_Assert(engine);
         engine->key_callback(key, action);
@@ -50,7 +52,7 @@ bool GLEngine<Game>::init(gsl::span<char const*> args) {
 
     auto mouse_callback = [](GLFWwindow* window, double xpos, double ypos) {
         using EngineType = GLEngine<Game>;
-        EngineType* engine =
+        auto* engine =
             static_cast<EngineType*>(glfwGetWindowUserPointer(window));
         gsl_Assert(engine);
         engine->mouse_callback(xpos, ypos);
@@ -61,7 +63,7 @@ bool GLEngine<Game>::init(gsl::span<char const*> args) {
     auto scroll_callback = [](GLFWwindow* window, double xoffset,
                               double yoffset) {
         using EngineType = GLEngine<Game>;
-        EngineType* engine =
+        auto* engine =
             static_cast<EngineType*>(glfwGetWindowUserPointer(window));
         gsl_Assert(engine);
         engine->scroll_callback(xoffset, yoffset);
@@ -71,7 +73,7 @@ bool GLEngine<Game>::init(gsl::span<char const*> args) {
 
     auto win_resize_callback = [](GLFWwindow* window, int width, int height) {
         using EngineType = GLEngine<Game>;
-        EngineType* engine =
+        auto* engine =
             static_cast<EngineType*>(glfwGetWindowUserPointer(window));
         gsl_Assert(engine);
         engine->window_resize_callback(width, height);
@@ -81,7 +83,7 @@ bool GLEngine<Game>::init(gsl::span<char const*> args) {
 
     auto fb_resize_callback = [](GLFWwindow* window, int width, int height) {
         using EngineType = GLEngine<Game>;
-        EngineType* engine =
+        auto* engine =
             static_cast<EngineType*>(glfwGetWindowUserPointer(window));
         gsl_Assert(engine);
         engine->framebuffer_resize_callback(width, height);
@@ -113,7 +115,7 @@ bool GLEngine<Game>::init(gsl::span<char const*> args) {
     mouse_.xpos = width / 2.0;
     mouse_.ypos = height / 2.0;
 
-    gui_ = std::make_unique<Gui>(*this, gsl::not_null{window_});
+    gui_ = std::make_unique<Gui>(*this, gsl_lite::not_null{window_});
     glCheckError();
 
     return true;
@@ -157,11 +159,11 @@ void GLEngine<Game>::key_callback(int key, int action) {
         } else if (key == GLFW_KEY_F1) {
             input_goes_to_game_ = !input_goes_to_game_;
             spdlog::info("got F1. game input: {}", input_goes_to_game_);
-        } else if (key >= 0 && static_cast<size_t>(key) < max_keys) {
+        } else if (key >= 0 && std::cmp_less(key, max_keys)) {
             keys_[key] = true;
         }
     } else if (action == GLFW_RELEASE && key >= 0 &&
-               static_cast<size_t>(key) < max_keys) {
+               std::cmp_less(key, max_keys)) {
         keys_[key] = false;
         keys_pressed_[key] = false;
     }

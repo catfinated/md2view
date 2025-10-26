@@ -8,7 +8,7 @@ template <typename Game> class GLEngine : public Engine {
 public:
     GLEngine() = default;
 
-    bool init(gsl::span<char const*> args);
+    bool init(std::span<char const*> args);
     void run_game();
 
 protected:

@@ -2,10 +2,9 @@
 
 #include "gl.hpp"
 
-#include <gsl/gsl-lite.hpp>
-
 #include <memory>
 #include <string>
+#include <span>
 
 class PAK;
 
@@ -23,7 +22,7 @@ public:
     ~Texture2D();
     Texture2D(GLuint width,
               GLuint height,
-              gsl::span<unsigned char const> data,
+              std::span<unsigned char const> data,
               bool alpha = false);
 
     // non-copyable
@@ -51,7 +50,7 @@ private:
     void cleanup();
     [[nodiscard]] bool init(GLuint width,
                             GLuint height,
-                            gsl::span<unsigned char const> data,
+                            std::span<unsigned char const> data,
                             bool alpha);
 
 private:

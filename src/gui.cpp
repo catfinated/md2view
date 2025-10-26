@@ -3,10 +3,11 @@
 #include "shader.hpp"
 
 #include <array>
+#include <utility>
 
-Gui::Gui(Engine& engine, gsl::not_null<GLFWwindow*> window)
+Gui::Gui(Engine& engine, gsl_lite::not_null<GLFWwindow*> window)
     : engine_(engine)
-    , window_(window) {
+    , window_(std::move(window)) {
     init();
 }
 
@@ -40,7 +41,7 @@ void Gui::init() {
 
     glCheckError();
 
-    glGenBuffers(num_buffers, glbuffers_);
+    glGenBuffers(num_buffers, glbuffers_.data());
     glGenVertexArrays(1, std::addressof(vao_));
 
     glCheckError();
@@ -85,7 +86,7 @@ void Gui::init() {
                  GL_UNSIGNED_BYTE, pixels);
 
     // Store our identifier
-    io.Fonts->TexID = (void*)(intptr_t)font_texture_;
+    io.Fonts->TexID = (intptr_t)font_texture_;
 
     // Restore state
     glBindTexture(GL_TEXTURE_2D, last_texture);

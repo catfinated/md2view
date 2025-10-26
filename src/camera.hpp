@@ -48,8 +48,8 @@ private:
 
     float yaw_;
     float pitch_;
-    float movement_speed_;
-    float mouse_sensitivity_;
+    float movement_speed_{3.0f};
+    float mouse_sensitivity_{0.25};
     float fov_;
 
     bool view_dirty_ = true;

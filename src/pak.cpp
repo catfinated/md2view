@@ -2,7 +2,7 @@
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
-#include <gsl/gsl-lite.hpp>
+#include <gsl-lite/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 
 #include <algorithm>
@@ -51,7 +51,7 @@ void PAK::init_from_directory() {
          std::filesystem::recursive_directory_iterator(fpath_)) {
         if (std::filesystem::is_regular_file(dir_entry.path())) {
             auto path = dir_entry.path().lexically_relative(fpath_).string();
-            std::replace(path.begin(), path.end(), '\\', '/');
+            std::ranges::replace(path, '\\', '/');
             Node node;
             node.name = dir_entry.path().stem().string();
             node.path = path;

@@ -1,7 +1,7 @@
 #include "resource_manager.hpp"
 #include "pcx.hpp"
 
-#include <gsl/gsl-lite.hpp>
+#include <gsl-lite/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 
 #include <filesystem>

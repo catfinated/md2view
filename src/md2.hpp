@@ -17,6 +17,7 @@ http://tfc.duke.free.fr/old/models/md2.htm
 #include <iosfwd>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 class Shader;
@@ -90,8 +91,8 @@ public:
             , end_frame(-1)
             , loop(true) {}
 
-        explicit Animation(std::string const& id)
-            : name(id)
+        explicit Animation(std::string id)
+            : name(std::move(id))
             , start_frame(-1)
             , end_frame(-1)
             , loop(true) {}
@@ -101,9 +102,9 @@ public:
         std::string fpath;
         std::string name;
 
-        SkinData(std::string const& fp, std::string const& n)
-            : fpath(fp)
-            , name(n) {}
+        SkinData(std::string fp, std::string n)
+            : fpath(std::move(fp))
+            , name(std::move(n)) {}
     };
 
     MD2() = default;
@@ -172,7 +173,7 @@ private:
     std::vector<glm::vec3> interpolated_vertices_;
 
     GLuint vao_;
-    GLuint vbo_[2];
+    std::array<GLuint, 2> vbo_;
 
     // animation state
     int32_t current_animation_index_;

@@ -1,5 +1,7 @@
 #include "engine.hpp"
 
+#include <gsl-lite/gsl-lite.hpp>
+
 #include <iostream>
 
 bool Engine::check_key_pressed(unsigned int key) {
@@ -12,7 +14,7 @@ bool Engine::check_key_pressed(unsigned int key) {
     return false;
 }
 
-bool Engine::parse_args(gsl::span<char const*> args) {
+bool Engine::parse_args(std::span<char const*> args) {
     boost::program_options::options_description engine("Engine options");
     engine.add_options()("help,h", "Show this help message")(
         "width,W",

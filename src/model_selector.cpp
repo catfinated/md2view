@@ -1,7 +1,7 @@
 #include "model_selector.hpp"
 #include "pak.hpp"
 
-#include <gsl/gsl-lite.hpp>
+#include <gsl-lite/gsl-lite.hpp>
 #include <imgui.h>
 #include <spdlog/spdlog.h>
 

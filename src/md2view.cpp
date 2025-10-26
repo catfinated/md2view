@@ -2,7 +2,6 @@
 #include "engine.hpp"
 
 #include <glm/gtx/string_cast.hpp>
-#include <spdlog/fmt/std.h>
 #include <spdlog/spdlog.h>
 
 #include <algorithm>
@@ -34,8 +33,11 @@ void MD2View::load_current_texture(Engine& engine) {
 
 bool MD2View::on_engine_initialized(Engine& engine) {
     if (!engine.resource_manager().pak().has_models()) {
+        // NB: converting filesystem path to string in format arg
+        // to work-around clang-tidy issue from libfmt:
+        // implicit instantiation of undefined template 'fmt::detail::type_is_unformattable_for<std::filesystem::path, char>' [clang-diagnostic-error]
         spdlog::error("PAK '{}' has no MD2 models to view",
-                      engine.resource_manager().pak().fpath());
+                      engine.resource_manager().pak().fpath().string());
         return false;
     }
     // init objects which needed an opengl context to initialize
@@ -330,7 +332,7 @@ void MD2View::draw_ui(Engine& engine) {
         if (model_changed) {
             update_model();
         }
-        ImGui::Image(reinterpret_cast<void*>(std::uintptr_t(texture_->id())),
+        ImGui::Image(std::uintptr_t(texture_->id()),
                      ImVec2(texture_->width(), texture_->height()),
                      ImVec2(0, 0), ImVec2(1, 1), ImColor(255, 255, 255, 255),
                      ImColor(255, 255, 255, 128));
