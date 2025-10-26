@@ -1,6 +1,6 @@
-#include "gui.hpp"
-#include "engine.hpp"
-#include "shader.hpp"
+#include "md2view/gui.hpp"
+#include "md2view/engine.hpp"
+#include "md2view/shader.hpp"
 
 #include <array>
 #include <utility>

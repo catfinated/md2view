@@ -1,5 +1,5 @@
 #include "glengine.ipp"
-#include "md2view.hpp"
+#include "md2view/md2view.hpp"
 
 int main(int argc, char const* argv[]) {
     GLEngine<MD2View> engine;

@@ -1,4 +1,4 @@
-#include "shader.hpp"
+#include "md2view/shader.hpp"
 
 #include <array>
 #include <fstream>

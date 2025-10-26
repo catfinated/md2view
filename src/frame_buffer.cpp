@@ -1,4 +1,4 @@
-#include "frame_buffer.hpp"
+#include "md2view/frame_buffer.hpp"
 
 FrameBuffer::FrameBuffer(GLuint width,
                          GLuint height,

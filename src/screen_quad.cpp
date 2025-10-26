@@ -1,5 +1,5 @@
-#include "screen_quad.hpp"
-#include "shader.hpp"
+#include "md2view/screen_quad.hpp"
+#include "md2view/shader.hpp"
 
 std::array<GLfloat, 24> ScreenQuad::vertices_ = {
     {// Positions   // TexCoords

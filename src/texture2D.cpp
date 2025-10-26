@@ -1,6 +1,6 @@
-#include "texture2D.hpp"
-#include "pak.hpp"
-#include "pcx.hpp"
+#include "md2view/texture2D.hpp"
+#include "md2view/pak.hpp"
+#include "md2view/pcx.hpp"
 
 #include <gsl-lite/gsl-lite.hpp>
 #include <spdlog/spdlog.h>

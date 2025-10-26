@@ -1,4 +1,4 @@
-#include "pak.hpp"
+#include "md2view/pak.hpp"
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>

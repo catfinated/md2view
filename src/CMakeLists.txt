@@ -42,7 +42,7 @@ target_link_libraries(libmd2v PUBLIC
    range-v3::range-v3
 )
 
-target_include_directories(libmd2v PUBLIC ${OPENGL_INCLUDE_DIR} ${Stb_INCLUDE_DIR} ${TREEHH_INCLUDE_DIRS})
+target_include_directories(libmd2v PUBLIC ${OPENGL_INCLUDE_DIR} ${Stb_INCLUDE_DIR} ${TREEHH_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/include)
 
 target_compile_options(libmd2v
    PUBLIC -DGLM_ENABLE_EXPERIMENTAL -DGLEW_NO_GLU -DFMT_USE_USER_DEFINED_LITERALS=1

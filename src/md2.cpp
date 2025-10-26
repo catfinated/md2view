@@ -1,6 +1,6 @@
-#include "md2.hpp"
-#include "pak.hpp"
-#include "shader.hpp"
+#include "md2view/md2.hpp"
+#include "md2view/pak.hpp"
+#include "md2view/shader.hpp"
 
 #include <fmt/ostream.h>
 #include <glm/gtx/compatibility.hpp>

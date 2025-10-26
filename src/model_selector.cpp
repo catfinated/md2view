@@ -1,5 +1,5 @@
-#include "model_selector.hpp"
-#include "pak.hpp"
+#include "md2view/model_selector.hpp"
+#include "md2view/pak.hpp"
 
 #include <gsl-lite/gsl-lite.hpp>
 #include <imgui.h>

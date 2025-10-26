@@ -1,5 +1,5 @@
-#include "md2view.hpp"
-#include "engine.hpp"
+#include "md2view/md2view.hpp"
+#include "md2view/engine.hpp"
 
 #include <glm/gtx/string_cast.hpp>
 #include <spdlog/spdlog.h>
