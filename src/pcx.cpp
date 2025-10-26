@@ -18,9 +18,10 @@ PCX::PCX(std::istream& ds) {
     auto scan_line_length = header_.num_bit_planes * header_.bytes_per_line;
 
     std::vector<ScanLine> scan_lines;
+    scan_lines.reserve(length);
 
     for (auto i = 0; i < length; ++i) {
-        scan_lines.push_back(read_scan_line(ds, scan_line_length));
+        scan_lines.emplace_back(read_scan_line(ds, scan_line_length));
     }
     spdlog::info("done reading scan lines {}", scan_lines.size());
 

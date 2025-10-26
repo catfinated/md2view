@@ -9,7 +9,9 @@ Checks: >
   -cppcoreguidelines-pro-type-reinterpret-cast,
   -cppcoreguidelines-init-variables,
   -cppcoreguidelines-pro-type-vararg,
-  -cppcoreguidelines-narrowing-conversions
+  -cppcoreguidelines-narrowing-conversions,
+  performance-*,
+  -performance-no-int-to-ptr,
 WarningsAsErrors: true
 CheckOptions:
   - key: cppcoreguidelines-pro-type-member-init.IgnoreArrays
