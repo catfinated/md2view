@@ -16,8 +16,8 @@ public:
 
     ModelSelector(ModelSelector const&) = delete;
     ModelSelector& operator=(ModelSelector const&) = delete;
-    ModelSelector(ModelSelector&&) = default;
-    ModelSelector& operator=(ModelSelector&&) = default;
+    ModelSelector(ModelSelector&&) noexcept = default;
+    ModelSelector& operator=(ModelSelector&&) noexcept = default;
 
     std::string model_path() const;
 

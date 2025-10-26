@@ -112,17 +112,17 @@ bool PAK::init_from_file() {
     return true;
 }
 
-std::ifstream PAK::open_ifstream(std::filesystem::path const& filename) const {
+std::ifstream PAK::open_ifstream(std::filesystem::path const& fpath) const {
     auto const flags = std::ios_base::in | std::ios_base::binary;
 
     if (!is_directory()) {
-        auto const& node = entries().at(filename.string());
+        auto const& node = entries().at(fpath.string());
         std::ifstream inf(fpath_, flags);
         inf.seekg(node.filepos);
         return inf;
     }
 
-    auto const p = fpath_ / filename;
+    auto const p = fpath_ / fpath;
     spdlog::info("open file {}", p.string());
     return {p, flags};
 }

@@ -33,7 +33,7 @@ private:
     void load_current_texture(Engine&);
     void update_model();
     void draw_ui(Engine&);
-    void set_vsync();
+    void set_vsync() const;
     void load_model(Engine&);
 
 private:

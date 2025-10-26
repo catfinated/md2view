@@ -62,22 +62,22 @@ bool MD2View::on_engine_initialized(Engine& engine) {
     load_current_texture(engine);
     glow_loc_ = shader_->uniform_location("glow_color");
     glow_color_ = glm::vec3(0.0f, 1.0f, 0.0f);
-    shader_->set_uniform(glow_loc_, glow_color_);
+    Shader::set_uniform(glow_loc_, glow_color_);
 
     blur_shader_ = engine.resource_manager().load_shader("blur", "screen");
     blur_shader_->use();
     disable_blur_loc_ = blur_shader_->uniform_location("disable_blur");
-    blur_shader_->set_uniform(disable_blur_loc_, 1);
+    Shader::set_uniform(disable_blur_loc_, 1);
 
     glow_shader_ = engine.resource_manager().load_shader("glow", "screen");
     glow_shader_->use();
 
     auto loc = glow_shader_->uniform_location("screenTexture");
-    glow_shader_->set_uniform(loc, 0);
+    Shader::set_uniform(loc, 0);
     loc = glow_shader_->uniform_location("prepassTexture");
-    glow_shader_->set_uniform(loc, 1);
+    Shader::set_uniform(loc, 1);
     loc = glow_shader_->uniform_location("blurredTexture");
-    glow_shader_->set_uniform(loc, 2);
+    Shader::set_uniform(loc, 2);
 
     camera_.set_position(glm::vec3(0.0f, 0.0f, 3.0f));
 
@@ -170,7 +170,7 @@ void MD2View::render(Engine& engine) {
         // blur solid image
         blur_fb_->bind();
         blur_shader_->use();
-        blur_shader_->set_uniform(disable_blur_loc_, 0);
+        Shader::set_uniform(disable_blur_loc_, 0);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, main_fb_->color_buffer(1));
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -190,7 +190,7 @@ void MD2View::render(Engine& engine) {
     } else {
         FrameBuffer::bind_default();
         blur_shader_->use();
-        blur_shader_->set_uniform(disable_blur_loc_, 1);
+        Shader::set_uniform(disable_blur_loc_, 1);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, main_fb_->color_buffer(0));
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -257,46 +257,10 @@ void MD2View::draw_ui(Engine& engine) {
 
         ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Model: %s",
                            model_selector_->model_path().c_str());
-        int index = md2_->animation_index();
 
-        ImGui::Combo(
-            "Animation", &index,
-            [](void* data, int idx, char const** out_text) -> bool {
-                MD2 const* model = reinterpret_cast<MD2 const*>(data);
-                assert(model);
-                if (idx < 0 ||
-                    static_cast<size_t>(idx) >= model->animations().size()) {
-                    return false;
-                }
-                *out_text = model->animations()[idx].name.c_str();
-                return true;
-            },
-            reinterpret_cast<void*>(md2_.get()), md2_->animations().size());
-
-        md2_->set_animation(static_cast<size_t>(index));
-
-        int sindex = md2_->skin_index();
-
-        ImGui::Combo(
-            "Skin", &sindex,
-            [](void* data, int idx, char const** out_text) -> bool {
-                MD2 const* model = reinterpret_cast<MD2 const*>(data);
-                assert(model);
-                if (idx < 0 ||
-                    static_cast<size_t>(idx) >= model->skins().size()) {
-                    return false;
-                }
-                *out_text = model->skins()[idx].name.c_str();
-                return true;
-            },
-            reinterpret_cast<void*>(md2_.get()), md2_->skins().size());
-
-        md2_->set_skin_index(static_cast<size_t>(sindex));
-        load_current_texture(engine); // skin may have changed
-
-        float fps = md2_->frames_per_second();
-        ImGui::InputFloat("Animation FPS", &fps, 1.0f, 5.0f, "%.3f");
-        md2_->set_frames_per_second(fps);
+        if (md2_->draw_ui()) {
+            load_current_texture(engine);
+        }
 
         ImGui::Text("Model");
         ImGui::PushItemWidth(vec4width);
@@ -313,7 +277,7 @@ void MD2View::draw_ui(Engine& engine) {
         ImGui::Checkbox("Glow", &glow_);
         if (ImGui::ColorEdit3("Glow color", glm::value_ptr(glow_color_))) {
             shader_->use();
-            shader_->set_uniform(glow_loc_, glow_color_);
+            Shader::set_uniform(glow_loc_, glow_color_);
         }
 
         bool model_changed = ImGui::SliderInt("Scale Factor", &scale_, 1, 256);
@@ -323,7 +287,7 @@ void MD2View::draw_ui(Engine& engine) {
             ImGui::SliderFloat("Y-Position", &pos_[1], -7.0f, 7.0f);
         model_changed |=
             ImGui::SliderFloat("Z-Position", &pos_[2], -7.0f, 7.0f);
-        model_changed |= ImGui::SliderAngle("X-Rotation", &rot_[0]);
+        model_changed |= ImGui::SliderAngle("X-Rotation", rot_.data());
         model_changed |= ImGui::SliderAngle("Y-Rotation", &rot_[1]);
         model_changed |= ImGui::SliderAngle("Z-Rotation", &rot_[2]);
 
@@ -352,7 +316,7 @@ void MD2View::draw_ui(Engine& engine) {
     ImGui::End();
 }
 
-void MD2View::set_vsync() { glfwSwapInterval(vsync_enabled_ ? 1 : 0); }
+void MD2View::set_vsync() const { glfwSwapInterval(vsync_enabled_ ? 1 : 0); }
 
 void MD2View::update(Engine& /* engine */, GLfloat delta_time) {
     md2_->update(delta_time);

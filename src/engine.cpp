@@ -33,7 +33,7 @@ bool Engine::parse_args(std::span<char const*> args) {
                                   variables_map_);
     boost::program_options::notify(variables_map_);
 
-    if (variables_map_.count("help")) {
+    if (variables_map_.contains("help")) {
         std::cerr << options_desc() << '\n';
         return false;
     }

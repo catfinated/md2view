@@ -36,7 +36,7 @@ public:
     void use() const { glUseProgram(program()); }
 
     void set_uniform_block_binding(gsl_lite::not_null<char const*> block,
-                                   GLuint binding_point);
+                                   GLuint binding_point) const;
 
     GLint uniform_location(gsl_lite::not_null<GLchar const*> name) const;
     GLint uniform_location(std::string const& name) const {
@@ -53,14 +53,14 @@ public:
     }
 
     // type specific implementations
-    void set_uniform(GLint location, glm::vec3 const& v);
-    void set_uniform(GLint location, glm::vec2 const& v);
-    void set_uniform(GLint location, glm::vec4 const& v);
-    void set_uniform(GLint location, GLboolean b);
-    void set_uniform(GLint location, glm::mat4 const& m);
-    void set_uniform(GLint location, GLint i);
-    void set_uniform(GLint location, GLuint i);
-    void set_uniform(GLint location, GLfloat f);
+    static void set_uniform(GLint location, glm::vec3 const& v);
+    static void set_uniform(GLint location, glm::vec2 const& v);
+    static void set_uniform(GLint location, glm::vec4 const& v);
+    static void set_uniform(GLint location, GLboolean b);
+    static void set_uniform(GLint location, glm::mat4 const& m);
+    static void set_uniform(GLint location, GLint i);
+    static void set_uniform(GLint location, GLuint i);
+    static void set_uniform(GLint location, GLfloat f);
 
     template <typename T>
     void set_uniform(gsl_lite::not_null<GLchar const*> name, T const& t) {
@@ -105,12 +105,14 @@ public:
     }
 
     // ergonomic helpers
-    void set_model(glm::mat4 const& m) { set_uniform(model_location(), m); }
-    void set_view(glm::mat4 const& m) { set_uniform(view_location(), m); }
-    void set_projection(glm::mat4 const& m) {
+    void set_model(glm::mat4 const& m) const {
+        set_uniform(model_location(), m);
+    }
+    void set_view(glm::mat4 const& m) const { set_uniform(view_location(), m); }
+    void set_projection(glm::mat4 const& m) const {
         set_uniform(projection_location(), m);
     }
-    void set_view_position(glm::vec3 const& v) {
+    void set_view_position(glm::vec3 const& v) const {
         set_uniform(camera_position_location(), v);
     }
 
@@ -119,12 +121,11 @@ private:
     init(std::filesystem::path const& vertex,
          std::filesystem::path const& fragment,
          std::optional<std::filesystem::path> const& geometry = {});
-    [[nodiscard]] bool compile_shader(GLenum shader_type,
-                                      std::filesystem::path const& path,
-                                      GLuint& handle);
-    [[nodiscard]] bool link_program();
+    [[nodiscard]] static bool compile_shader(GLenum shader_type,
+                                             std::filesystem::path const& path,
+                                             GLuint& handle);
+    [[nodiscard]] static bool link_program(GLuint program);
     void cleanup();
 
-private:
-    GLuint program_;
+    GLuint program_{};
 };

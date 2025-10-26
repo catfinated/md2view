@@ -7,8 +7,7 @@
 
 Shader::Shader(std::filesystem::path const& vertex,
                std::filesystem::path const& fragment,
-               std::optional<std::filesystem::path> const& geometry)
-    : program_(0) {
+               std::optional<std::filesystem::path> const& geometry) {
     if (!init(vertex, fragment, geometry)) {
         throw std::runtime_error("shader initialization failed");
     }
@@ -50,7 +49,9 @@ bool Shader::init(std::filesystem::path const& vertex,
 
     program_ = glCreateProgram();
 
-    GLuint vertex_id, fragment_id, geometry_id;
+    GLuint vertex_id{};
+    GLuint fragment_id{};
+    GLuint geometry_id{};
 
     if (!compile_shader(GL_VERTEX_SHADER, vertex, vertex_id)) {
         spdlog::error("ERROR::SHADER::VERTEX::COMPILATION_FAILED");
@@ -76,7 +77,7 @@ bool Shader::init(std::filesystem::path const& vertex,
         glAttachShader(program_, geometry_id);
     }
 
-    if (!link_program()) {
+    if (!link_program(program_)) {
         spdlog::error("ERROR::PROGRAM::LINK_FAILED");
         return false;
     }
@@ -115,10 +116,10 @@ bool Shader::compile_shader(GLenum shader_type,
     glShaderSource(handle, 1, &shader_code, nullptr);
     glCompileShader(handle);
 
-    GLint success;
+    GLint success{};
     glGetShaderiv(handle, GL_COMPILE_STATUS, &success);
 
-    if (!success) {
+    if (success == GL_FALSE) {
         std::array<GLchar, 512> log{};
         glGetShaderInfoLog(handle, log.size(), nullptr, log.data());
         spdlog::error("ERROR::SHADER::COMPILATION_FAILED: ('{}') - \n{}",
@@ -129,15 +130,15 @@ bool Shader::compile_shader(GLenum shader_type,
     return true;
 }
 
-bool Shader::link_program() {
-    GLint success;
-    glLinkProgram(program_);
+bool Shader::link_program(GLuint program) {
+    GLint success{};
+    glLinkProgram(program);
 
-    glGetProgramiv(program_, GL_LINK_STATUS, &success);
+    glGetProgramiv(program, GL_LINK_STATUS, &success);
 
-    if (!success) {
+    if (success == GL_FALSE) {
         std::array<GLchar, 512> log{};
-        glGetProgramInfoLog(program_, log.size(), nullptr, log.data());
+        glGetProgramInfoLog(program, log.size(), nullptr, log.data());
         spdlog::error("{}", log.data());
         return false;
     }
@@ -150,7 +151,7 @@ GLint Shader::uniform_location(gsl_lite::not_null<GLchar const*> name) const {
 }
 
 void Shader::set_uniform_block_binding(gsl_lite::not_null<char const*> block,
-                                       GLuint binding_point) {
+                                       GLuint binding_point) const {
     GLuint index = glGetUniformBlockIndex(program(), block);
     glUniformBlockBinding(program(), index, binding_point);
 }

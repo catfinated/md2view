@@ -46,8 +46,6 @@ public:
     PCX() = default;
     PCX(std::istream&);
 
-    Header const& header() const { return header_; }
-
     std::vector<unsigned char> const& image() const { return image_; }
 
     std::vector<Color> const& colors() const { return colors_; }
@@ -57,11 +55,10 @@ public:
 
 private:
     using ScanLine = std::vector<uint8_t>;
-    ScanLine read_scan_line(std::istream& ds, int32_t length);
-    std::vector<Color> read_palette(std::istream&);
+    static ScanLine read_scan_line(std::istream& ds, int32_t length);
+    static std::vector<Color> read_palette(std::istream&);
 
 private:
-    Header header_{};
     std::vector<unsigned char> image_;
     std::vector<Color> colors_;
     int width_{};

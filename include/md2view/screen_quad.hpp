@@ -17,7 +17,7 @@ public:
     ScreenQuad(ScreenQuad&&) = delete;
     ScreenQuad& operator=(ScreenQuad&&) = delete;
 
-    void draw(Shader& shader);
+    void draw(Shader& shader) const;
 
 private:
     GLuint vao_{};

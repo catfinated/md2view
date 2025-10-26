@@ -101,7 +101,9 @@ std::shared_ptr<Texture2D> Texture2D::load(PAK const& pak,
 
     auto const abspath = (pak.fpath() / path).make_preferred();
     gsl_Assert(std::filesystem::exists(abspath));
-    int width, height, n;
+    int width{};
+    int height{};
+    int n{};
     unsigned char* image =
         stbi_load(abspath.string().c_str(), &width, &height, &n, 3);
     gsl_Assert(image);

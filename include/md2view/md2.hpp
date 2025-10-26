@@ -86,8 +86,7 @@ public:
         bool loop;
 
         Animation()
-            : name()
-            , start_frame(-1)
+            : start_frame(-1)
             , end_frame(-1)
             , loop(true) {}
 
@@ -118,18 +117,11 @@ public:
 
     // accessors
     Header const& header() const { return hdr_; }
-
-    void draw(Shader& shader);
-    void update(float delta_time);
-
     std::vector<SkinData> const& skins() const { return skins_; }
-
-    void set_animation(std::string const& id);
-    void set_animation(size_t id);
-
     size_t animation_index() const { return current_animation_index_; }
     size_t skin_index() const { return current_skin_index_; }
-    void set_skin_index(size_t idx);
+    std::vector<Animation> const& animations() const { return animations_; }
+    float frames_per_second() const { return frames_per_second_; }
 
     SkinData const& current_skin() const {
         assert(current_skin_index_ >= 0 &&
@@ -137,16 +129,21 @@ public:
         return skins_[current_skin_index_];
     }
 
-    std::vector<Animation> const& animations() const { return animations_; }
+    // modifiers
+    void draw(Shader& shader);
+    void update(float dt);
+    [[nodiscard]] bool draw_ui();
 
-    float frames_per_second() const { return frames_per_second_; }
+    void set_animation(std::string const& id);
+    void set_animation(size_t index);
+    void set_skin_index(size_t index);
     void set_frames_per_second(float f) {
         frames_per_second_ = boost::algorithm::clamp(f, 0.0f, 60.0f);
     }
 
 private:
     void setup_buffers();
-    [[nodiscard]] bool validate_header(Header const& hdr);
+    [[nodiscard]] static bool validate_header(Header const& hdr);
     [[nodiscard]] bool load(PAK const&, std::string const& filename);
     [[nodiscard]] bool load(std::ifstream&);
     [[nodiscard]] bool load_skins(std::ifstream&, size_t);
@@ -156,7 +153,6 @@ private:
     void load_skins_from_directory(std::filesystem::path const& dpath,
                                    std::filesystem::path const& root);
 
-private:
     struct KeyFrame {
         std::vector<glm::vec3> vertices;
     };

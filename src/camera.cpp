@@ -73,7 +73,7 @@ void Camera::on_mouse_movement(float xoffset,
     update_vectors();
 }
 
-void Camera::on_mouse_scroll(double, double yoffset) {
+void Camera::on_mouse_scroll(double /* xoffset */, double yoffset) {
     if (fov_ >= 1.0f && fov_ <= 45.0f) {
         fov_ -= yoffset;
     }

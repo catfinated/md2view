@@ -18,7 +18,7 @@ ResourceManager::load_shader(std::string const& name,
                              std::optional<std::string_view> vertex,
                              std::optional<std::string_view> fragment,
                              std::optional<std::string_view> geometry) {
-    gsl_Assert(shaders_.find(name) == shaders_.end());
+    gsl_Assert(!shaders_.contains(name));
     auto const vfname =
         vertex ? fmt::format("{}.vert", *vertex) : fmt::format("{}.vert", name);
     auto const ffname = fragment ? fmt::format("{}.frag", *fragment)

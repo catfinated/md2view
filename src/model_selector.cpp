@@ -13,12 +13,13 @@ void ModelSelector::add_node(std::filesystem::path const& path) {
     spdlog::debug("add node for {}", path.string());
     gsl_Assert(path.extension() == ".md2");
     // pak seperator is always '/'
-    auto const sep = "/";
+    auto const* const sep = "/";
 
     std::string curr;
-    for (auto& part : path) {
-        if (!curr.empty())
+    for (auto const& part : path) {
+        if (!curr.empty()) {
             curr.append(sep);
+        }
         curr += part.string();
         auto fullpath = curr;
         auto child = std::find_if(parent, tree_.end(), [&](auto const& node) {
@@ -69,8 +70,9 @@ void ModelSelector::select_random_model() {
         }
     }
 
-    if (iters.empty())
+    if (iters.empty()) {
         return;
+    }
 
     std::uniform_int_distribution<> dist(0, iters.size() - 1);
     auto idx = dist(mt_);
@@ -86,18 +88,20 @@ bool ModelSelector::draw_ui() {
         ret = true;
     }
 
+    using TreeT = tree<Node>;
+
     // NB: treehh end_fixed does not seem to be working yet
     // https://github.com/kpeeters/tree.hh/blob/master/src/tree.hh#L854
     // we need to go down level be level but only push nodes to the stack
     // if they are expanded in the UI
-    std::stack<tree<Node>::iterator> stack;
+    std::stack<TreeT::iterator> stack;
     stack.push(tree_.begin());
 
     int lastDepth{0};
     while (!stack.empty()) {
         auto curr = stack.top();
         stack.pop();
-        auto depth = tree_.depth(curr);
+        auto depth = TreeT::depth(curr);
 
         while (depth < lastDepth) {
             ImGui::TreePop();
@@ -107,7 +111,7 @@ bool ModelSelector::draw_ui() {
 
         // if curr has no children it is selectable leafat
         ImGuiTreeNodeFlags flags{0};
-        auto const is_leaf = tree_.number_of_children(curr) == 0U;
+        auto const is_leaf = TreeT::number_of_children(curr) == 0U;
 
         if (is_leaf) {
             flags =
@@ -123,7 +127,7 @@ bool ModelSelector::draw_ui() {
 
         if (ImGui::TreeNodeEx(curr->name.c_str(), flags)) {
             if (!is_leaf) {
-                for (auto iter = tree_.begin(curr); iter != tree_.end(curr);
+                for (auto iter = TreeT::begin(curr); iter != TreeT::end(curr);
                      ++iter) {
                     stack.emplace(iter);
                 }

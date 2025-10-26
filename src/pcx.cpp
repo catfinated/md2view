@@ -9,13 +9,12 @@
 #include <iostream>
 
 PCX::PCX(std::istream& ds) {
-    auto header_ptr = std::addressof(header_);
-    memset(header_ptr, 0, sizeof(header_));
-    ds.read(reinterpret_cast<char*>(header_ptr), sizeof(header_));
+    Header header{};
+    ds.read(reinterpret_cast<char*>(std::addressof(header)), sizeof(header));
 
-    auto width = header_.xend - header_.xstart + 1;
-    auto length = header_.yend - header_.ystart + 1;
-    auto scan_line_length = header_.num_bit_planes * header_.bytes_per_line;
+    auto width = header.xend - header.xstart + 1;
+    auto length = header.yend - header.ystart + 1;
+    auto scan_line_length = header.num_bit_planes * header.bytes_per_line;
 
     std::vector<ScanLine> scan_lines;
     scan_lines.reserve(length);

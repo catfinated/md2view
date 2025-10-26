@@ -20,7 +20,9 @@ void Gui::init() {
     // io.RenderDrawListsFn = nullptr; // why no user data callback?!?
 
     // Backup GL state
-    GLint last_texture, last_array_buffer, last_vertex_array;
+    GLint last_texture{};
+    GLint last_array_buffer{};
+    GLint last_vertex_array{};
     glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
     glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &last_array_buffer);
     glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &last_vertex_array);
@@ -76,8 +78,9 @@ void Gui::init() {
 
     // create font
     // Build texture atlas
-    unsigned char* pixels;
-    int width, height;
+    unsigned char* pixels{nullptr};
+    int width{};
+    int height{};
     io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
     // Upload texture to graphics system
     glGenTextures(1, std::addressof(font_texture_));
@@ -102,8 +105,10 @@ void Gui::update(double current_time, bool apply_inputs) {
     ImGuiIO& io = ImGui::GetIO();
 
     // Setup display size (every frame to accommodate for window resizing)
-    int w, h;
-    int display_w, display_h;
+    int w{};
+    int h{};
+    int display_w{};
+    int display_h{};
     glfwGetWindowSize(window_, &w, &h);
     glfwGetFramebufferSize(window_, &display_w, &display_h);
     io.DisplaySize = ImVec2((float)w, (float)h);
@@ -111,15 +116,14 @@ void Gui::update(double current_time, bool apply_inputs) {
                                         h > 0 ? ((float)display_h / h) : 0);
 
     // Setup time step
-    io.DeltaTime =
-        time_ > 0.0 ? (float)(current_time - time_) : (float)(1.0f / 60.0f);
+    io.DeltaTime = time_ > 0.0 ? (float)(current_time - time_) : (1.0f / 60.0f);
     time_ = current_time;
 
     if (apply_inputs) {
         // Setup inputs
         // (we already got mouse wheel, keyboard keys & characters from glfw
         // callbacks polled in glfwPollEvents())
-        if (glfwGetWindowAttrib(window_, GLFW_FOCUSED)) {
+        if (glfwGetWindowAttrib(window_, GLFW_FOCUSED) > 0) {
             io.MousePos = ImVec2(
                 static_cast<float>(engine_.mouse().xpos.value_or(-1)),
                 static_cast<float>(engine_.mouse().ypos.value_or(
@@ -154,12 +158,13 @@ void Gui::render() {
     ImGuiIO& io = ImGui::GetIO();
 
     ImGui::Render();
-    auto draw_data = ImGui::GetDrawData();
+    auto* draw_data = ImGui::GetDrawData();
 
     int fb_width = (int)(io.DisplaySize.x * io.DisplayFramebufferScale.x);
     int fb_height = (int)(io.DisplaySize.y * io.DisplayFramebufferScale.y);
-    if (fb_width == 0 || fb_height == 0)
+    if (fb_width == 0 || fb_height == 0) {
         return;
+    }
     draw_data->ScaleClipRects(io.DisplayFramebufferScale);
 
     // Backup GL state
@@ -240,7 +245,7 @@ void Gui::render() {
 
         for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i++) {
             const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[cmd_i];
-            if (pcmd->UserCallback) {
+            if (pcmd->UserCallback != nullptr) {
                 pcmd->UserCallback(cmd_list, pcmd);
             } else {
                 glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd->TextureId);
@@ -268,22 +273,31 @@ void Gui::render() {
     glBlendEquationSeparate(last_blend_equation_rgb, last_blend_equation_alpha);
     glBlendFuncSeparate(last_blend_src_rgb, last_blend_dst_rgb,
                         last_blend_src_alpha, last_blend_dst_alpha);
-    if (last_enable_blend)
+
+    if (last_enable_blend != 0U) {
         glEnable(GL_BLEND);
-    else
+    } else {
         glDisable(GL_BLEND);
-    if (last_enable_cull_face)
+    }
+
+    if (last_enable_cull_face != 0U) {
         glEnable(GL_CULL_FACE);
-    else
+    } else {
         glDisable(GL_CULL_FACE);
-    if (last_enable_depth_test)
+    }
+
+    if (last_enable_depth_test != 0U) {
         glEnable(GL_DEPTH_TEST);
-    else
+    } else {
         glDisable(GL_DEPTH_TEST);
-    if (last_enable_scissor_test)
+    }
+
+    if (last_enable_scissor_test != 0U) {
         glEnable(GL_SCISSOR_TEST);
-    else
+    } else {
         glDisable(GL_SCISSOR_TEST);
+    }
+
     glViewport(last_viewport[0], last_viewport[1], (GLsizei)last_viewport[2],
                (GLsizei)last_viewport[3]);
     glScissor(last_scissor_box[0], last_scissor_box[1],

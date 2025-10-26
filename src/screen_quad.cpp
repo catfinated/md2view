@@ -32,7 +32,7 @@ ScreenQuad::~ScreenQuad() {
     glDeleteBuffers(1, &vbo_);
 }
 
-void ScreenQuad::draw(Shader& /* shader */) {
+void ScreenQuad::draw(Shader& /* shader */) const {
     glBindVertexArray(vao_);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);

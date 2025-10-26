@@ -5,6 +5,7 @@
 #include <fmt/ostream.h>
 #include <glm/gtx/compatibility.hpp>
 #include <gsl-lite/gsl-lite.hpp>
+#include <imgui.h>
 #include <spdlog/spdlog.h>
 
 #include <cctype>
@@ -20,8 +21,8 @@ template <> struct fmt::formatter<MD2::Animation> : ostream_formatter {};
 std::string animation_id_from_frame_name(std::string const& name) {
     std::string id;
 
-    for (auto& ch : name) {
-        if (isdigit(ch)) {
+    for (auto const& ch : name) {
+        if (isdigit(ch) != 0) {
             break;
         }
 
@@ -294,7 +295,7 @@ void MD2::setup_buffers() {
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_[0]);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3),
-                 &vertices[0], GL_DYNAMIC_DRAW);
+                 vertices.data(), GL_DYNAMIC_DRAW);
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
@@ -303,7 +304,7 @@ void MD2::setup_buffers() {
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_[1]);
     glBufferData(GL_ARRAY_BUFFER, scaled_texcoords_.size() * sizeof(glm::vec2),
-                 &scaled_texcoords_[0], GL_STATIC_DRAW);
+                 scaled_texcoords_.data(), GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
@@ -387,7 +388,7 @@ void MD2::update(float dt) {
     glBindBuffer(GL_ARRAY_BUFFER, vbo_[0]);
     glBufferSubData(GL_ARRAY_BUFFER, 0,
                     sizeof(glm::vec3) * interpolated_vertices_.size(),
-                    &interpolated_vertices_[0]);
+                    interpolated_vertices_.data());
 }
 
 void MD2::draw(Shader& /* shader */) {
@@ -425,6 +426,50 @@ bool MD2::validate_header(Header const& hdr) {
         return false;
     }
 
+    return true;
+}
+
+bool MD2::draw_ui() {
+    int index = animation_index();
+
+    ImGui::Combo(
+        "Animation", &index,
+        [](void* data, int idx, char const** out_text) -> bool {
+            auto const* md2 = static_cast<MD2 const*>(data);
+            if (idx < 0 ||
+                static_cast<size_t>(idx) >= md2->animations().size()) {
+                return false;
+            }
+            *out_text = md2->animations()[idx].name.c_str();
+            return true;
+        },
+        this, animations().size());
+
+    set_animation(static_cast<size_t>(index));
+
+    int sindex = skin_index();
+
+    ImGui::Combo(
+        "Skin", &sindex,
+        [](void* data, int idx, char const** out_text) -> bool {
+            auto const* md2 = static_cast<MD2 const*>(data);
+            if (idx < 0 || static_cast<size_t>(idx) >= md2->skins().size()) {
+                return false;
+            }
+            *out_text = md2->skins()[idx].name.c_str();
+            return true;
+        },
+        this, skins().size());
+
+    float fps = frames_per_second();
+    ImGui::InputFloat("Animation FPS", &fps, 1.0f, 5.0f, "%.3f");
+    set_frames_per_second(fps);
+
+    if (static_cast<size_t>(sindex) == skin_index()) {
+        return false;
+    }
+
+    set_skin_index(static_cast<size_t>(sindex));
     return true;
 }
 
