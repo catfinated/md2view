@@ -10,6 +10,8 @@ Camera::Camera(glm::vec3 const& position,
                float pitch)
     : position_(position)
     , front_(0.0f, 0.0f, -1.0f)
+    , up_(up)
+    , right_(1.0f, 0.0f, 0.0)
     , world_up_(up)
     , yaw_(yaw)
     , pitch_(pitch)
@@ -81,11 +83,12 @@ void Camera::on_mouse_scroll(double, double yoffset) {
 }
 
 void Camera::update_vectors() {
-    glm::vec3 front;
-    front.x = cos(glm::radians(pitch_)) * cos(glm::radians(yaw_));
-    front.y = sin(glm::radians(pitch_));
-    front.z = cos(glm::radians(pitch_)) * sin(glm::radians(yaw_));
-    front_ = glm::normalize(front);
+    auto const x =
+        glm::cos(glm::radians(pitch_)) * glm::cos(glm::radians(yaw_));
+    auto const y = glm::sin(glm::radians(pitch_));
+    auto const z =
+        glm::cos(glm::radians(pitch_)) * glm::sin(glm::radians(yaw_));
+    front_ = glm::normalize(glm::vec3(x, y, z));
     right_ = glm::normalize(glm::cross(front_, world_up_));
     up_ = glm::normalize(glm::cross(right_, front_));
     view_dirty_ = true;

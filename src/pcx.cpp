@@ -50,20 +50,20 @@ PCX::ScanLine PCX::read_scan_line(std::istream& ds, int32_t length) {
 
     auto index = decltype(length)(0);
 
-    uint8_t runcount;
-    uint8_t runvalue;
+    uint8_t runcount{};
+    uint8_t runvalue{};
 
     while (index < length) {
-        uint8_t byte;
-        ds.read((char*)&byte, 1);
+        char byte{};
+        ds.read(std::addressof(byte), 1);
 
         if ((byte & 0xc0) == 0xc0) {
             runcount = byte & 0x3f;
-            ds.read((char*)&byte, 1);
-            runvalue = byte;
+            ds.read(std::addressof(byte), 1);
+            runvalue = static_cast<uint8_t>(byte);
         } else {
             runcount = 1;
-            runvalue = byte;
+            runvalue = static_cast<uint8_t>(byte);
         }
 
         while (runcount > 0 && index < length) {
@@ -83,13 +83,15 @@ std::vector<PCX::Color> PCX::read_palette(std::istream& ds) {
         return colors;
     }
 
-    uint8_t byte;
-    ds.read(reinterpret_cast<char*>(&byte), 1);
+    char byte{}; // marker byte
+    ds.read(std::addressof(byte), 1);
 
     while (!ds.eof()) {
-        std::array<uint8_t, 3> rgb;
-        ds.read(reinterpret_cast<char*>(rgb.data()), 3);
-        colors.emplace_back(rgb[0], rgb[1], rgb[2]);
+        std::array<char, 3> rgb{};
+        ds.read(rgb.data(), rgb.size());
+        colors.emplace_back(static_cast<uint8_t>(rgb[0]),
+                            static_cast<uint8_t>(rgb[1]),
+                            static_cast<uint8_t>(rgb[2]));
     }
 
     return colors;

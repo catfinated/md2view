@@ -25,8 +25,8 @@ public:
     Shader& operator=(Shader const&) = delete;
 
     // moveable
-    Shader(Shader&& rhs);
-    Shader& operator=(Shader&& rhs);
+    Shader(Shader&& rhs) noexcept;
+    Shader& operator=(Shader&& rhs) noexcept;
 
     Shader(std::filesystem::path const& vertex,
            std::filesystem::path const& fragment,
@@ -40,7 +40,8 @@ public:
 
     GLint uniform_location(gsl_lite::not_null<GLchar const*> name) const;
     GLint uniform_location(std::string const& name) const {
-        return uniform_location(gsl_lite::not_null<GLchar const*>(name.c_str()));
+        return uniform_location(
+            gsl_lite::not_null<GLchar const*>(name.c_str()));
     }
 
     // maybe cache some of these

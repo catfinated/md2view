@@ -3,8 +3,8 @@
 #include "gl.hpp"
 
 #include <memory>
-#include <string>
 #include <span>
+#include <string>
 
 class PAK;
 
@@ -30,8 +30,8 @@ public:
     Texture2D& operator=(Texture2D const&) = delete;
 
     // movable
-    Texture2D(Texture2D&& rhs);
-    Texture2D& operator=(Texture2D&&);
+    Texture2D(Texture2D&& rhs) noexcept;
+    Texture2D& operator=(Texture2D&&) noexcept;
 
     void bind() const;
 
@@ -55,7 +55,7 @@ private:
 
 private:
     Attributes attr_;
-    GLuint id_;
-    GLuint width_ = 0;
-    GLuint height_ = 0;
+    GLuint id_{};
+    GLuint width_{};
+    GLuint height_{};
 }; // class Texture2D

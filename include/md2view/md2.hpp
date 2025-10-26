@@ -161,7 +161,7 @@ private:
         std::vector<glm::vec3> vertices;
     };
 
-    Header hdr_;
+    Header hdr_{};
     std::vector<Triangle> triangles_;
     std::vector<TexCoord> texcoords_;
     std::vector<Frame> frames_;
@@ -172,17 +172,17 @@ private:
     std::unordered_map<std::string, size_t> animation_index_map_;
     std::vector<glm::vec3> interpolated_vertices_;
 
-    GLuint vao_;
-    std::array<GLuint, 2> vbo_;
+    GLuint vao_{};
+    std::array<GLuint, 2> vbo_{};
 
     // animation state
-    int32_t current_animation_index_;
-    int next_frame_;
-    int current_frame_;
-    float interpolation_;
+    int32_t current_animation_index_{};
+    int next_frame_{};
+    int current_frame_{};
+    float interpolation_{};
     float frames_per_second_ = 8.0f;
 
-    int32_t current_skin_index_;
+    int32_t current_skin_index_{};
 };
 
 std::ostream& operator<<(std::ostream&, MD2::Header const&);

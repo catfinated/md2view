@@ -71,7 +71,7 @@ bool PAK::init_from_file() {
         return false;
     }
 
-    Header hdr;
+    Header hdr{};
     inf.read(reinterpret_cast<char*>(&hdr), sizeof(hdr));
 
     spdlog::info("{}{}{}{} {} {}", hdr.id[0], hdr.id[1], hdr.id[2], hdr.id[3],
@@ -93,7 +93,7 @@ bool PAK::init_from_file() {
 
     for (size_t i = 0; i < num_entries; ++i) {
         gsl_Assert(inf);
-        Entry entry;
+        Entry entry{};
         inf.read(reinterpret_cast<char*>(&entry), sizeof(entry));
         // TODO: ensure filepos/filelen converted from little endian to host
 

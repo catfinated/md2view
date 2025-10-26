@@ -20,7 +20,7 @@ public:
     void draw(Shader& shader);
 
 private:
-    GLuint vao_;
-    GLuint vbo_;
+    GLuint vao_{};
+    GLuint vbo_{};
     static std::array<GLfloat, 24> vertices_;
 };

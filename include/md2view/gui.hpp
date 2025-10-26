@@ -40,5 +40,5 @@ private:
     int attrib_location_uv_ = 0;
     int attrib_location_color_ = 0;
     unsigned int vao_ = 0;
-    std::array<unsigned int, num_buffers> glbuffers_;
+    std::array<unsigned int, num_buffers> glbuffers_{};
 };

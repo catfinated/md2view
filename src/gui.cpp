@@ -2,6 +2,8 @@
 #include "md2view/engine.hpp"
 #include "md2view/shader.hpp"
 
+#include <gsl-lite/gsl-lite.hpp>
+
 #include <array>
 #include <utility>
 
@@ -128,12 +130,12 @@ void Gui::update(double current_time, bool apply_inputs) {
         }
 
         for (int i = 0; i < 3; i++) {
-            io.MouseDown[i] =
-                mouse_pressed_[i] || glfwGetMouseButton(window_, i) != 0;
+            gsl_lite::at(io.MouseDown, i) = gsl_lite::at(mouse_pressed_, i) ||
+                                            glfwGetMouseButton(window_, i) != 0;
             // If a mouse press event came, always pass it as "mouse held this
             // frame", so we don't miss click-release events that are shorter
             // than 1 frame.
-            mouse_pressed_[i] = false;
+            gsl_lite::at(mouse_pressed_, i) = false;
         }
 
         io.MouseWheel = engine_.mouse().scroll_yoffset.value_or(0.0);
@@ -186,9 +188,9 @@ void Gui::render() {
     glGetIntegerv(GL_BLEND_EQUATION_RGB, &last_blend_equation_rgb);
     GLint last_blend_equation_alpha;
     glGetIntegerv(GL_BLEND_EQUATION_ALPHA, &last_blend_equation_alpha);
-    std::array<GLint, 4> last_viewport;
+    std::array<GLint, 4> last_viewport{};
     glGetIntegerv(GL_VIEWPORT, last_viewport.data());
-    std::array<GLint, 4> last_scissor_box;
+    std::array<GLint, 4> last_scissor_box{};
     glGetIntegerv(GL_SCISSOR_BOX, last_scissor_box.data());
     GLboolean last_enable_blend = glIsEnabled(GL_BLEND);
     GLboolean last_enable_cull_face = glIsEnabled(GL_CULL_FACE);
@@ -251,6 +253,7 @@ void Gui::render() {
                                                       : GL_UNSIGNED_INT,
                                idx_buffer_offset);
             }
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
             idx_buffer_offset += pcmd->ElemCount;
         }
     }

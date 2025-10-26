@@ -178,15 +178,14 @@ bool MD2::load_texcoords(std::ifstream& infile, size_t offset) {
 
     for (auto const& triangle : triangles_) {
         for (size_t i = 0; i < 3; ++i) {
-            auto st_index = triangle.st[i];
+            auto st_index = gsl_lite::at(triangle.st, i);
             assert(st_index < texcoords_.size());
             auto const& st = texcoords_[st_index];
-            glm::vec2 scaled;
-            scaled.s =
+            auto const s =
                 static_cast<float>(st.s) / static_cast<float>(hdr_.skinwidth);
-            scaled.t =
+            auto const t =
                 static_cast<float>(st.t) / static_cast<float>(hdr_.skinheight);
-            scaled_texcoords_.push_back(scaled);
+            scaled_texcoords_.emplace_back(s, t);
         }
     }
 
@@ -248,14 +247,16 @@ bool MD2::load_frames(std::ifstream& infile, size_t offset) {
 
         for (auto const& triangle : triangles_) {
             for (size_t i = 0; i < 3; ++i) {
-                auto vertex_index = triangle.vertex[i];
+                auto vertex_index = gsl_lite::at(triangle.vertex, i);
                 assert(vertex_index < frame.vertices.size());
                 auto const& vertex = frame.vertices[vertex_index];
-                glm::vec3 scaled;
-                scaled.x = (frame.scale[0] * vertex.v[0]) + frame.translate[0];
-                scaled.z = (frame.scale[1] * vertex.v[1]) + frame.translate[1];
-                scaled.y = (frame.scale[2] * vertex.v[2]) + frame.translate[2];
-                key_frame.vertices.push_back(scaled);
+                auto const x =
+                    (frame.scale[0] * vertex.v[0]) + frame.translate[0];
+                auto const z =
+                    (frame.scale[1] * vertex.v[1]) + frame.translate[1];
+                auto const y =
+                    (frame.scale[2] * vertex.v[2]) + frame.translate[2];
+                key_frame.vertices.emplace_back(x, y, z);
             }
         }
         assert(key_frame.vertices.size() ==

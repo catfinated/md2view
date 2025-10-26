@@ -21,14 +21,14 @@ Texture2D::Texture2D(GLuint width,
 
 Texture2D::~Texture2D() { cleanup(); }
 
-Texture2D::Texture2D(Texture2D&& rhs) {
-    attr_ = rhs.attr_;
+Texture2D::Texture2D(Texture2D&& rhs) noexcept
+    : attr_{rhs.attr_}
+    , width_{rhs.width_}
+    , height_{rhs.height_} {
     id_ = std::exchange(rhs.id_, 0U);
-    width_ = rhs.width_;
-    height_ = rhs.height_;
 }
 
-Texture2D& Texture2D::operator=(Texture2D&& rhs) {
+Texture2D& Texture2D::operator=(Texture2D&& rhs) noexcept {
     if (this != &rhs) {
         cleanup();
         attr_ = rhs.attr_;

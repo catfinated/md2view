@@ -40,7 +40,7 @@ private:
     init(GLuint width, GLuint height, bool enable_render_buffer);
 
 private:
-    GLuint frame_buffer_;
+    GLuint frame_buffer_{};
     std::vector<GLuint> color_buffers_;
     std::optional<GLuint> render_buffer_;
 };

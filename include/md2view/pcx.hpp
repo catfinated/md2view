@@ -61,11 +61,11 @@ private:
     std::vector<Color> read_palette(std::istream&);
 
 private:
-    Header header_;
+    Header header_{};
     std::vector<unsigned char> image_;
     std::vector<Color> colors_;
-    int width_ = 0;
-    int height_ = 0;
+    int width_{};
+    int height_{};
 };
 
 std::ostream& operator<<(std::ostream&, PCX::Header const&);

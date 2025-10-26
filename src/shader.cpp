@@ -16,9 +16,11 @@ Shader::Shader(std::filesystem::path const& vertex,
 
 Shader::~Shader() { cleanup(); }
 
-Shader::Shader(Shader&& rhs) { program_ = std::exchange(rhs.program_, 0U); }
+Shader::Shader(Shader&& rhs) noexcept {
+    program_ = std::exchange(rhs.program_, 0U);
+}
 
-Shader& Shader::operator=(Shader&& rhs) {
+Shader& Shader::operator=(Shader&& rhs) noexcept {
     if (this != &rhs) {
         cleanup();
         program_ = std::exchange(rhs.program_, 0U);
@@ -117,7 +119,7 @@ bool Shader::compile_shader(GLenum shader_type,
     glGetShaderiv(handle, GL_COMPILE_STATUS, &success);
 
     if (!success) {
-        std::array<GLchar, 512> log;
+        std::array<GLchar, 512> log{};
         glGetShaderInfoLog(handle, log.size(), nullptr, log.data());
         spdlog::error("ERROR::SHADER::COMPILATION_FAILED: ('{}') - \n{}",
                       path.string(), log.data());
@@ -134,7 +136,7 @@ bool Shader::link_program() {
     glGetProgramiv(program_, GL_LINK_STATUS, &success);
 
     if (!success) {
-        std::array<GLchar, 512> log;
+        std::array<GLchar, 512> log{};
         glGetProgramInfoLog(program_, log.size(), nullptr, log.data());
         spdlog::error("{}", log.data());
         return false;
