@@ -435,14 +435,10 @@ bool MD2::draw_ui() {
 
     ImGui::Combo(
         "Animation", &index,
-        [](void* data, int idx, char const** out_text) -> bool {
+        [](void* data, int idx) -> char const* {
             auto const* md2 = static_cast<MD2 const*>(data);
-            if (idx < 0 ||
-                static_cast<size_t>(idx) >= md2->animations().size()) {
-                return false;
-            }
-            *out_text = md2->animations()[idx].name.c_str();
-            return true;
+            gsl_Assert(static_cast<size_t>(idx) < md2->animations().size());
+            return md2->animations()[idx].name.c_str();
         },
         this, animations().size(), anim_max_height_in_items);
 
@@ -452,13 +448,10 @@ bool MD2::draw_ui() {
 
     ImGui::Combo(
         "Skin", &sindex,
-        [](void* data, int idx, char const** out_text) -> bool {
+        [](void* data, int idx) -> char const* {
             auto const* md2 = static_cast<MD2 const*>(data);
-            if (idx < 0 || static_cast<size_t>(idx) >= md2->skins().size()) {
-                return false;
-            }
-            *out_text = md2->skins()[idx].name.c_str();
-            return true;
+            gsl_Assert(static_cast<size_t>(idx) < md2->skins().size());
+            return md2->skins()[idx].name.c_str();
         },
         this, skins().size());
 

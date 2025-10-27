@@ -126,8 +126,6 @@ void MD2View::update_model() {
 }
 
 void MD2View::render(Engine& engine) {
-    // ImGui::ShowTestWindow(nullptr);
-    // return;
     shader_->use();
 
     if (camera_.view_dirty()) {
@@ -301,10 +299,16 @@ void MD2View::draw_ui(Engine& engine) {
         if (model_changed) {
             update_model();
         }
-        ImGui::Image(std::uintptr_t(texture_->id()),
-                     ImVec2(texture_->width(), texture_->height()),
-                     ImVec2(0, 0), ImVec2(1, 1), ImColor(255, 255, 255, 255),
-                     ImColor(255, 255, 255, 128));
+
+        ImGui::PushStyleVar(ImGuiStyleVar_ImageBorderSize,
+                            std::max(1.0f, ImGui::GetStyle().ImageBorderSize));
+        ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(255, 255, 255, 128));
+        ImGui::ImageWithBg(std::uintptr_t(texture_->id()),
+                           ImVec2(texture_->width(), texture_->height()),
+                           ImVec2(0, 0), ImVec2(1, 1),
+                           ImVec4(255, 255, 255, 255));
+        ImGui::PopStyleColor();
+        ImGui::PopStyleVar();
 
         ImGui::TreePop();
     }
