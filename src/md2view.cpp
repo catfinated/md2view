@@ -228,26 +228,28 @@ void MD2View::draw_ui(Engine& engine) {
 
         ImGui::Text("View");
         ImGui::PushItemWidth(vec4width);
-        ImGui::InputFloat4("", glm::value_ptr(view_[0]), "%.3f",
-                           ImGuiInputTextFlags_ReadOnly);
-        ImGui::InputFloat4("", glm::value_ptr(view_[1]), "%.3f",
-                           ImGuiInputTextFlags_ReadOnly);
-        ImGui::InputFloat4("", glm::value_ptr(view_[2]), "%.3f",
-                           ImGuiInputTextFlags_ReadOnly);
-        ImGui::InputFloat4("", glm::value_ptr(view_[3]), "%.3f",
-                           ImGuiInputTextFlags_ReadOnly);
+        static std::array view_ids = {"view##0", "view##1", "view##2",
+                                      "view##3"};
+
+        for (auto i = 0U; i < view_ids.size(); ++i) {
+            ImGui::PushID(gsl_lite::at(view_ids, i));
+            ImGui::InputFloat4("", glm::value_ptr(view_[i]), "%.3f",
+                               ImGuiInputTextFlags_ReadOnly);
+            ImGui::PopID();
+        }
         ImGui::PopItemWidth();
 
         ImGui::Text("Projection");
         ImGui::PushItemWidth(vec4width);
-        ImGui::InputFloat4("", glm::value_ptr(projection_[0]), "%.3f",
-                           ImGuiInputTextFlags_ReadOnly);
-        ImGui::InputFloat4("", glm::value_ptr(projection_[1]), "%.3f",
-                           ImGuiInputTextFlags_ReadOnly);
-        ImGui::InputFloat4("", glm::value_ptr(projection_[2]), "%.3f",
-                           ImGuiInputTextFlags_ReadOnly);
-        ImGui::InputFloat4("", glm::value_ptr(projection_[3]), "%.3f",
-                           ImGuiInputTextFlags_ReadOnly);
+        static std::array proj_ids = {"proj##0", "proj##1", "proj##2",
+                                      "proj##3"};
+
+        for (auto i = 0U; i < proj_ids.size(); ++i) {
+            ImGui::PushID(gsl_lite::at(proj_ids, i));
+            ImGui::InputFloat4("", glm::value_ptr(projection_[i]), "%.3f",
+                               ImGuiInputTextFlags_ReadOnly);
+            ImGui::PopID();
+        }
         ImGui::PopItemWidth();
 
         ImGui::TreePop();
@@ -264,14 +266,15 @@ void MD2View::draw_ui(Engine& engine) {
 
         ImGui::Text("Model");
         ImGui::PushItemWidth(vec4width);
-        ImGui::InputFloat4("", glm::value_ptr(model_[0]), "%.3f",
-                           ImGuiInputTextFlags_ReadOnly);
-        ImGui::InputFloat4("", glm::value_ptr(model_[1]), "%.3f",
-                           ImGuiInputTextFlags_ReadOnly);
-        ImGui::InputFloat4("", glm::value_ptr(model_[2]), "%.3f",
-                           ImGuiInputTextFlags_ReadOnly);
-        ImGui::InputFloat4("", glm::value_ptr(model_[3]), "%.3f",
-                           ImGuiInputTextFlags_ReadOnly);
+        static std::array model_ids = {"model##00", "model##1", "model##2",
+                                       "model##3"};
+
+        for (auto i = 0U; i < model_ids.size(); ++i) {
+            ImGui::PushID(gsl_lite::at(model_ids, i));
+            ImGui::InputFloat4("", glm::value_ptr(model_[i]), "%.3f",
+                               ImGuiInputTextFlags_ReadOnly);
+            ImGui::PopID();
+        }
         ImGui::PopItemWidth();
 
         ImGui::Checkbox("Glow", &glow_);
