@@ -431,6 +431,7 @@ bool MD2::validate_header(Header const& hdr) {
 
 bool MD2::draw_ui() {
     int index = animation_index();
+    constexpr int anim_max_height_in_items = 15;
 
     ImGui::Combo(
         "Animation", &index,
@@ -443,7 +444,7 @@ bool MD2::draw_ui() {
             *out_text = md2->animations()[idx].name.c_str();
             return true;
         },
-        this, animations().size());
+        this, animations().size(), anim_max_height_in_items);
 
     set_animation(static_cast<size_t>(index));
 
