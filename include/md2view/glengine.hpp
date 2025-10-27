@@ -24,7 +24,7 @@ protected:
 
 private:
     Game game_;
-    GLFWwindow* window_;
+    GLFWwindow* window_{nullptr};
     std::unique_ptr<Gui> gui_;
     GLfloat delta_time_ = 0.0f;
     GLfloat last_frame_ = 0.0f;

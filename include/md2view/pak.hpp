@@ -19,8 +19,8 @@ public:
     struct Node {
         std::string name;
         std::string path;
-        int32_t filepos;
-        int32_t filelen;
+        int32_t filepos{};
+        int32_t filelen{};
     };
 
     explicit PAK(std::filesystem::path fpath);

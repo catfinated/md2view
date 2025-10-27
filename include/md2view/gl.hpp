@@ -12,7 +12,8 @@
 
 #include <spdlog/spdlog.h>
 
-#include <cassert>
+#include <concepts>
+#include <source_location>
 
 inline const char* glErrorToString(GLenum error) {
     char const* str = "unknown error";
@@ -38,19 +39,19 @@ inline const char* glErrorToString(GLenum error) {
     return str;
 }
 
-inline GLenum glCheckError(char const* file, int line) {
-    assert(file);
-
+inline GLenum
+glCheckError(std::source_location loc = std::source_location::current()) {
     GLenum error_code = glGetError();
 
     while (error_code != GL_NO_ERROR) {
-        spdlog::error("[{}:{}] {}", file, line, glErrorToString(error_code));
+        spdlog::error("[{}:{}] {}", loc.file_name(), loc.line(),
+                      glErrorToString(error_code));
         error_code = glGetError();
     }
 
     return error_code;
 }
 
-#define glCheckError() glCheckError(__FILE__, __LINE__)
-
-#define GL_BUFFER_OFFSET(offset) (reinterpret_cast<void*>(offset))
+void* GL_BUFFER_OFFSET(std::integral auto offset) {
+    return reinterpret_cast<void*>(offset);
+}

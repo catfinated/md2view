@@ -14,6 +14,7 @@ public:
         init(pak);
     }
 
+    ~ModelSelector() = default;
     ModelSelector(ModelSelector const&) = delete;
     ModelSelector& operator=(ModelSelector const&) = delete;
     ModelSelector(ModelSelector&&) noexcept = default;

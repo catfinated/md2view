@@ -73,9 +73,9 @@ public:
     };
 
     struct Frame {
-        std::array<float, 3> scale;
-        std::array<float, 3> translate;
-        std::array<char, 16> name;
+        std::array<float, 3> scale{};
+        std::array<float, 3> translate{};
+        std::array<char, 16> name{};
         std::vector<Vertex> vertices;
     };
 
@@ -144,12 +144,12 @@ public:
 private:
     void setup_buffers();
     [[nodiscard]] static bool validate_header(Header const& hdr);
-    [[nodiscard]] bool load(PAK const&, std::string const& filename);
-    [[nodiscard]] bool load(std::ifstream&);
-    [[nodiscard]] bool load_skins(std::ifstream&, size_t);
-    [[nodiscard]] bool load_triangles(std::ifstream&, size_t);
-    [[nodiscard]] bool load_texcoords(std::ifstream&, size_t);
-    [[nodiscard]] bool load_frames(std::ifstream&, size_t);
+    [[nodiscard]] bool load(PAK const& pf, std::string const& filename);
+    [[nodiscard]] bool load(std::ifstream& infile);
+    [[nodiscard]] bool load_skins(std::ifstream& infile, size_t offset);
+    [[nodiscard]] bool load_triangles(std::ifstream& infile, size_t offset);
+    [[nodiscard]] bool load_texcoords(std::ifstream& infile, size_t offset);
+    [[nodiscard]] bool load_frames(std::ifstream& infile, size_t offset);
     void load_skins_from_directory(std::filesystem::path const& dpath,
                                    std::filesystem::path const& root);
 
@@ -181,5 +181,5 @@ private:
     int32_t current_skin_index_{};
 };
 
-std::ostream& operator<<(std::ostream&, MD2::Header const&);
-std::ostream& operator<<(std::ostream&, MD2::Animation const&);
+std::ostream& operator<<(std::ostream& os, MD2::Header const& hdr);
+std::ostream& operator<<(std::ostream& os, MD2::Animation const& anim);

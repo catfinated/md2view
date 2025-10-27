@@ -125,7 +125,7 @@ template <typename Game> void GLEngine<Game>::run_game() {
     last_frame_ = glfwGetTime();
     // glfwSwapInterval(1);
 
-    while (!glfwWindowShouldClose(window_)) {
+    while (glfwWindowShouldClose(window_) == 0) {
         GLfloat current_frame = glfwGetTime();
         delta_time_ = current_frame - last_frame_;
         last_frame_ = current_frame;

@@ -8,9 +8,9 @@
 #include <iomanip>
 #include <iostream>
 
-PCX::PCX(std::istream& ds) {
+PCX::PCX(std::istream& is) {
     Header header{};
-    ds.read(reinterpret_cast<char*>(std::addressof(header)), sizeof(header));
+    is.read(reinterpret_cast<char*>(std::addressof(header)), sizeof(header));
 
     auto width = header.xend - header.xstart + 1;
     auto length = header.yend - header.ystart + 1;
@@ -20,11 +20,11 @@ PCX::PCX(std::istream& ds) {
     scan_lines.reserve(length);
 
     for (auto i = 0; i < length; ++i) {
-        scan_lines.emplace_back(read_scan_line(ds, scan_line_length));
+        scan_lines.emplace_back(read_scan_line(is, scan_line_length));
     }
     spdlog::info("done reading scan lines {}", scan_lines.size());
 
-    colors_ = read_palette(ds);
+    colors_ = read_palette(is);
     spdlog::info("num colors in palette: {}", colors_.size());
 
     width_ = width;
@@ -76,19 +76,19 @@ PCX::ScanLine PCX::read_scan_line(std::istream& ds, int32_t length) {
     return scan_line;
 }
 
-std::vector<PCX::Color> PCX::read_palette(std::istream& ds) {
+std::vector<PCX::Color> PCX::read_palette(std::istream& is) {
     std::vector<PCX::Color> colors;
 
-    if (ds.eof()) {
+    if (is.eof()) {
         return colors;
     }
 
     char byte{}; // marker byte
-    ds.read(std::addressof(byte), 1);
+    is.read(std::addressof(byte), 1);
 
-    while (!ds.eof()) {
+    while (!is.eof()) {
         std::array<char, 3> rgb{};
-        ds.read(rgb.data(), rgb.size());
+        is.read(rgb.data(), rgb.size());
         colors.emplace_back(static_cast<uint8_t>(rgb[0]),
                             static_cast<uint8_t>(rgb[1]),
                             static_cast<uint8_t>(rgb[2]));

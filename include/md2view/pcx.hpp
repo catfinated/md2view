@@ -44,7 +44,7 @@ public:
     };
 
     PCX() = default;
-    PCX(std::istream&);
+    PCX(std::istream& is);
 
     std::vector<unsigned char> const& image() const { return image_; }
 
@@ -56,13 +56,12 @@ public:
 private:
     using ScanLine = std::vector<uint8_t>;
     static ScanLine read_scan_line(std::istream& ds, int32_t length);
-    static std::vector<Color> read_palette(std::istream&);
+    static std::vector<Color> read_palette(std::istream& is);
 
-private:
     std::vector<unsigned char> image_;
     std::vector<Color> colors_;
     int width_{};
     int height_{};
 };
 
-std::ostream& operator<<(std::ostream&, PCX::Header const&);
+std::ostream& operator<<(std::ostream& os, PCX::Header const& hdr);

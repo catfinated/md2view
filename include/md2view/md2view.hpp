@@ -22,21 +22,20 @@ public:
     void process_input(Engine& engine, GLfloat delta_time);
     void on_mouse_movement(GLfloat xoffset, GLfloat yoffset);
     void on_mouse_scroll(double xoffset, double yoffset);
-    void on_framebuffer_resized(int, int);
+    void on_framebuffer_resized(int width, int height);
     void update(Engine& engine, GLfloat delta_time);
     void render(Engine& engine);
-    char const* title() const { return "MD2View"; }
+    static char const* title() { return "MD2View"; }
 
 private:
     void reset_camera();
     void reset_model_matrix();
-    void load_current_texture(Engine&);
+    void load_current_texture(Engine& engine);
     void update_model();
-    void draw_ui(Engine&);
+    void draw_ui(Engine& engine);
     void set_vsync() const;
-    void load_model(Engine&);
+    void load_model(Engine& engine);
 
-private:
     std::shared_ptr<MD2> md2_;
     std::unique_ptr<ModelSelector> model_selector_;
     std::shared_ptr<Texture2D> texture_;

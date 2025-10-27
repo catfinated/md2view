@@ -31,7 +31,7 @@ public:
 
     // movable
     Texture2D(Texture2D&& rhs) noexcept;
-    Texture2D& operator=(Texture2D&&) noexcept;
+    Texture2D& operator=(Texture2D&& rhs) noexcept;
 
     void bind() const;
 
@@ -53,7 +53,6 @@ private:
                             std::span<unsigned char const> data,
                             bool alpha);
 
-private:
     Attributes attr_;
     GLuint id_{};
     GLuint width_{};

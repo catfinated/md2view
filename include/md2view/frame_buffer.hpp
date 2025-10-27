@@ -21,7 +21,7 @@ public:
     FrameBuffer(FrameBuffer&&) = delete;
     FrameBuffer& operator=(FrameBuffer&&) = delete;
 
-    void bind() { glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_); }
+    void bind() const { glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_); }
 
     static void bind_default() { glBindFramebuffer(GL_FRAMEBUFFER, 0); }
 
@@ -39,7 +39,6 @@ private:
     [[nodiscard]] bool
     init(GLuint width, GLuint height, bool enable_render_buffer);
 
-private:
     GLuint frame_buffer_{};
     std::vector<GLuint> color_buffers_;
     std::optional<GLuint> render_buffer_;

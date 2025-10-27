@@ -2,12 +2,13 @@
 
 #include <glm/glm.hpp>
 
+#include <cstdint>
 #include <vector>
 
 // based on camera tutorial from https://learnopengl.com/Getting-started/Camera
 class Camera {
 public:
-    enum Direction { FORWARD, BACKWARD, LEFT, RIGHT };
+    enum class Direction : std::uint8_t { FORWARD, BACKWARD, LEFT, RIGHT };
 
     static constexpr float YAW = -90.0f;
     static constexpr float PITCH = 0.0f;
@@ -18,28 +19,27 @@ public:
            float yaw = YAW,
            float pitch = PITCH);
 
-    glm::mat4 view_matrix() const;
-    float fov() const { return fov_; }
+    [[nodiscard]] glm::mat4 view_matrix() const;
+    [[nodiscard]] float fov() const { return fov_; }
 
     void move(Direction direction, float delta_time);
     void on_mouse_movement(float xoffset,
                            float yoffset,
                            bool constrain_pitch = true);
     void on_mouse_scroll(double xoffset, double yoffset);
-    void reset(glm::vec3 const&);
+    void reset(glm::vec3 const& position);
     void set_position(glm::vec3 const& pos) { position_ = pos; }
     void draw_ui();
 
-    bool view_dirty() { return view_dirty_; }
+    [[nodiscard]] bool view_dirty() const { return view_dirty_; }
     void set_view_clean() { view_dirty_ = false; }
 
-    bool fov_dirty() { return fov_dirty_; }
+    [[nodiscard]] bool fov_dirty() const { return fov_dirty_; }
     void set_fov_clean() { fov_dirty_ = false; }
 
 private:
     void update_vectors();
 
-private:
     glm::vec3 position_;
     glm::vec3 front_;
     glm::vec3 up_;

@@ -53,11 +53,11 @@ public:
 protected:
     bool parse_args(std::span<char const*> args);
 
-    int width_;
-    int height_;
-    int screen_width_;
-    int screen_height_;
-    std::unique_ptr<ResourceManager> resource_manager_;
+    int width_{};
+    int height_{};
+    int screen_width_{};
+    int screen_height_{};
+    std::unique_ptr<ResourceManager> resource_manager_{nullptr};
 
     std::bitset<max_keys> keys_;
     std::bitset<max_keys> keys_pressed_;

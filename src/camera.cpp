@@ -38,16 +38,16 @@ void Camera::move(Direction direction, float delta_time) {
     float velocity = movement_speed_ * delta_time;
 
     switch (direction) {
-    case FORWARD:
+    case Direction::FORWARD:
         position_ += front_ * velocity;
         break;
-    case BACKWARD:
+    case Direction::BACKWARD:
         position_ -= front_ * velocity;
         break;
-    case LEFT:
+    case Direction::LEFT:
         position_ -= right_ * velocity;
         break;
-    case RIGHT:
+    case Direction::RIGHT:
         position_ += right_ * velocity;
         break;
     default:

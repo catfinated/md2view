@@ -7,25 +7,27 @@
 #include <imgui.h>
 
 #include <array>
+#include <cstdint>
 
 class Engine;
 
 class Gui {
 public:
-    Gui(Engine&, gsl_lite::not_null<GLFWwindow*> window);
+    Gui(Engine& engine, gsl_lite::not_null<GLFWwindow*> window);
+    ~Gui() = default;
 
     Gui(Gui const&) = delete;
     Gui& operator=(Gui const&) = delete;
 
-    Gui(Gui&&) = delete;
-    Gui& operator=(Gui&&) = delete;
+    Gui(Gui&&) noexcept = delete;
+    Gui& operator=(Gui&&) noexcept = delete;
 
     void update(double current_time, bool apply_inputs = true);
     void render();
     void shutdown();
 
 private:
-    enum { vertex = 0, element = 1, num_buffers };
+    enum Buffer : std::int8_t { vertex = 0, element, num_buffers };
 
     void init();
 
@@ -40,5 +42,6 @@ private:
     int attrib_location_uv_ = 0;
     int attrib_location_color_ = 0;
     unsigned int vao_ = 0;
-    std::array<unsigned int, num_buffers> glbuffers_{};
+    std::array<unsigned int, static_cast<size_t>(Buffer::num_buffers)>
+        glbuffers_{};
 };
