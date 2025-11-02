@@ -8,7 +8,6 @@ find_package(spdlog REQUIRED)
 find_package(imgui REQUIRED)
 find_package(Stb REQUIRED)
 find_package(gsl-lite REQUIRED)
-find_package(range-v3 CONFIG REQUIRED)
 find_path(TREEHH_INCLUDE_DIRS "treehh/tree.hh")
 #find_package(Vulkan REQUIRED)
 
@@ -37,9 +36,6 @@ target_link_libraries(libmd2v PUBLIC
    imgui::imgui 
    spdlog::spdlog 
    gsl::gsl-lite-v1
-   range-v3::meta 
-   range-v3::concepts 
-   range-v3::range-v3
 )
 
 target_include_directories(libmd2v PUBLIC ${OPENGL_INCLUDE_DIR} ${Stb_INCLUDE_DIR} ${TREEHH_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/include)

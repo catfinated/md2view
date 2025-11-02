@@ -1,13 +1,12 @@
 #pragma once
 
 #include <boost/algorithm/string/predicate.hpp>
-#include <range/v3/view/filter.hpp>
-#include <range/v3/view/map.hpp>
 
 #include <array>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <ranges>
 #include <string>
 #include <unordered_map>
 
@@ -34,8 +33,8 @@ public:
     std::ifstream open_ifstream(std::filesystem::path const& fpath) const;
 
     auto models() const {
-        return entries() | ranges::views::values |
-               ranges::views::filter([](auto const& n) {
+        return entries() | std::ranges::views::values |
+               std::ranges::views::filter([](auto const& n) {
                    return boost::algorithm::ends_with(n.path, ".md2");
                });
     }

@@ -1,8 +1,6 @@
 #include "md2view/vk.hpp"
 
 #include <glm/glm.hpp>
-#include <range/v3/algorithm/find_if.hpp>
-#include <range/v3/algorithm/transform.hpp>
 #include <spdlog/fmt/fmt.h>
 #include <spdlog/fmt/std.h>
 #include <spdlog/spdlog.h>
@@ -12,6 +10,7 @@
 #include <fstream>
 #include <iterator>
 #include <limits>
+#include <ranges>
 #include <string_view>
 #include <vector>
 
@@ -141,10 +140,11 @@ createInstance(vk::raii::Context& context) noexcept {
 
     for (auto layerName : validationLayers) {
         std::string_view sv{layerName};
-        auto iter = ranges::find_if(availableLayers, [sv](auto const& layer) {
-            return sv == std::string_view{layer.layerName};
-        });
-        if (iter == ranges::end(availableLayers)) {
+        auto iter =
+            std::ranges::find_if(availableLayers, [sv](auto const& layer) {
+                return sv == std::string_view{layer.layerName};
+            });
+        if (iter == std::ranges::end(availableLayers)) {
             tl::make_unexpected(std::runtime_error(
                 fmt::format("validation layer not available {}", sv)));
         }
