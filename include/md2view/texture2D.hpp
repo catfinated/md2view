@@ -35,11 +35,11 @@ public:
 
     void bind() const;
 
-    Attributes const& attributes() const { return attr_; }
-    GLuint id() const { return id_; }
+    [[nodiscard]] Attributes const& attributes() const { return attr_; }
+    [[nodiscard]] GLuint id() const { return id_; }
 
-    GLuint width() const { return width_; }
-    GLuint height() const { return height_; }
+    [[nodiscard]] GLuint width() const { return width_; }
+    [[nodiscard]] GLuint height() const { return height_; }
 
     static void unbind() { glBindTexture(GL_TEXTURE_2D, 0); }
 

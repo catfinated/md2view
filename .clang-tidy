@@ -3,7 +3,6 @@ Checks: >
   clang-analyzer-*,
   modernize-*,
   -modernize-use-trailing-return-type,
-  -modernize-use-nodiscard,
   cppcoreguidelines-*,
   -cppcoreguidelines-avoid-magic-numbers,
   -cppcoreguidelines-pro-type-reinterpret-cast,

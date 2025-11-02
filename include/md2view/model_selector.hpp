@@ -20,7 +20,7 @@ public:
     ModelSelector(ModelSelector&&) noexcept = default;
     ModelSelector& operator=(ModelSelector&&) noexcept = default;
 
-    std::string model_path() const;
+    [[nodiscard]] std::string model_path() const;
 
     /// @brief  Draw the model selection ui
     /// @return True if the selected model changed

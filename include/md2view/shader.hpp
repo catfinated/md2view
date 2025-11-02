@@ -32,23 +32,30 @@ public:
            std::filesystem::path const& fragment,
            std::optional<std::filesystem::path> const& geometry = {});
 
-    GLuint program() const { return program_; }
+    [[nodiscard]] GLuint program() const { return program_; }
     void use() const { glUseProgram(program()); }
 
     void set_uniform_block_binding(gsl_lite::not_null<char const*> block,
                                    GLuint binding_point) const;
 
-    GLint uniform_location(gsl_lite::not_null<GLchar const*> name) const;
-    GLint uniform_location(std::string const& name) const {
+    [[nodiscard]] GLint
+    uniform_location(gsl_lite::not_null<GLchar const*> name) const;
+    [[nodiscard]] GLint uniform_location(std::string const& name) const {
         return uniform_location(
             gsl_lite::not_null<GLchar const*>(name.c_str()));
     }
 
     // maybe cache some of these
-    GLint model_location() const { return uniform_location("model"); }
-    GLint view_location() const { return uniform_location("view"); }
-    GLint projection_location() const { return uniform_location("projection"); }
-    GLint camera_position_location() const {
+    [[nodiscard]] GLint model_location() const {
+        return uniform_location("model");
+    }
+    [[nodiscard]] GLint view_location() const {
+        return uniform_location("view");
+    }
+    [[nodiscard]] GLint projection_location() const {
+        return uniform_location("projection");
+    }
+    [[nodiscard]] GLint camera_position_location() const {
         return uniform_location("cameraPos");
     }
 

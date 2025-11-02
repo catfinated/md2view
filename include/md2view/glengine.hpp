@@ -12,7 +12,7 @@ public:
     void run_game();
 
 protected:
-    GLfloat delta_time() const { return delta_time_; }
+    [[nodiscard]] GLfloat delta_time() const { return delta_time_; }
 
     // consider using attorney so these callbacks don't have to be public
     void key_callback(int key, int action);

@@ -23,21 +23,21 @@ public:
 
     Engine() = default;
 
-    int width() const { return width_; }
-    int height() const { return height_; }
+    [[nodiscard]] int width() const { return width_; }
+    [[nodiscard]] int height() const { return height_; }
 
-    int screen_width() const { return screen_width_; }
-    int screen_height() const { return screen_height_; }
+    [[nodiscard]] int screen_width() const { return screen_width_; }
+    [[nodiscard]] int screen_height() const { return screen_height_; }
 
     ResourceManager& resource_manager() {
         gsl_Expects(resource_manager_);
         return *resource_manager_;
     }
-    std::bitset<max_keys> const& keys() const { return keys_; }
+    [[nodiscard]] std::bitset<max_keys> const& keys() const { return keys_; }
 
     [[nodiscard]] bool check_key_pressed(unsigned int key);
 
-    float aspect_ratio() const {
+    [[nodiscard]] float aspect_ratio() const {
         return static_cast<float>(width_) / static_cast<float>(height_);
     }
 
@@ -48,7 +48,7 @@ public:
         return variables_map_;
     }
 
-    Mouse const& mouse() const { return mouse_; }
+    [[nodiscard]] Mouse const& mouse() const { return mouse_; }
 
 protected:
     bool parse_args(std::span<char const*> args);

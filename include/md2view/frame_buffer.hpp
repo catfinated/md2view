@@ -25,12 +25,14 @@ public:
 
     static void bind_default() { glBindFramebuffer(GL_FRAMEBUFFER, 0); }
 
-    GLuint color_buffer(size_t n) const { return color_buffers_.at(n); }
+    [[nodiscard]] GLuint color_buffer(size_t n) const {
+        return color_buffers_.at(n);
+    }
     void use_color_buffer(size_t n) const {
         glBindTexture(GL_TEXTURE_2D, color_buffers_.at(n));
     }
 
-    GLuint handle() const { return frame_buffer_; }
+    [[nodiscard]] GLuint handle() const { return frame_buffer_; }
 
 private:
     void cleanup();

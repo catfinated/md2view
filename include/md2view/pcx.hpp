@@ -46,12 +46,14 @@ public:
     PCX() = default;
     PCX(std::istream& is);
 
-    std::vector<unsigned char> const& image() const { return image_; }
+    [[nodiscard]] std::vector<unsigned char> const& image() const {
+        return image_;
+    }
 
-    std::vector<Color> const& colors() const { return colors_; }
+    [[nodiscard]] std::vector<Color> const& colors() const { return colors_; }
 
-    int height() const { return height_; }
-    int width() const { return width_; }
+    [[nodiscard]] int height() const { return height_; }
+    [[nodiscard]] int width() const { return width_; }
 
 private:
     using ScanLine = std::vector<uint8_t>;
