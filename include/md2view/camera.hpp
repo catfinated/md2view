@@ -50,7 +50,7 @@ private:
     float pitch_;
     float movement_speed_{3.0f};
     float mouse_sensitivity_{0.25};
-    float fov_;
+    float fov_{FOV};
 
     bool view_dirty_ = true;
     bool fov_dirty_ = true;

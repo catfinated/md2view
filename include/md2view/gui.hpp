@@ -27,7 +27,7 @@ public:
     void shutdown();
 
 private:
-    enum Buffer : std::int8_t { vertex = 0, element, num_buffers };
+    enum class Buffer : std::int8_t { vertex = 0, element, num_buffers };
 
     void init();
 

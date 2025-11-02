@@ -14,8 +14,7 @@ Camera::Camera(glm::vec3 const& position,
     , right_(1.0f, 0.0f, 0.0)
     , world_up_(up)
     , yaw_(yaw)
-    , pitch_(pitch)
-    , fov_(FOV) {
+    , pitch_(pitch) {
     update_vectors();
 }
 

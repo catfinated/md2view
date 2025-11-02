@@ -45,14 +45,15 @@ void Gui::init() {
 
     glCheckError();
 
-    glGenBuffers(Buffer::num_buffers, glbuffers_.data());
+    glGenBuffers(static_cast<GLsizei>(Buffer::num_buffers), glbuffers_.data());
     glGenVertexArrays(1, std::addressof(vao_));
 
     glCheckError();
 
     glBindVertexArray(vao_);
     glCheckError();
-    glBindBuffer(GL_ARRAY_BUFFER, glbuffers_[Buffer::vertex]);
+    glBindBuffer(GL_ARRAY_BUFFER,
+                 glbuffers_[static_cast<size_t>(Buffer::vertex)]);
     glCheckError();
     glEnableVertexAttribArray(attrib_location_position_);
     glCheckError();
@@ -233,12 +234,14 @@ void Gui::render() {
         const ImDrawList* cmd_list = draw_data->CmdLists[n];
         const ImDrawIdx* idx_buffer_offset = nullptr;
 
-        glBindBuffer(GL_ARRAY_BUFFER, glbuffers_[Buffer::vertex]);
+        glBindBuffer(GL_ARRAY_BUFFER,
+                     glbuffers_[static_cast<size_t>(Buffer::vertex)]);
         glBufferData(GL_ARRAY_BUFFER,
                      (GLsizeiptr)cmd_list->VtxBuffer.Size * sizeof(ImDrawVert),
                      (const GLvoid*)cmd_list->VtxBuffer.Data, GL_STREAM_DRAW);
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, glbuffers_[Buffer::element]);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,
+                     glbuffers_[static_cast<size_t>(Buffer::element)]);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                      (GLsizeiptr)cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx),
                      (const GLvoid*)cmd_list->IdxBuffer.Data, GL_STREAM_DRAW);

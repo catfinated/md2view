@@ -50,8 +50,8 @@ The screenshots above come from the Macbook which partly explains the low FPS.
 
 ## Building
 
-* cmake -B build -S . --preset vcpkg
-* cmake --build build/ --verbose
+* cmake --preset debug
+* cmake --build --preset debug
 
 ### Dependencies
 
@@ -79,7 +79,7 @@ md2view is built using vcpkg to manage dependencies. These dependencies are:
 
 ### Running
 
-* build/src/glmd2v
+* build/debug/src/glmd2v
 
 ## Attributions
 
