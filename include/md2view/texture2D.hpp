@@ -12,11 +12,11 @@ class Texture2D {
 public:
     struct Attributes {
         GLuint image_format = GL_RGB;
-        GLuint internal_format = GL_RGB;
+        GLint internal_format = GL_RGB;
         GLuint wrap_s = GL_REPEAT;
         GLuint wrap_t = GL_REPEAT;
-        GLuint filter_min = GL_LINEAR;
-        GLuint filter_max = GL_LINEAR;
+        GLint filter_min = GL_LINEAR;
+        GLint filter_max = GL_LINEAR;
     };
 
     ~Texture2D();

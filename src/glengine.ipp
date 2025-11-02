@@ -122,11 +122,12 @@ bool GLEngine<Game>::init(std::span<char const*> args) {
 }
 
 template <typename Game> void GLEngine<Game>::run_game() {
-    last_frame_ = glfwGetTime();
+    last_frame_ = gsl_lite::narrow_cast<GLfloat>(glfwGetTime());
     // glfwSwapInterval(1);
 
     while (glfwWindowShouldClose(window_) == 0) {
-        GLfloat current_frame = glfwGetTime();
+        auto const current_frame =
+            gsl_lite::narrow_cast<GLfloat>(glfwGetTime());
         delta_time_ = current_frame - last_frame_;
         last_frame_ = current_frame;
 

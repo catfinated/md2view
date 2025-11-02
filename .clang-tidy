@@ -8,7 +8,6 @@ Checks: >
   -cppcoreguidelines-pro-type-reinterpret-cast,
   -cppcoreguidelines-init-variables,
   -cppcoreguidelines-pro-type-vararg,
-  -cppcoreguidelines-narrowing-conversions,
   -cppcoreguidelines-non-private-member-variables-in-classes,
   performance-*,
   -performance-no-int-to-ptr,

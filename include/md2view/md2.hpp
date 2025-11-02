@@ -172,13 +172,13 @@ private:
     std::array<GLuint, 2> vbo_{};
 
     // animation state
-    int32_t current_animation_index_{};
     int next_frame_{};
     int current_frame_{};
     float interpolation_{};
     float frames_per_second_ = 8.0f;
 
-    int32_t current_skin_index_{};
+    std::size_t current_animation_index_{};
+    std::size_t current_skin_index_{};
 };
 
 std::ostream& operator<<(std::ostream& os, MD2::Header const& hdr);

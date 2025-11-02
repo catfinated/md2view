@@ -29,7 +29,8 @@ bool Engine::parse_args(std::span<char const*> args) {
     options_desc().add(engine);
 
     boost::program_options::store(boost::program_options::parse_command_line(
-                                      args.size(), args.data(), options_desc()),
+                                      gsl_lite::narrow_cast<int>(args.size()),
+                                      args.data(), options_desc()),
                                   variables_map_);
     boost::program_options::notify(variables_map_);
 

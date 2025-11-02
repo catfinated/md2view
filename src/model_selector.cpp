@@ -74,7 +74,8 @@ void ModelSelector::select_random_model() {
         return;
     }
 
-    std::uniform_int_distribution<> dist(0, iters.size() - 1);
+    std::uniform_int_distribution<> dist(
+        0, gsl_lite::narrow_cast<int>(iters.size()) - 1);
     auto idx = dist(mt_);
     auto iter = iters[idx];
     spdlog::info("selected random model='{}' '{}'", iter->path, iter->name);

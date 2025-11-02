@@ -19,7 +19,7 @@ public:
         std::string name;
         std::string path;
         int32_t filepos{};
-        int32_t filelen{};
+        uintmax_t filelen{};
     };
 
     explicit PAK(std::filesystem::path fpath);

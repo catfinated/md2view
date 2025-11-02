@@ -36,8 +36,6 @@ MD2::MD2(std::string const& filename, PAK const& pak) {
     if (!load(pak, filename)) {
         throw std::runtime_error("failed to load MD2 model " + filename);
     }
-
-    set_animation(0);
 }
 
 MD2::~MD2() {
@@ -62,7 +60,6 @@ bool MD2::load(PAK const& pf, std::string const& filename) {
         auto p = pf.fpath() / filename;
         load_skins_from_directory(p.parent_path(), pf.fpath());
     }
-    set_skin_index(0);
     return true;
 }
 
@@ -103,8 +100,6 @@ void MD2::load_skins_from_directory(std::filesystem::path const& dpath,
 bool MD2::load(std::ifstream& infile) {
     next_frame_ = 1;
     current_frame_ = 0;
-    current_animation_index_ = -1;
-    current_skin_index_ = -1;
     interpolation_ = 0.0f;
 
     static_assert(sizeof(hdr_) == (17 * sizeof(int32_t)),
@@ -120,7 +115,6 @@ bool MD2::load(std::ifstream& infile) {
     gsl_Assert(load_frames(infile, offset));
 
     setup_buffers();
-    set_animation(0);
     return true;
 }
 
@@ -131,9 +125,9 @@ bool MD2::load_skins(std::ifstream& infile, size_t offset) {
     static_assert(sizeof(Skin) == 64, "md2 skin has padding");
     std::vector<Skin> skins;
     skins.resize(hdr_.num_skins); // need resize so we actually push elements
-    infile.seekg(offset + hdr_.offset_skins);
+    infile.seekg(gsl_lite::narrow<std::streamoff>(offset + hdr_.offset_skins));
     infile.read(reinterpret_cast<char*>(skins.data()),
-                sizeof(Skin) * skins.size());
+                gsl_lite::narrow<std::streamsize>(sizeof(Skin) * skins.size()));
     assert(static_cast<size_t>(infile.gcount()) == sizeof(Skin) * skins.size());
     assert(skins.size() == static_cast<size_t>(hdr_.num_skins));
     spdlog::info("num skins={}", skins.size());
@@ -154,9 +148,10 @@ bool MD2::load_triangles(std::ifstream& infile, size_t offset) {
     static_assert(sizeof(Triangle) == 6 * sizeof(uint16_t),
                   "md2 triangle has padding");
     triangles_.resize(hdr_.num_tris);
-    infile.seekg(offset + hdr_.offset_tris);
+    infile.seekg(gsl_lite::narrow<std::streamoff>(offset + hdr_.offset_tris));
     infile.read(reinterpret_cast<char*>(triangles_.data()),
-                sizeof(Triangle) * triangles_.size());
+                gsl_lite::narrow<std::streamsize>(sizeof(Triangle) *
+                                                  triangles_.size()));
 
     return infile.good();
 }
@@ -169,9 +164,10 @@ bool MD2::load_texcoords(std::ifstream& infile, size_t offset) {
     static_assert(sizeof(TexCoord) == 2 * sizeof(int16_t),
                   "md2 texcoord has padding");
     texcoords_.resize(hdr_.num_st);
-    infile.seekg(offset + hdr_.offset_st);
+    infile.seekg(gsl_lite::narrow<std::streamoff>((offset + hdr_.offset_st)));
     infile.read(reinterpret_cast<char*>(texcoords_.data()),
-                sizeof(TexCoord) * texcoords_.size());
+                gsl_lite::narrow<std::streamsize>(sizeof(TexCoord) *
+                                                  texcoords_.size()));
 
     // we must scale the texcoords and unpack the triangles
     // into a flat vector to better work gith glDrawArrays
@@ -198,7 +194,7 @@ bool MD2::load_frames(std::ifstream& infile, size_t offset) {
 
     frames_.resize(hdr_.num_frames);
     key_frames_.resize(hdr_.num_frames);
-    infile.seekg(offset + hdr_.offset_frames);
+    infile.seekg(gsl_lite::narrow<std::streamoff>(offset + hdr_.offset_frames));
 
     Animation current_anim;
     current_anim.start_frame = -1;
@@ -215,8 +211,9 @@ bool MD2::load_frames(std::ifstream& infile, size_t offset) {
                     sizeof(frame.translate));
         infile.read(reinterpret_cast<char*>(frame.name.data()),
                     sizeof(frame.name));
-        infile.read(reinterpret_cast<char*>(frame.vertices.data()),
-                    sizeof(Vertex) * hdr_.num_xyz);
+        infile.read(
+            reinterpret_cast<char*>(frame.vertices.data()),
+            gsl_lite::narrow<std::streamsize>(sizeof(Vertex) * hdr_.num_xyz));
 
         std::string anim_id =
             animation_id_from_frame_name(std::string(frame.name.data()));
@@ -251,12 +248,15 @@ bool MD2::load_frames(std::ifstream& infile, size_t offset) {
                 auto vertex_index = gsl_lite::at(triangle.vertex, i);
                 assert(vertex_index < frame.vertices.size());
                 auto const& vertex = frame.vertices[vertex_index];
-                auto const x =
-                    (frame.scale[0] * vertex.v[0]) + frame.translate[0];
-                auto const z =
-                    (frame.scale[1] * vertex.v[1]) + frame.translate[1];
-                auto const y =
-                    (frame.scale[2] * vertex.v[2]) + frame.translate[2];
+                auto const x = (frame.scale[0] *
+                                gsl_lite::narrow_cast<float>(vertex.v[0])) +
+                               frame.translate[0];
+                auto const z = (frame.scale[1] *
+                                gsl_lite::narrow_cast<float>(vertex.v[1])) +
+                               frame.translate[1];
+                auto const y = (frame.scale[2] *
+                                gsl_lite::narrow_cast<float>(vertex.v[2])) +
+                               frame.translate[2];
                 key_frame.vertices.emplace_back(x, y, z);
             }
         }
@@ -294,8 +294,10 @@ void MD2::setup_buffers() {
     static_assert(sizeof(glm::vec3) == 12, "bad vec3 size");
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_[0]);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3),
-                 vertices.data(), GL_DYNAMIC_DRAW);
+    glBufferData(
+        GL_ARRAY_BUFFER,
+        gsl_lite::narrow_cast<GLsizeiptr>(vertices.size() * sizeof(glm::vec3)),
+        vertices.data(), GL_DYNAMIC_DRAW);
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
@@ -303,7 +305,9 @@ void MD2::setup_buffers() {
     static_assert(sizeof(glm::vec2) == 8, "bad vec2 size");
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_[1]);
-    glBufferData(GL_ARRAY_BUFFER, scaled_texcoords_.size() * sizeof(glm::vec2),
+    glBufferData(GL_ARRAY_BUFFER,
+                 gsl_lite::narrow_cast<GLsizeiptr>(scaled_texcoords_.size() *
+                                                   sizeof(glm::vec2)),
                  scaled_texcoords_.data(), GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(1);
@@ -324,7 +328,7 @@ void MD2::set_animation(std::string const& id) {
 }
 
 void MD2::set_animation(size_t index) {
-    assert(index < animations_.size());
+    gsl_Expects(index < animations_.size());
 
     if (std::cmp_not_equal(current_animation_index_, index)) {
         auto const& anim = animations_[index];
@@ -335,24 +339,16 @@ void MD2::set_animation(size_t index) {
 }
 
 void MD2::set_skin_index(size_t index) {
-    assert(index < skins_.size());
-
+    gsl_Expects(index < skins_.size());
     current_skin_index_ = index;
 }
 
 void MD2::update(float dt) {
-    if (current_animation_index_ < 0) {
-        return;
-    }
-
     if (frames_per_second_ == 0.0f) {
         return;
     }
 
-    assert(static_cast<size_t>(current_animation_index_) < animations_.size());
-
-    auto const& anim = animations_[current_animation_index_];
-
+    auto const& anim = gsl_lite::at(animations_, current_animation_index_);
     interpolation_ += dt * frames_per_second_;
 
     if (interpolation_ >= 1.0f) {
@@ -387,13 +383,15 @@ void MD2::update(float dt) {
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo_[0]);
     glBufferSubData(GL_ARRAY_BUFFER, 0,
-                    sizeof(glm::vec3) * interpolated_vertices_.size(),
+                    gsl_lite::narrow_cast<GLsizeiptr>(
+                        sizeof(glm::vec3) * interpolated_vertices_.size()),
                     interpolated_vertices_.data());
 }
 
 void MD2::draw(Shader& /* shader */) {
     glBindVertexArray(vao_);
-    glDrawArrays(GL_TRIANGLES, 0, interpolated_vertices_.size());
+    glDrawArrays(GL_TRIANGLES, 0,
+                 gsl_lite::narrow_cast<GLsizei>(interpolated_vertices_.size()));
     glCheckError();
 }
 
@@ -430,7 +428,7 @@ bool MD2::validate_header(Header const& hdr) {
 }
 
 bool MD2::draw_ui() {
-    int index = animation_index();
+    int index = gsl_lite::narrow_cast<int>(animation_index());
     constexpr int anim_max_height_in_items = 15;
 
     ImGui::Combo(
@@ -440,11 +438,12 @@ bool MD2::draw_ui() {
             gsl_Assert(static_cast<size_t>(idx) < md2->animations().size());
             return md2->animations()[idx].name.c_str();
         },
-        this, animations().size(), anim_max_height_in_items);
+        this, gsl_lite::narrow_cast<int>(animations().size()),
+        anim_max_height_in_items);
 
     set_animation(static_cast<size_t>(index));
 
-    int sindex = skin_index();
+    int sindex = gsl_lite::narrow_cast<int>(skin_index());
 
     ImGui::Combo(
         "Skin", &sindex,
@@ -453,7 +452,7 @@ bool MD2::draw_ui() {
             gsl_Assert(static_cast<size_t>(idx) < md2->skins().size());
             return md2->skins()[idx].name.c_str();
         },
-        this, skins().size());
+        this, gsl_lite::narrow_cast<int>(skins().size()));
 
     float fps = frames_per_second();
     ImGui::InputFloat("Animation FPS", &fps, 1.0f, 5.0f, "%.3f");

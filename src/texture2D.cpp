@@ -65,8 +65,10 @@ bool Texture2D::init(GLuint width,
 
     spdlog::debug("init 2D texture {}x{}", width_, height_);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, attr_.internal_format, width_, height_, 0,
-                 attr_.image_format, GL_UNSIGNED_BYTE, data.data());
+    glTexImage2D(GL_TEXTURE_2D, 0, attr_.internal_format,
+                 gsl_lite::narrow_cast<GLsizei>(width_),
+                 gsl_lite::narrow_cast<GLsizei>(height_), 0, attr_.image_format,
+                 GL_UNSIGNED_BYTE, data.data());
 
     glGenerateMipmap(GL_TEXTURE_2D);
 

@@ -231,7 +231,8 @@ void MD2View::draw_ui(Engine& engine) {
 
         for (auto i = 0U; i < view_ids.size(); ++i) {
             ImGui::PushID(gsl_lite::at(view_ids, i));
-            ImGui::InputFloat4("", glm::value_ptr(view_[i]), "%.3f",
+            auto const j = gsl_lite::narrow_cast<glm::length_t>(i);
+            ImGui::InputFloat4("", glm::value_ptr(view_[j]), "%.3f",
                                ImGuiInputTextFlags_ReadOnly);
             ImGui::PopID();
         }
@@ -244,7 +245,8 @@ void MD2View::draw_ui(Engine& engine) {
 
         for (auto i = 0U; i < proj_ids.size(); ++i) {
             ImGui::PushID(gsl_lite::at(proj_ids, i));
-            ImGui::InputFloat4("", glm::value_ptr(projection_[i]), "%.3f",
+            auto const j = gsl_lite::narrow_cast<glm::length_t>(i);
+            ImGui::InputFloat4("", glm::value_ptr(projection_[j]), "%.3f",
                                ImGuiInputTextFlags_ReadOnly);
             ImGui::PopID();
         }
@@ -269,7 +271,8 @@ void MD2View::draw_ui(Engine& engine) {
 
         for (auto i = 0U; i < model_ids.size(); ++i) {
             ImGui::PushID(gsl_lite::at(model_ids, i));
-            ImGui::InputFloat4("", glm::value_ptr(model_[i]), "%.3f",
+            auto const j = gsl_lite::narrow_cast<glm::length_t>(i);
+            ImGui::InputFloat4("", glm::value_ptr(model_[j]), "%.3f",
                                ImGuiInputTextFlags_ReadOnly);
             ImGui::PopID();
         }
@@ -303,10 +306,11 @@ void MD2View::draw_ui(Engine& engine) {
         ImGui::PushStyleVar(ImGuiStyleVar_ImageBorderSize,
                             std::max(1.0f, ImGui::GetStyle().ImageBorderSize));
         ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(255, 255, 255, 128));
-        ImGui::ImageWithBg(std::uintptr_t(texture_->id()),
-                           ImVec2(texture_->width(), texture_->height()),
-                           ImVec2(0, 0), ImVec2(1, 1),
-                           ImVec4(255, 255, 255, 255));
+        ImGui::ImageWithBg(
+            std::uintptr_t(texture_->id()),
+            ImVec2(gsl_lite::narrow_cast<float>(texture_->width()),
+                   gsl_lite::narrow_cast<float>(texture_->height())),
+            ImVec2(0, 0), ImVec2(1, 1), ImVec4(255, 255, 255, 255));
         ImGui::PopStyleColor();
         ImGui::PopStyleVar();
 

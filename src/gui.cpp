@@ -112,9 +112,13 @@ void Gui::update(double current_time, bool apply_inputs) {
     int display_h{};
     glfwGetWindowSize(window_, &w, &h);
     glfwGetFramebufferSize(window_, &display_w, &display_h);
-    io.DisplaySize = ImVec2((float)w, (float)h);
-    io.DisplayFramebufferScale = ImVec2(w > 0 ? ((float)display_w / w) : 0,
-                                        h > 0 ? ((float)display_h / h) : 0);
+    auto const wf = gsl_lite::narrow_cast<float>(w);
+    auto const hf = gsl_lite::narrow_cast<float>(h);
+    auto const dwf = gsl_lite::narrow_cast<float>(display_w);
+    auto const dhf = gsl_lite::narrow_cast<float>(display_h);
+    io.DisplaySize = ImVec2(wf, hf);
+    io.DisplayFramebufferScale =
+        ImVec2(w > 0 ? dwf / wf : 0.0F, h > 0 ? dhf / hf : 0.0F);
 
     // Setup time step
     io.DeltaTime = time_ > 0.0 ? (float)(current_time - time_) : (1.0f / 60.0f);
@@ -143,7 +147,8 @@ void Gui::update(double current_time, bool apply_inputs) {
             gsl_lite::at(mouse_pressed_, i) = false;
         }
 
-        io.MouseWheel = engine_.mouse().scroll_yoffset.value_or(0.0);
+        io.MouseWheel = gsl_lite::narrow_cast<float>(
+            engine_.mouse().scroll_yoffset.value_or(0.0));
     }
 
     // Hide OS mouse cursor if ImGui is drawing it
@@ -237,13 +242,15 @@ void Gui::render() {
         glBindBuffer(GL_ARRAY_BUFFER,
                      glbuffers_[static_cast<size_t>(Buffer::vertex)]);
         glBufferData(GL_ARRAY_BUFFER,
-                     (GLsizeiptr)cmd_list->VtxBuffer.Size * sizeof(ImDrawVert),
+                     gsl_lite::narrow_cast<GLsizeiptr>(
+                         cmd_list->VtxBuffer.Size * sizeof(ImDrawVert)),
                      (const GLvoid*)cmd_list->VtxBuffer.Data, GL_STREAM_DRAW);
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,
                      glbuffers_[static_cast<size_t>(Buffer::element)]);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                     (GLsizeiptr)cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx),
+                     gsl_lite::narrow_cast<GLsizeiptr>(
+                         cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx)),
                      (const GLvoid*)cmd_list->IdxBuffer.Data, GL_STREAM_DRAW);
 
         for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i++) {
@@ -252,10 +259,15 @@ void Gui::render() {
                 pcmd->UserCallback(cmd_list, pcmd);
             } else {
                 glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd->TextureId);
-                glScissor((int)pcmd->ClipRect.x,
-                          (int)(fb_height - pcmd->ClipRect.w),
-                          (int)(pcmd->ClipRect.z - pcmd->ClipRect.x),
-                          (int)(pcmd->ClipRect.w - pcmd->ClipRect.y));
+                auto const yf =
+                    gsl_lite::narrow_cast<float>(fb_height) - pcmd->ClipRect.w;
+
+                glScissor(gsl_lite::narrow_cast<int>(pcmd->ClipRect.x),
+                          gsl_lite::narrow_cast<int>(yf),
+                          gsl_lite::narrow_cast<int>(pcmd->ClipRect.z -
+                                                     pcmd->ClipRect.x),
+                          gsl_lite::narrow_cast<int>(pcmd->ClipRect.w -
+                                                     pcmd->ClipRect.y));
                 glDrawElements(GL_TRIANGLES, (GLsizei)pcmd->ElemCount,
                                sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT
                                                       : GL_UNSIGNED_INT,

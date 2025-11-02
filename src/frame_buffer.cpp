@@ -1,5 +1,7 @@
 #include "md2view/frame_buffer.hpp"
 
+#include <gsl-lite/gsl-lite.hpp>
+
 FrameBuffer::FrameBuffer(GLuint width,
                          GLuint height,
                          size_t num_color_buffers,
@@ -44,16 +46,20 @@ void FrameBuffer::cleanup() {
         glDeleteRenderbuffers(1, &rb);
     }
 
-    glDeleteTextures(color_buffers_.size(), color_buffers_.data());
+    auto const count = gsl_lite::narrow_cast<GLsizei>(color_buffers_.size());
+    glDeleteTextures(count, color_buffers_.data());
     glDeleteFramebuffers(1, &frame_buffer_);
 }
 
 void FrameBuffer::create_texture_attachment(GLuint width, GLuint height) {
-    glGenTextures(color_buffers_.size(), color_buffers_.data());
+    auto const count = gsl_lite::narrow_cast<GLsizei>(color_buffers_.size());
+    glGenTextures(count, color_buffers_.data());
 
     for (auto i = 0u; i < color_buffers_.size(); ++i) {
         glBindTexture(GL_TEXTURE_2D, color_buffers_[i]);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
+                     gsl_lite::narrow_cast<GLsizei>(width),
+                     gsl_lite::narrow_cast<GLsizei>(height), 0, GL_RGB,
                      GL_UNSIGNED_BYTE, nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -72,7 +78,9 @@ void FrameBuffer::create_render_buffer_attachement(GLuint width,
     GLuint rb;
     glGenRenderbuffers(1, &rb);
     glBindRenderbuffer(GL_RENDERBUFFER, rb);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8,
+                          gsl_lite::narrow_cast<GLsizei>(width),
+                          gsl_lite::narrow_cast<GLsizei>(height));
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
                               GL_RENDERBUFFER, rb);

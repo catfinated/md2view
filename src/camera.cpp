@@ -2,6 +2,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <gsl-lite/gsl-lite.hpp>
 #include <imgui.h>
 
 Camera::Camera(glm::vec3 const& position,
@@ -74,7 +75,7 @@ void Camera::on_mouse_movement(float xoffset,
 
 void Camera::on_mouse_scroll(double /* xoffset */, double yoffset) {
     if (fov_ >= 1.0f && fov_ <= 45.0f) {
-        fov_ -= yoffset;
+        fov_ -= gsl_lite::narrow_cast<float>(yoffset);
     }
 
     fov_ = std::min(45.0f, std::max(1.0f, fov_));
