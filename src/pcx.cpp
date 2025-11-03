@@ -11,7 +11,6 @@
 
 PCX::PCX(std::istream& is) {
     Header header{};
-    std::cout << "HELLO " << is.gcount() << std::endl;
     is.read(reinterpret_cast<char*>(std::addressof(header)), sizeof(header));
     gsl_Assert(is.gcount() == sizeof(header));
 
