@@ -13,6 +13,7 @@
     "stb",
     "treehh",
     "gsl-lite",
-    "tl-expected"
+    "tl-expected",
+    "catch2"
   ]
 }

@@ -1,5 +1,6 @@
 #include "md2view/pcx.hpp"
 
+#include <gsl-lite/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 
 #include <array>
@@ -10,7 +11,9 @@
 
 PCX::PCX(std::istream& is) {
     Header header{};
+    std::cout << "HELLO " << is.gcount() << std::endl;
     is.read(reinterpret_cast<char*>(std::addressof(header)), sizeof(header));
+    gsl_Assert(is.gcount() == sizeof(header));
 
     auto width = header.xend - header.xstart + 1;
     auto length = header.yend - header.ystart + 1;

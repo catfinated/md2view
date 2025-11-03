@@ -23,8 +23,8 @@
             "binaryDir": "${sourceDir}/build/debug",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_CXX_FLAGS": "-g -O0",
-                "CMAKE_C_FLAGS": "-g -O0"
+                "CMAKE_CXX_FLAGS_DEBUG": "-g -O0",
+                "CMAKE_C_FLAGS_DEBUG": "-g -O0"
             }
         },
         {
@@ -34,8 +34,8 @@
             "binaryDir": "${sourceDir}/build/release",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_CXX_FLAGS": "-O3",
-                "CMAKE_C_FLAGS": "-O3"
+                "CMAKE_CXX_FLAGS_RELEASE": "-O3",
+                "CMAKE_C_FLAGS_RELEASE": "-O3"
             }
         },
         {
@@ -62,6 +62,22 @@
         {
             "name": "clang-tidy",
             "configurePreset": "clang-tidy"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "debug",
+            "configurePreset": "debug",
+            "output": {
+                "outputOnFailure": true
+            }
+        },
+        {
+            "name": "release",
+            "configurePreset": "release",
+            "output": {
+                "outputOnFailure": true
+            }
         }
     ]
 }

@@ -7,9 +7,9 @@ http://tfc.duke.free.fr/old/models/md2.htm
 
 #include "gl.hpp"
 
-#include <glm/glm.hpp>
-
 #include <boost/algorithm/clamp.hpp>
+#include <glm/glm.hpp>
+#include <gsl-lite/gsl-lite.hpp>
 
 #include <array>
 #include <cstdint>
@@ -106,7 +106,6 @@ public:
             , name(std::move(n)) {}
     };
 
-    MD2() = default;
     explicit MD2(std::string const& filename, PAK const& pak);
     ~MD2();
 
@@ -124,9 +123,7 @@ public:
     float frames_per_second() const { return frames_per_second_; }
 
     SkinData const& current_skin() const {
-        assert(current_skin_index_ >= 0 &&
-               static_cast<size_t>(current_skin_index_) < skins_.size());
-        return skins_[current_skin_index_];
+        return gsl_lite::at(skins_, current_skin_index_);
     }
 
     // modifiers
