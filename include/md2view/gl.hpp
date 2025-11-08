@@ -14,6 +14,7 @@
 
 #include <concepts>
 #include <source_location>
+#include <string_view>
 
 inline const char* glErrorToString(GLenum error) {
     char const* str = "unknown error";
@@ -54,4 +55,8 @@ glCheckError(std::source_location loc = std::source_location::current()) {
 
 void* GL_BUFFER_OFFSET(std::integral auto offset) {
     return reinterpret_cast<void*>(offset);
+}
+
+inline std::string_view glStrView(GLubyte const* bytes) {
+    return reinterpret_cast<char const*>(bytes);
 }

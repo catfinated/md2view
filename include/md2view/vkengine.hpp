@@ -13,7 +13,12 @@ public:
     VKEngine();
     ~VKEngine();
 
-    bool init(int argc, char const* argv[]);
+    VKEngine(VKEngine const&) = delete;
+    VKEngine& operator=(VKEngine const&) = delete;
+    VKEngine(VKEngine&&) noexcept = delete;
+    VKEngine& operator=(VKEngine&&) noexcept = delete;
+
+    bool init(std::span<char const*> args);
     void run_game();
 
 private:

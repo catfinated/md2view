@@ -4,7 +4,7 @@
 The purpose of this project is to be able to load, render, texture, and animate
 MD2 models that are stored in *Quake II* PAK files or which have been extracted into
 an equivalent directory structure. The rendering is currently done in OpenGL 4. 
-Support for a Vulkan renderer is currently in progress. The code is written in C++17.
+Support for a Vulkan renderer is currently in progress. The code is written in C++23.
 
 Here are some screenshots of md2view in action:
 
@@ -29,29 +29,34 @@ will be displayed in the GUI when you manipulate the camera.
 You can use the GUI to enable an optional post-processing "glow" effect around the
 model. You can set the color to use as well.
 
-## Renders 
+## Renderers
 
 The OpenGL renderer is compiled into the `glmd2v` binary target. 
 The Vulkan renderer (incomplete) is compiled into the `vkmd2v` binary target.
 
-## Testing
+## Test platforms
 
 md2view is currently being tested on the following systems:
 
-    * Windows 10 (VS 2019) - NVIDIA GeForce RTX 3080 Ti
-    * Windows 11 (VS 2019) - NVIDIA Geforce RTX 4060 Laptop GPU
+    * CachyOS 6.17.6-2 (64-bit) - NVIDIA GeForce RTX 3080 Ti
 
 md2view has previously been tested the following systems but may no longer work:
 
     * Mac OS X Mojave (10.14.6) - AMD Radeon R9 M370X
     * Ubuntu 18.04.3 LTS - NVIDIA GeForce GTX 1050 Ti
+    * Windows 10 (VS 2019) - NVIDIA GeForce RTX 3080 Ti
+    * Windows 11 (VS 2019) - NVIDIA Geforce RTX 4060 Laptop GPU
 
 The screenshots above come from the Macbook which partly explains the low FPS.
 
 ## Building
 
-* cmake --preset debug
-* cmake --build --preset debug
+```cmd
+> cmake --preset debug
+> cmake --build --preset debug
+```
+
+There is also a preset for `release` builds.
 
 ### Dependencies
 
@@ -77,9 +82,33 @@ md2view is built using vcpkg to manage dependencies. These dependencies are:
 
 [tl-expected](https://github.com/TartanLlama/expected)
 
+[vulkan](https://www.vulkan.org/)
+
 ### Running
 
-* build/debug/src/glmd2v
+On Linux, each executable supports both Wayland and X11. Set XDG_SESSION_TYPE in the environment as needed:
+
+```cmd 
+> export XDG_SESSION_TYPE=x11 # or export XDG_SESSION_TYPE=wayland
+```
+
+To run the main OpenGL renderer execuatable:
+
+```cmd 
+> build/debug/src/glmd2v
+```
+
+To run the in progress Vuilkan based executable:
+
+```cmd
+> VK_LAYER_PATH=build/debug/vcpkg_installed/x64-linux/share/vulkan/explicit_layer.d build/debug/src/vkmd2v
+```
+
+### Testing
+
+```cmd
+> ctest --preset debug
+```
 
 ## Attributions
 

@@ -2,9 +2,11 @@
 
 #include <spdlog/spdlog.h>
 
+#include <span>
+
 int main(int argc, char const* argv[]) {
     myvk::VKEngine engine;
-    engine.init(argc, argv);
+    engine.init(std::span{argv, static_cast<size_t>(argc)});
     try {
         engine.run_game();
     } catch (std::exception const& excp) {

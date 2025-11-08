@@ -62,25 +62,26 @@ struct SwapChainSupportDetails {
 };
 
 [[nodiscard]] SwapChainSupportDetails
-querySwapChainSupport(vk::PhysicalDevice,
+querySwapChainSupport(vk::PhysicalDevice physicalDevice,
                       vk::SurfaceKHR const& surface) noexcept;
 
 tl::expected<vk::raii::Instance, std::runtime_error>
-createInstance(vk::raii::Context&) noexcept;
+createInstance(vk::raii::Context& context) noexcept;
 
 tl::expected<vk::raii::DebugUtilsMessengerEXT, std::runtime_error>
-createDebugUtilsMessenger(vk::raii::Instance&) noexcept;
+createDebugUtilsMessenger(vk::raii::Instance& instance) noexcept;
 
 tl::expected<vk::raii::SurfaceKHR, std::runtime_error>
-createSurface(vk::raii::Instance&, Window const&) noexcept;
+createSurface(vk::raii::Instance& instance, Window const& window) noexcept;
 
 tl::expected<std::pair<vk::raii::PhysicalDevice, QueueFamilyIndices>,
              std::runtime_error>
-pickPhysicalDevice(vk::raii::Instance&, vk::SurfaceKHR const&) noexcept;
+pickPhysicalDevice(vk::raii::Instance& instance,
+                   vk::SurfaceKHR const& surface) noexcept;
 
 tl::expected<vk::raii::Device, std::runtime_error>
 createDevice(vk::raii::PhysicalDevice const& physicalDevice,
-             QueueFamilyIndices const&) noexcept;
+             QueueFamilyIndices const& queueFamilyIndices) noexcept;
 
 tl::expected<std::vector<vk::raii::Semaphore>, std::runtime_error>
 createSemaphores(vk::raii::Device const& device,

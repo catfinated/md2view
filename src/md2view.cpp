@@ -35,9 +35,7 @@ bool MD2View::on_engine_initialized(Engine& engine) {
     if (!engine.resource_manager().pak().has_models()) {
         // NB: converting filesystem path to string in format arg
         // to work-around clang-tidy issue from libfmt:
-        // implicit instantiation of undefined template
-        // 'fmt::detail::type_is_unformattable_for<std::filesystem::path, char>'
-        // [clang-diagnostic-error]
+        // https://github.com/fmtlib/fmt/issues/4552
         spdlog::error("PAK '{}' has no MD2 models to view",
                       engine.resource_manager().pak().fpath().string());
         return false;

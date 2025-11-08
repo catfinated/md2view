@@ -25,21 +25,23 @@ template <class T, class E> T forceUnwrap(tl::expected<T, E>&& expectedT) {
     return std::move(expectedT).value();
 }
 
-VKEngine::VKEngine() { gsl_Ensures(glfwInit() == GLFW_TRUE); }
+VKEngine::VKEngine() {
+    gsl_Ensures(glfwInit() == GLFW_TRUE);
+    spdlog::info("GLFW version: {}", glfwGetVersionString());
+    spdlog::info("Vulkan supported: {}",
+                 glfwVulkanSupported() != 0 ? "yes" : "no");
+}
 
 VKEngine::~VKEngine() { glfwTerminate(); }
 
-bool VKEngine::init(int argc, char const* argv[]) {
-    return parse_args(argc, argv);
-}
+bool VKEngine::init(std::span<char const*> args) { return parse_args(args); }
 
 void VKEngine::initWindow() {
     window_ = forceUnwrap(Window::create(width_, height_));
 
-    auto framebufferResizeCallback = [](GLFWwindow* window, int width,
-                                        int height) {
-        VKEngine* engine =
-            static_cast<VKEngine*>(glfwGetWindowUserPointer(window));
+    auto framebufferResizeCallback = [](GLFWwindow* window, int /* width */,
+                                        int /* height */) {
+        auto* engine = static_cast<VKEngine*>(glfwGetWindowUserPointer(window));
         gsl_Assert(engine);
         engine->frameBufferResized_ = true;
     };
@@ -88,7 +90,7 @@ void VKEngine::initVulkan() {
     vertexBufferMemory_ =
         allocateVertexBufferMemory(device_, vertexBuffer_, physicalDevice_);
     vertexBuffer_.bindMemory(*vertexBufferMemory_, 0UL);
-    auto data = vertexBufferMemory_.mapMemory(0U, bufSize);
+    auto* data = vertexBufferMemory_.mapMemory(0U, bufSize);
     std::memcpy(data, vertices.data(), bufSize);
     vertexBufferMemory_.unmapMemory();
 
@@ -97,11 +99,13 @@ void VKEngine::initVulkan() {
 }
 
 void VKEngine::recreateSwapChain() {
-    int width = 0, height = 0;
+    int width{};
+    int height{};
     glfwGetFramebufferSize(window_.get(), &width, &height);
     while (width == 0 || height == 0) {
-        if (window_.shouldClose())
+        if (window_.shouldClose()) {
             return;
+        }
         glfwGetFramebufferSize(window_.get(), &width, &height);
         glfwWaitEvents();
     }
@@ -141,8 +145,8 @@ void VKEngine::createGraphicsPipeline() {
     fragShaderStageInfo.module = *fragShaderModule;
     fragShaderStageInfo.pName = "main";
 
-    vk::PipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo,
-                                                        fragShaderStageInfo};
+    std::array<vk::PipelineShaderStageCreateInfo, 2UL> shaderStages = {
+        vertShaderStageInfo, fragShaderStageInfo};
 
     auto bindingDescription = Vertex::getBindingDescription();
     auto attributeDescriptions = Vertex::getAttributeDescriptions();
@@ -212,7 +216,7 @@ void VKEngine::createGraphicsPipeline() {
 
     vk::GraphicsPipelineCreateInfo pipelineInfo{};
     pipelineInfo.stageCount = 2;
-    pipelineInfo.pStages = shaderStages;
+    pipelineInfo.pStages = shaderStages.data();
     pipelineInfo.pVertexInputState = &vertexInputInfo;
     pipelineInfo.pInputAssemblyState = &inputAssembly;
     pipelineInfo.pViewportState = &viewportState;
@@ -292,6 +296,7 @@ void VKEngine::recordCommandBuffer(vk::raii::CommandBuffer& commandBuffer,
 
     commandBuffer.begin(beginInfo);
 
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-union-access)
     clearValue_.color = vk::ClearColorValue{0.0f, 0.0f, 0.0f, 1.0f};
     vk::RenderPassBeginInfo renderPassInfo{
         *renderPass_, *(frameBuffers_.at(imageIndex)),
@@ -317,8 +322,8 @@ void VKEngine::recordCommandBuffer(vk::raii::CommandBuffer& commandBuffer,
     scissor.extent = swapChainSupportDetails_.extent;
     commandBuffer.setScissor(0, {scissor});
 
-    vk::Buffer vertexBuffers[] = {*vertexBuffer_};
-    vk::DeviceSize offsets[] = {0};
+    std::array<vk::Buffer, 1UL> vertexBuffers{*vertexBuffer_};
+    std::array<vk::DeviceSize, 1UL> offsets{0};
     commandBuffer.bindVertexBuffers(0, vertexBuffers, offsets);
     commandBuffer.draw(vertices.size(), 1, 0, 0);
 
@@ -342,32 +347,32 @@ void VKEngine::drawFrame() {
     commandBuffer.reset();
     recordCommandBuffer(commandBuffer, imageIndex);
 
-    vk::Semaphore waitSemaphores[] = {*imageAvailableSemaphore};
-    vk::CommandBuffer commandBuffers[] = {*commandBuffer};
-    vk::PipelineStageFlags waitStages[] = {
+    std::array<vk::Semaphore, 1UL> waitSemaphores{*imageAvailableSemaphore};
+    std::array<vk::CommandBuffer, 1UL> commandBuffers{*commandBuffer};
+    std::array<vk::PipelineStageFlags, 1UL> waitStages{
         vk::PipelineStageFlagBits::eColorAttachmentOutput};
 
     vk::SubmitInfo submitInfo{};
-    submitInfo.waitSemaphoreCount = 1;
-    submitInfo.pWaitSemaphores = waitSemaphores;
-    submitInfo.pWaitDstStageMask = waitStages;
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = commandBuffers;
+    submitInfo.waitSemaphoreCount = waitSemaphores.size();
+    submitInfo.pWaitSemaphores = waitSemaphores.data();
+    submitInfo.pWaitDstStageMask = waitStages.data();
+    submitInfo.commandBufferCount = commandBuffers.size();
+    submitInfo.pCommandBuffers = commandBuffers.data();
 
     auto& renderFinishedSemaphore = renderFinishedSemaphores_.at(currentFrame_);
-    vk::Semaphore signalSemaphores[] = {*renderFinishedSemaphore};
-    submitInfo.signalSemaphoreCount = 1;
-    submitInfo.pSignalSemaphores = signalSemaphores;
+    std::array<vk::Semaphore, 1UL> signalSemaphores{*renderFinishedSemaphore};
+    submitInfo.signalSemaphoreCount = signalSemaphores.size();
+    submitInfo.pSignalSemaphores = signalSemaphores.data();
 
     graphicsQueue_.submit({submitInfo}, *fence);
 
     vk::PresentInfoKHR presentInfo{};
-    presentInfo.waitSemaphoreCount = 1;
-    presentInfo.pWaitSemaphores = signalSemaphores;
+    presentInfo.waitSemaphoreCount = signalSemaphores.size();
+    presentInfo.pWaitSemaphores = signalSemaphores.data();
 
-    vk::SwapchainKHR swapChains[] = {*swapChain_};
-    presentInfo.swapchainCount = 1;
-    presentInfo.pSwapchains = swapChains;
+    std::array<vk::SwapchainKHR, 1UL> swapChains{*swapChain_};
+    presentInfo.swapchainCount = swapChains.size();
+    presentInfo.pSwapchains = swapChains.data();
     presentInfo.pImageIndices = &imageIndex;
     presentInfo.pResults = nullptr; // Optional
 

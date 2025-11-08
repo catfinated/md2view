@@ -93,8 +93,20 @@ bool GLEngine<Game>::init(std::span<char const*> args) {
 
     glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
+    glfwMakeContextCurrent(window_);
+
+    spdlog::info("gl version: {}", glStrView(glGetString(GL_VERSION)));
+    spdlog::info("gl renderer: {}", glStrView(glGetString(GL_RENDERER)));
+
     glewExperimental = GL_TRUE;
-    gsl_Assert(glewInit() == GLEW_OK);
+    auto const result = glewInit();
+
+    // https://github.com/nigels-com/glew/issues/417
+    if (result != GLEW_OK && result != GLEW_ERROR_NO_GLX_DISPLAY) {
+        std::string_view err = glStrView(glewGetErrorString(result));
+        throw std::runtime_error(fmt::format("failed to init glew: '{}'", err));
+    }
+
     glGetError(); // glewInit is known to cause invalid enum error
 
     glfwGetFramebufferSize(window_, &width_, &height_);

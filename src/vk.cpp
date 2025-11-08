@@ -1,8 +1,8 @@
 #include "md2view/vk.hpp"
 
+#include <fmt/core.h>
 #include <glm/glm.hpp>
-#include <spdlog/fmt/fmt.h>
-#include <spdlog/fmt/std.h>
+#include <gsl-lite/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 
 #include <algorithm>
@@ -14,7 +14,43 @@
 #include <string_view>
 #include <vector>
 
+#include <iostream>
+
 namespace myvk {
+
+Window::Window(GLFWwindow* window) noexcept
+    : window_(window) {}
+
+Window::~Window() noexcept {
+    if (window_ != nullptr) {
+        glfwDestroyWindow(window_);
+    }
+}
+
+Window& Window::operator=(Window&& rhs) noexcept {
+    if (this != std::addressof(rhs)) {
+        if (window_ != nullptr) {
+            glfwDestroyWindow(window_);
+        }
+        window_ = std::exchange(rhs.window_, nullptr);
+    }
+    return *this;
+}
+
+tl::expected<Window, std::runtime_error> Window::create(int width,
+                                                        int height) noexcept {
+    spdlog::info("create window");
+    gsl_Expects(width > 0);
+    gsl_Expects(height > 0);
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    auto* window = glfwCreateWindow(width, height, "vkmd2v", nullptr, nullptr);
+
+    uint32_t extensionCount = 0;
+    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+
+    spdlog::info("{} extensions supported", extensionCount);
+    return Window{window};
+}
 
 static constexpr std::array<char const*, 1> validationLayers = {
     "VK_LAYER_KHRONOS_validation"};
@@ -23,10 +59,10 @@ static constexpr std::array<char const*, 1> deviceExtensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
 VKAPI_ATTR VkBool32 VKAPI_CALL
-debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-              VkDebugUtilsMessageTypeFlagsEXT messageType,
-              VkDebugUtilsMessengerCallbackDataEXT const* pCallbackData,
-              void* pUserData) {
+debugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT /* messageSeverity */,
+              vk::DebugUtilsMessageTypeFlagsEXT /* messageType */,
+              vk::DebugUtilsMessengerCallbackDataEXT const* pCallbackData,
+              void* /* pUserData */) {
 
     spdlog::info("validation layer: {}", pCallbackData->pMessage);
 
@@ -73,61 +109,56 @@ vk::Extent2D chooseSwapExtent(vk::SurfaceCapabilitiesKHR const& capabilities,
     if (capabilities.currentExtent.width !=
         std::numeric_limits<uint32_t>::max()) {
         return capabilities.currentExtent;
-    } else {
-        int width, height;
-        glfwGetFramebufferSize(window.get(), &width, &height);
-
-        vk::Extent2D actualExtent = {static_cast<uint32_t>(width),
-                                     static_cast<uint32_t>(height)};
-
-        actualExtent.width =
-            std::clamp(actualExtent.width, capabilities.minImageExtent.width,
-                       capabilities.maxImageExtent.width);
-        actualExtent.height =
-            std::clamp(actualExtent.height, capabilities.minImageExtent.height,
-                       capabilities.maxImageExtent.height);
-        return actualExtent;
     }
+    int width{};
+    int height{};
+    glfwGetFramebufferSize(window.get(), &width, &height);
+
+    vk::Extent2D actualExtent = {static_cast<uint32_t>(width),
+                                 static_cast<uint32_t>(height)};
+
+    actualExtent.width =
+        std::clamp(actualExtent.width, capabilities.minImageExtent.width,
+                   capabilities.maxImageExtent.width);
+    actualExtent.height =
+        std::clamp(actualExtent.height, capabilities.minImageExtent.height,
+                   capabilities.maxImageExtent.height);
+    return actualExtent;
 }
 
-[[nodiscard]] QueueFamilyIndices
-findQueueFamilies(vk::PhysicalDevice device,
-                  vk::SurfaceKHR const& surface) noexcept;
-[[nodiscard]] bool
-checkDeviceExtensionSupport(vk::PhysicalDevice device) noexcept;
+QueueFamilyIndices findQueueFamilies(vk::PhysicalDevice device,
+                                     vk::SurfaceKHR const& surface) noexcept {
+    QueueFamilyIndices indices;
+    auto const queueFamilies = device.getQueueFamilyProperties();
 
-Window::Window(GLFWwindow* window) noexcept
-    : window_(window) {}
-
-Window::~Window() noexcept {
-    if (window_) {
-        glfwDestroyWindow(window_);
-    }
-}
-
-Window& Window::operator=(Window&& rhs) noexcept {
-    if (this != std::addressof(rhs)) {
-        if (window_) {
-            glfwDestroyWindow(window_);
+    for (auto i{0}; i < gsl_lite::narrow<int>(queueFamilies.size()); ++i) {
+        auto const& queueFamily = queueFamilies.at(i);
+        if (queueFamily.queueFlags & vk::QueueFlagBits::eGraphics) {
+            indices.graphicsFamily = i;
         }
-        window_ = std::exchange(rhs.window_, nullptr);
+        if (device.getSurfaceSupportKHR(i, surface) != 0U) {
+            indices.presentFamily = i;
+        }
+        if (indices.isComplete()) {
+            break;
+        }
     }
-    return *this;
+    spdlog::info("queue family indices: {} {}", indices.graphicsFamily.value(),
+                 indices.presentFamily.value());
+    return indices;
 }
 
-tl::expected<Window, std::runtime_error> Window::create(int width,
-                                                        int height) noexcept {
-    spdlog::info("create window");
-    gsl_Expects(width > 0);
-    gsl_Expects(height > 0);
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    auto window = glfwCreateWindow(width, height, "vkmd2v", nullptr, nullptr);
+bool checkDeviceExtensionSupport(vk::PhysicalDevice device) noexcept {
+    auto const availableExtensions =
+        device.enumerateDeviceExtensionProperties();
+    std::set<std::string> requiredExtensions(deviceExtensions.begin(),
+                                             deviceExtensions.end());
 
-    uint32_t extensionCount = 0;
-    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+    for (const auto& extension : availableExtensions) {
+        requiredExtensions.erase(extension.extensionName);
+    }
 
-    spdlog::info("{} extensions supported", extensionCount);
-    return Window{window};
+    return requiredExtensions.empty();
 }
 
 tl::expected<vk::raii::Instance, std::runtime_error>
@@ -138,7 +169,7 @@ createInstance(vk::raii::Context& context) noexcept {
 
     auto availableLayers = context.enumerateInstanceLayerProperties();
 
-    for (auto layerName : validationLayers) {
+    for (auto const* layerName : validationLayers) {
         std::string_view sv{layerName};
         auto iter =
             std::ranges::find_if(availableLayers, [sv](auto const& layer) {
@@ -160,9 +191,15 @@ createInstance(vk::raii::Context& context) noexcept {
     uint32_t glfwExtensionCount = 0;
     char const** glfwExtensions =
         glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-    std::vector<char const*> extensions(glfwExtensions,
-                                        glfwExtensions + glfwExtensionCount);
+    spdlog::info("glfwExtentionCount: {}", glfwExtensionCount);
+    std::span extSpan{glfwExtensions, glfwExtensionCount};
+    std::vector<char const*> extensions(extSpan.begin(), extSpan.end());
+
     extensions.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+    for (auto const* ext : extensions) {
+        spdlog::info("requesting ext '{}'", ext);
+    }
+
     createInfo.enabledExtensionCount = extensions.size();
     createInfo.ppEnabledExtensionNames = extensions.data();
     createInfo.enabledLayerCount =
@@ -194,7 +231,7 @@ createDevice(vk::raii::PhysicalDevice const& physicalDevice,
     spdlog::info("create logical device");
     static constexpr float queuePriority = 1.0f;
 
-    vk::PhysicalDeviceFeatures deviceFeatures{};
+    // vk::PhysicalDeviceFeatures deviceFeatures{};
 
     std::set<uint32_t> uniqueQueueFamilies = {
         queueFamilyIndices.graphicsFamily.value(),
@@ -261,51 +298,17 @@ tl::expected<vk::raii::SurfaceKHR, std::runtime_error>
 createSurface(vk::raii::Instance& instance, Window const& window) noexcept {
     spdlog::info("create surface");
     VkSurfaceKHR surface;
-    if (glfwCreateWindowSurface(*instance, window.get(), nullptr, &surface) !=
-        VK_SUCCESS) {
-        return tl::make_unexpected(
-            std::runtime_error("failed to create window surface!"));
+    auto const result =
+        glfwCreateWindowSurface(*instance, window.get(), nullptr, &surface);
+    if (result != VK_SUCCESS) {
+        return tl::make_unexpected(std::runtime_error(fmt::format(
+            "failed to create window surface! {}", static_cast<int>(result))));
     }
     try {
         return vk::raii::SurfaceKHR{instance, surface};
     } catch (std::exception const& excp) {
         return tl::make_unexpected(std::runtime_error(excp.what()));
     }
-}
-
-QueueFamilyIndices findQueueFamilies(vk::PhysicalDevice device,
-                                     vk::SurfaceKHR const& surface) noexcept {
-    QueueFamilyIndices indices;
-    auto const queueFamilies = device.getQueueFamilyProperties();
-
-    for (auto i{0}; i < queueFamilies.size(); ++i) {
-        auto const& queueFamily = queueFamilies.at(i);
-        if (queueFamily.queueFlags & vk::QueueFlagBits::eGraphics) {
-            indices.graphicsFamily = i;
-        }
-        if (device.getSurfaceSupportKHR(i, surface)) {
-            indices.presentFamily = i;
-        }
-        if (indices.isComplete()) {
-            break;
-        }
-    }
-    spdlog::info("queue family indices: {} {}", indices.graphicsFamily.value(),
-                 indices.presentFamily.value());
-    return indices;
-}
-
-bool checkDeviceExtensionSupport(vk::PhysicalDevice device) noexcept {
-    auto const availableExtensions =
-        device.enumerateDeviceExtensionProperties();
-    std::set<std::string> requiredExtensions(deviceExtensions.begin(),
-                                             deviceExtensions.end());
-
-    for (const auto& extension : availableExtensions) {
-        requiredExtensions.erase(extension.extensionName);
-    }
-
-    return requiredExtensions.empty();
 }
 
 tl::expected<std::pair<vk::raii::SwapchainKHR, SwapChainSupportDetails>,
@@ -407,20 +410,20 @@ createImageViews(vk::raii::Device const& device,
 tl::expected<vk::raii::ShaderModule, std::runtime_error>
 createShaderModule(std::filesystem::path const& path,
                    vk::raii::Device const& device) noexcept {
-    spdlog::info("creating shader module for {}", path);
+    spdlog::info("creating shader module for {}", path.string());
     std::vector<char> buffer;
     {
         std::ifstream inf(path, std::ios::ate | std::ios::binary);
 
         if (!inf.is_open()) {
             return tl::make_unexpected(std::runtime_error(
-                fmt::format("failed to open file '{}'!", path)));
+                fmt::format("failed to open file '{}'!", path.string())));
         }
 
         auto const fileSize = static_cast<size_t>(inf.tellg());
         inf.seekg(0);
         buffer.resize(fileSize);
-        inf.read(buffer.data(), fileSize);
+        inf.read(buffer.data(), gsl_lite::narrow<std::streamsize>(fileSize));
     }
 
     vk::ShaderModuleCreateInfo createInfo{
@@ -438,12 +441,12 @@ createFrameBuffers(std::vector<vk::raii::ImageView> const& imageViews,
     std::vector<vk::raii::Framebuffer> frameBuffers;
     frameBuffers.reserve(imageViews.size());
 
-    for (size_t i = 0; i < imageViews.size(); i++) {
-        vk::ImageView attachments[] = {*imageViews[i]};
+    for (auto const& imageView : imageViews) {
+        std::array<vk::ImageView, 1UL> attachments{*imageView};
         vk::FramebufferCreateInfo framebufferInfo{};
         framebufferInfo.renderPass = *renderPass;
-        framebufferInfo.attachmentCount = 1;
-        framebufferInfo.pAttachments = attachments;
+        framebufferInfo.attachmentCount = attachments.size();
+        framebufferInfo.pAttachments = attachments.data();
         framebufferInfo.width = swapChainExtent.width;
         framebufferInfo.height = swapChainExtent.height;
         framebufferInfo.layers = 1;
@@ -521,9 +524,12 @@ uint32_t findMemoryType(uint32_t typeFilter,
     auto const memProperties = physicalDevice.getMemoryProperties();
 
     for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
-        if (typeFilter & (1 << i) &&
-            (memProperties.memoryTypes[i].propertyFlags & properties) ==
-                properties) {
+        auto const hasType = (typeFilter & (1 << i)) != 0U;
+        auto const propFlags =
+            gsl_lite::at(memProperties.memoryTypes, i).propertyFlags;
+        auto const hasMemProps = (propFlags & properties) == properties;
+
+        if (hasType && hasMemProps) {
             return i;
         }
     }

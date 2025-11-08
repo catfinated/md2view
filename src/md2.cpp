@@ -240,7 +240,7 @@ bool MD2::load_frames(std::ifstream& infile, size_t offset) {
         // has num_tris * 3 entries and our tex coord
         // buffer ends up with num_tris * 3 entires but
         // that data is shared by all frames
-        auto& key_frame = key_frames_[i];
+        auto& key_frame = key_frames_.at(i);
         key_frame.vertices.reserve(hdr_.num_tris * 3);
 
         for (auto const& triangle : triangles_) {
@@ -276,7 +276,7 @@ bool MD2::load_frames(std::ifstream& infile, size_t offset) {
         spdlog::debug("animation: {}", anim);
     }
 
-    interpolated_vertices_ = key_frames_[0].vertices;
+    interpolated_vertices_ = key_frames_.at(0).vertices;
 
     return infile.good();
 }
@@ -354,17 +354,16 @@ void MD2::update(float dt) {
     if (interpolation_ >= 1.0f) {
         current_frame_ = next_frame_;
         ++next_frame_;
-
-        if (next_frame_ > anim.end_frame) {
-            if (anim.loop) {
-                next_frame_ = anim.start_frame;
-            } else {
-                next_frame_ = anim.end_frame;
-                current_frame_ = anim.end_frame;
-            }
-        }
-
         interpolation_ = 0.0f;
+    }
+
+    if (next_frame_ > anim.end_frame) {
+        if (anim.loop) {
+            next_frame_ = anim.start_frame;
+        } else {
+            next_frame_ = anim.end_frame;
+            current_frame_ = anim.end_frame;
+        }
     }
 
     float t = interpolation_;
@@ -375,8 +374,8 @@ void MD2::update(float dt) {
     }
 
     for (auto& vertex : interpolated_vertices_) {
-        auto const& v1 = key_frames_[current_frame_].vertices[i];
-        auto const& v2 = key_frames_[next_frame_].vertices[i];
+        auto const& v1 = key_frames_.at(current_frame_).vertices[i];
+        auto const& v2 = key_frames_.at(next_frame_).vertices[i];
         vertex = lerp(v1, v2, glm::vec3(t, t, t));
         ++i;
     }
