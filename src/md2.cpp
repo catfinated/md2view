@@ -344,34 +344,29 @@ void MD2::set_skin_index(size_t index) {
 }
 
 void MD2::update(float dt) {
-    if (frames_per_second_ == 0.0f) {
+    auto const& anim = gsl_lite::at(animations_, current_animation_index_);
+    auto const paused = frames_per_second_ == 0.0f;
+    auto const single_frame = anim.start_frame == anim.end_frame;
+    auto const done = !anim.loop && current_frame_ == anim.end_frame;
+
+    if (paused || single_frame || done) {
         return;
     }
 
-    auto const& anim = gsl_lite::at(animations_, current_animation_index_);
     interpolation_ += dt * frames_per_second_;
 
     if (interpolation_ >= 1.0f) {
         current_frame_ = next_frame_;
         ++next_frame_;
         interpolation_ = 0.0f;
-    }
 
-    if (next_frame_ > anim.end_frame) {
-        if (anim.loop) {
+        if (next_frame_ > anim.end_frame) {
             next_frame_ = anim.start_frame;
-        } else {
-            next_frame_ = anim.end_frame;
-            current_frame_ = anim.end_frame;
         }
     }
 
     float t = interpolation_;
     int i = 0;
-
-    if (next_frame_ == current_frame_) {
-        return;
-    }
 
     for (auto& vertex : interpolated_vertices_) {
         auto const& v1 = key_frames_.at(current_frame_).vertices[i];
