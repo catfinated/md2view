@@ -20,7 +20,6 @@
     "stb",
     "treehh",
     "gsl-lite",
-    "tl-expected",
     "catch2",
     "vulkan",
     "vulkan-validationlayers"

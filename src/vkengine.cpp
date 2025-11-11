@@ -18,7 +18,7 @@ static std::vector<Vertex> const vertices = {
     {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
     {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
 
-template <class T, class E> T forceUnwrap(tl::expected<T, E>&& expectedT) {
+template <class T, class E> T forceUnwrap(std::expected<T, E>&& expectedT) {
     if (!expectedT) {
         throw expectedT.error();
     }

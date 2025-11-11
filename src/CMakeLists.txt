@@ -9,7 +9,6 @@ find_package(Stb REQUIRED)
 find_package(gsl-lite CONFIG REQUIRED)
 find_path(TREEHH_INCLUDE_DIRS "treehh/tree.hh")
 find_package(Vulkan REQUIRED)
-find_package(tl-expected CONFIG REQUIRED)
 
 add_library(libmd2v
   md2view.cpp

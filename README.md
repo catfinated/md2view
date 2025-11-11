@@ -80,8 +80,6 @@ md2view is built using vcpkg to manage dependencies. These dependencies are:
 
 [gsl-lite](https://github.com/gsl-lite/gsl-lite)
 
-[tl-expected](https://github.com/TartanLlama/expected)
-
 [vulkan](https://www.vulkan.org/)
 
 ### Running
