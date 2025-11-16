@@ -318,7 +318,7 @@ createSwapChain(vk::raii::PhysicalDevice const& physicalDevice,
                 Window const& window,
                 vk::SurfaceKHR const& surface,
                 QueueFamilyIndices const& queueFamilyIndices) noexcept {
-    spdlog::info("create swap chain");
+    spdlog::debug("create swap chain");
     auto swapChainSupport = querySwapChainSupport(*physicalDevice, surface);
     swapChainSupport.surfaceFormat =
         chooseSwapSurfaceFormat(swapChainSupport.formats);
@@ -377,7 +377,7 @@ std::expected<std::vector<vk::raii::ImageView>, std::runtime_error>
 createImageViews(vk::raii::Device const& device,
                  std::vector<vk::Image>& images,
                  SwapChainSupportDetails const& swapChainSupport) {
-    spdlog::info("create image views");
+    spdlog::debug("create image views");
     std::vector<vk::raii::ImageView> views;
     views.reserve(images.size());
 
@@ -437,7 +437,7 @@ createFrameBuffers(std::vector<vk::raii::ImageView> const& imageViews,
                    vk::raii::RenderPass const& renderPass,
                    vk::Extent2D swapChainExtent,
                    vk::raii::Device const& device) noexcept {
-    spdlog::info("create frame buffer");
+    spdlog::debug("create frame buffer");
     std::vector<vk::raii::Framebuffer> frameBuffers;
     frameBuffers.reserve(imageViews.size());
 

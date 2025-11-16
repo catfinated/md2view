@@ -123,7 +123,7 @@ void VKEngine::recreateSwapChain() {
         createImageViews(device_, swapChainImages_, swapChainSupportDetails_));
     frameBuffers_ = forceUnwrap(createFrameBuffers(
         imageViews_, renderPass_, swapChainSupportDetails_.extent, device_));
-    spdlog::info("recreated swap chain");
+    spdlog::debug("recreated swap chain");
 }
 
 void VKEngine::createGraphicsPipeline() {
@@ -335,13 +335,29 @@ void VKEngine::drawFrame() {
     auto& fence = inflightFences_.at(currentFrame_);
     gsl_Assert(device_.waitForFences({*fence}, true, UINT64_MAX) ==
                vk::Result::eSuccess);
-    device_.resetFences({*fence});
 
     auto& imageAvailableSemaphore = imageAvailableSemaphores_.at(currentFrame_);
     uint32_t imageIndex;
+    // vk hpp throws exception on OutOfDateKHR result
+    // https://github.com/KhronosGroup/Vulkan-Hpp/issues/599
+    auto result = static_cast<vk::Result>(
+        swapChain_.getDispatcher()->vkAcquireNextImageKHR(
+            static_cast<VkDevice>(swapChain_.getDevice()),
+            static_cast<VkSwapchainKHR>(*swapChain_), UINT64_MAX,
+            static_cast<VkSemaphore>(*imageAvailableSemaphore), VK_NULL_HANDLE,
+            &imageIndex));
 
-    std::tie(std::ignore, imageIndex) =
-        swapChain_.acquireNextImage(UINT64_MAX, *imageAvailableSemaphore);
+    if (result == vk::Result::eErrorOutOfDateKHR) {
+        recreateSwapChain();
+        return;
+    }
+
+    if (result != vk::Result::eSuccess &&
+        result != vk::Result::eSuboptimalKHR) {
+        throw std::runtime_error("failed to acquire swap chain image");
+    }
+
+    device_.resetFences({*fence});
 
     auto& commandBuffer = commandBuffers_.at(currentFrame_);
     commandBuffer.reset();
@@ -378,7 +394,7 @@ void VKEngine::drawFrame() {
 
     // vk hpp throws exception on OutOfDateKHR result
     // https://github.com/KhronosGroup/Vulkan-Hpp/issues/599
-    auto const result = static_cast<vk::Result>(
+    result = static_cast<vk::Result>(
         presentQueue_.getDispatcher()->vkQueuePresentKHR(
             static_cast<VkQueue>(*presentQueue_),
             reinterpret_cast<const VkPresentInfoKHR*>(&presentInfo)));
@@ -390,7 +406,7 @@ void VKEngine::drawFrame() {
         frameBufferResized_ = false;
         recreateSwapChain();
     } else if (result != vk::Result::eSuccess) {
-        throw std::runtime_error("failed to acquire swap chain image!");
+        throw std::runtime_error("failed to present swap chain image!");
     }
 }
 
