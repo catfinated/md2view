@@ -573,6 +573,16 @@ createStaticVertexBuffer(vk::raii::Device const& device,
 }
 
 std::expected<BoundBuffer, std::runtime_error>
+createIndexBuffer(vk::raii::Device const& device,
+                  vk::raii::PhysicalDevice const& physicalDevice,
+                  vk::DeviceSize size) noexcept {
+    return BoundBuffer::create(device, physicalDevice, size,
+                               vk::BufferUsageFlagBits::eTransferDst |
+                                   vk::BufferUsageFlagBits::eIndexBuffer,
+                               vk::MemoryPropertyFlagBits::eDeviceLocal);
+}
+
+std::expected<BoundBuffer, std::runtime_error>
 createStagingBuffer(vk::raii::Device const& device,
                     vk::raii::PhysicalDevice const& physicalDevice,
                     vk::DeviceSize size) noexcept {

@@ -11,12 +11,12 @@
 namespace md2v {
 
 static std::vector<Vertex> const vertices = {
-    // {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-    // {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-    // {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
-    {{0.0f, -0.5f}, {1.0f, 1.0f, 1.0f}},
-    {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-    {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
+    {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+    {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+    {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+    {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}};
+
+static std::vector<uint16_t> const indices = {0, 1, 2, 2, 3, 0};
 
 template <class T, class E> T forceUnwrap(std::expected<T, E>&& expectedT) {
     if (!expectedT) {
@@ -85,16 +85,24 @@ void VKEngine::initVulkan() {
         forceUnwrap(createSemaphores(device_, kMaxFramesInFlight));
     inflightFences_ = forceUnwrap(createFences(device_, kMaxFramesInFlight));
 
-    auto const bufSize = sizeof(Vertex) * vertices.size();
-
+    // copy vertices to high performance on device gpu memory
+    auto bufSize = sizeof(Vertex) * vertices.size();
     auto stagingBuffer =
         forceUnwrap(createStagingBuffer(device_, physicalDevice_, bufSize));
     stagingBuffer.memcpy(vertices);
-
     vertexBuffer_ = forceUnwrap(
         createStaticVertexBuffer(device_, physicalDevice_, bufSize));
-
     copyBuffer(stagingBuffer, vertexBuffer_, device_, commandPool_,
+               graphicsQueue_);
+
+    // copy indices to high performance on device gpu memory
+    bufSize = sizeof(indices[0]) * indices.size();
+    stagingBuffer =
+        forceUnwrap(createStagingBuffer(device_, physicalDevice_, bufSize));
+    stagingBuffer.memcpy(indices);
+    indexBuffer_ =
+        forceUnwrap(createIndexBuffer(device_, physicalDevice_, bufSize));
+    copyBuffer(stagingBuffer, indexBuffer_, device_, commandPool_,
                graphicsQueue_);
 
     spdlog::info("vulkan initialization complete. num views={}",
@@ -328,7 +336,12 @@ void VKEngine::recordCommandBuffer(vk::raii::CommandBuffer& commandBuffer,
     std::array<vk::Buffer, 1UL> vertexBuffers{*vertexBuffer_.buffer};
     std::array<vk::DeviceSize, 1UL> offsets{0};
     commandBuffer.bindVertexBuffers(0, vertexBuffers, offsets);
-    commandBuffer.draw(vertices.size(), 1, 0, 0);
+    commandBuffer.bindIndexBuffer(*indexBuffer_.buffer, 0,
+                                  vk::IndexType::eUint16);
+    commandBuffer.drawIndexed(static_cast<uint32_t>(indices.size()), 1, 0, 0,
+                              0);
+
+    // commandBuffer.draw(vertices.size(), 1, 0, 0);
 
     commandBuffer.endRenderPass();
     commandBuffer.end();

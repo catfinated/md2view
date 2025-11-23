@@ -61,6 +61,7 @@ private:
     std::vector<vk::raii::Semaphore> renderFinishedSemaphores_;
     std::vector<vk::raii::Fence> inflightFences_;
     BoundBuffer vertexBuffer_;
+    BoundBuffer indexBuffer_;
 
     vk::ClearValue clearValue_;
 

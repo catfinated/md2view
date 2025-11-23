@@ -87,6 +87,22 @@ createStaticVertexBuffer(vk::raii::Device const& device,
                          vk::DeviceSize size) noexcept;
 
 /**
+ * @brief Create a BoundBuffer suitable for index data
+ *
+ * This will be a device local buffer that can not be mapped to cpu
+ * accessible memory.
+ *
+ * @param device The logical device to create the buffer for
+ * @param physicalDevice The physical device to allocate memory on
+ * @param size The size of the buffer
+ * @return An expected BoundBuffer or an error
+ */
+std::expected<BoundBuffer, std::runtime_error>
+createIndexBuffer(vk::raii::Device const& device,
+                  vk::raii::PhysicalDevice const& physicalDevice,
+                  vk::DeviceSize size) noexcept;
+
+/**
  * @brief Create a BoundBuffer suitable for staging data
  *
  * @param device The logical device to create the buffer for
