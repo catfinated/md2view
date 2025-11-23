@@ -8,7 +8,7 @@
 #include <iostream>
 #include <stdexcept>
 
-namespace myvk {
+namespace md2v {
 
 static std::vector<Vertex> const vertices = {
     // {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
@@ -86,13 +86,16 @@ void VKEngine::initVulkan() {
     inflightFences_ = forceUnwrap(createFences(device_, kMaxFramesInFlight));
 
     auto const bufSize = sizeof(Vertex) * vertices.size();
-    vertexBuffer_ = forceUnwrap(createVertexBuffer(device_, bufSize));
-    vertexBufferMemory_ =
-        allocateVertexBufferMemory(device_, vertexBuffer_, physicalDevice_);
-    vertexBuffer_.bindMemory(*vertexBufferMemory_, 0UL);
-    auto* data = vertexBufferMemory_.mapMemory(0U, bufSize);
-    std::memcpy(data, vertices.data(), bufSize);
-    vertexBufferMemory_.unmapMemory();
+
+    auto stagingBuffer =
+        forceUnwrap(createStagingBuffer(device_, physicalDevice_, bufSize));
+    stagingBuffer.memcpy(vertices);
+
+    vertexBuffer_ = forceUnwrap(
+        createStaticVertexBuffer(device_, physicalDevice_, bufSize));
+
+    copyBuffer(stagingBuffer, vertexBuffer_, device_, commandPool_,
+               graphicsQueue_);
 
     spdlog::info("vulkan initialization complete. num views={}",
                  imageViews_.size());
@@ -322,7 +325,7 @@ void VKEngine::recordCommandBuffer(vk::raii::CommandBuffer& commandBuffer,
     scissor.extent = swapChainSupportDetails_.extent;
     commandBuffer.setScissor(0, {scissor});
 
-    std::array<vk::Buffer, 1UL> vertexBuffers{*vertexBuffer_};
+    std::array<vk::Buffer, 1UL> vertexBuffers{*vertexBuffer_.buffer};
     std::array<vk::DeviceSize, 1UL> offsets{0};
     commandBuffer.bindVertexBuffers(0, vertexBuffers, offsets);
     commandBuffer.draw(vertices.size(), 1, 0, 0);
@@ -422,4 +425,4 @@ void VKEngine::run_game() {
     glfwTerminate();
 }
 
-} // namespace myvk
+} // namespace md2v

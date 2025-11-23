@@ -1,3 +1,8 @@
+/**
+ * @brief md2view Vulkan graphics engine
+ *
+ * This is very much a work in progress.
+ */
 #pragma once
 
 #include "md2view/engine.hpp"
@@ -5,7 +10,7 @@
 
 #include <optional>
 
-namespace myvk {
+namespace md2v {
 
 class VKEngine : public Engine {
 public:
@@ -55,8 +60,7 @@ private:
     std::vector<vk::raii::Semaphore> imageAvailableSemaphores_;
     std::vector<vk::raii::Semaphore> renderFinishedSemaphores_;
     std::vector<vk::raii::Fence> inflightFences_;
-    vk::raii::Buffer vertexBuffer_{nullptr};
-    vk::raii::DeviceMemory vertexBufferMemory_{nullptr};
+    BoundBuffer vertexBuffer_;
 
     vk::ClearValue clearValue_;
 
@@ -64,4 +68,4 @@ private:
     bool frameBufferResized_{false};
 };
 
-} // namespace myvk
+} // namespace md2v

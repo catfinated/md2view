@@ -11,10 +11,11 @@
 #include <iterator>
 #include <limits>
 #include <ranges>
+#include <set>
 #include <string_view>
 #include <vector>
 
-namespace myvk {
+namespace md2v {
 
 Window::Window(GLFWwindow* window) noexcept
     : window_(window) {}
@@ -501,21 +502,6 @@ createSemaphores(vk::raii::Device const& device,
     return semaphores;
 }
 
-std::expected<vk::raii::Buffer, std::runtime_error>
-createVertexBuffer(vk::raii::Device const& device,
-                   std::size_t bufSize) noexcept {
-    vk::BufferCreateInfo bufferInfo{};
-    bufferInfo.size = bufSize;
-    bufferInfo.usage = vk::BufferUsageFlagBits::eVertexBuffer;
-    bufferInfo.sharingMode = vk::SharingMode::eExclusive;
-
-    try {
-        return device.createBuffer(bufferInfo);
-    } catch (std::runtime_error const& excp) {
-        return std::unexpected(excp);
-    }
-}
-
 uint32_t findMemoryType(uint32_t typeFilter,
                         vk::MemoryPropertyFlags properties,
                         vk::raii::PhysicalDevice const& physicalDevice) {
@@ -535,20 +521,96 @@ uint32_t findMemoryType(uint32_t typeFilter,
     throw std::runtime_error("failed to find suitable memory type!");
 }
 
-vk::raii::DeviceMemory
-allocateVertexBufferMemory(vk::raii::Device const& device,
-                           vk::raii::Buffer const& buffer,
-                           vk::raii::PhysicalDevice const& physicalDevice) {
-    auto const memRequirements = buffer.getMemoryRequirements();
-    vk::MemoryAllocateInfo allocInfo{};
-    allocInfo.allocationSize = memRequirements.size;
-    allocInfo.memoryTypeIndex =
-        findMemoryType(memRequirements.memoryTypeBits,
-                       vk::MemoryPropertyFlagBits::eHostVisible |
-                           vk::MemoryPropertyFlagBits::eHostCoherent,
-                       physicalDevice);
+std::expected<BoundBuffer, std::runtime_error>
+BoundBuffer::create(vk::raii::Device const& device,
+                    vk::raii::PhysicalDevice const& physicalDevice,
+                    vk::DeviceSize size,
+                    vk::BufferUsageFlags usage,
+                    vk::MemoryPropertyFlags properties) noexcept {
+    try {
+        // first create the buffer
+        vk::BufferCreateInfo bufferInfo{};
+        bufferInfo.size = size;
+        bufferInfo.usage = usage;
+        bufferInfo.sharingMode = vk::SharingMode::eExclusive;
+        auto buf = device.createBuffer(bufferInfo);
 
-    return device.allocateMemory(allocInfo);
+        // next allocate the memory
+        auto const memRequirements = buf.getMemoryRequirements();
+        vk::MemoryAllocateInfo allocInfo{};
+        allocInfo.allocationSize = memRequirements.size;
+        allocInfo.memoryTypeIndex = findMemoryType(
+            memRequirements.memoryTypeBits, properties, physicalDevice);
+        auto mem = device.allocateMemory(allocInfo);
+
+        // bind buffer to memory and return
+        buf.bindMemory(*mem, 0UL);
+        return BoundBuffer{
+            .buffer = std::move(buf), .memory = std::move(mem), .size = size};
+    } catch (std::runtime_error const& excp) {
+        return std::unexpected(excp);
+    }
 }
 
-} // namespace myvk
+std::expected<BoundBuffer, std::runtime_error>
+createDynamicVertexBuffer(vk::raii::Device const& device,
+                          vk::raii::PhysicalDevice const& physicalDevice,
+                          vk::DeviceSize size) noexcept {
+    return BoundBuffer::create(device, physicalDevice, size,
+                               vk::BufferUsageFlagBits::eVertexBuffer,
+                               vk::MemoryPropertyFlagBits::eHostVisible |
+                                   vk::MemoryPropertyFlagBits::eHostCoherent);
+}
+
+std::expected<BoundBuffer, std::runtime_error>
+createStaticVertexBuffer(vk::raii::Device const& device,
+                         vk::raii::PhysicalDevice const& physicalDevice,
+                         vk::DeviceSize size) noexcept {
+    return BoundBuffer::create(device, physicalDevice, size,
+                               vk::BufferUsageFlagBits::eTransferDst |
+                                   vk::BufferUsageFlagBits::eVertexBuffer,
+                               vk::MemoryPropertyFlagBits::eDeviceLocal);
+}
+
+std::expected<BoundBuffer, std::runtime_error>
+createStagingBuffer(vk::raii::Device const& device,
+                    vk::raii::PhysicalDevice const& physicalDevice,
+                    vk::DeviceSize size) noexcept {
+    return BoundBuffer::create(device, physicalDevice, size,
+                               vk::BufferUsageFlagBits::eTransferSrc,
+                               vk::MemoryPropertyFlagBits::eHostVisible |
+                                   vk::MemoryPropertyFlagBits::eHostCoherent);
+}
+
+void copyBuffer(BoundBuffer const& src,
+                BoundBuffer const& dst,
+                vk::raii::Device const& device,
+                vk::raii::CommandPool const& commandPool,
+                vk::raii::Queue const& graphicsQueue) {
+
+    gsl_Assert(src.size == dst.size);
+    vk::CommandBufferAllocateInfo allocInfo{
+        *commandPool, vk::CommandBufferLevel::ePrimary, 1};
+
+    auto commandBuffers = device.allocateCommandBuffers(allocInfo);
+    auto& commandBuffer = commandBuffers.at(0);
+
+    vk::CommandBufferBeginInfo beginInfo{
+        vk::CommandBufferUsageFlagBits::eOneTimeSubmit};
+
+    vk::BufferCopy copyRegion{};
+    copyRegion.srcOffset = 0;
+    copyRegion.dstOffset = 0;
+    copyRegion.size = src.size;
+
+    commandBuffer.begin(beginInfo);
+    commandBuffer.copyBuffer(*src.buffer, *dst.buffer, copyRegion);
+    commandBuffer.end();
+
+    vk::SubmitInfo submitInfo{nullptr, nullptr, *commandBuffer};
+
+    graphicsQueue.submit(submitInfo, nullptr);
+    graphicsQueue.waitIdle();
+}
+
+} // namespace md2v

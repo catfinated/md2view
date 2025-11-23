@@ -5,7 +5,7 @@
 #include <span>
 
 int main(int argc, char const* argv[]) {
-    myvk::VKEngine engine;
+    md2v::VKEngine engine;
     engine.init(std::span{argv, static_cast<size_t>(argc)});
     try {
         engine.run_game();
