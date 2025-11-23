@@ -1,9 +1,9 @@
 #pragma once
 
-#include "md2.hpp"
-#include "pak.hpp"
-#include "shader.hpp"
-#include "texture2D.hpp"
+#include "md2view/md2.hpp"
+#include "md2view/pak.hpp"
+#include "md2view/shader.hpp"
+#include "md2view/texture2D.hpp"
 
 #include <filesystem>
 #include <memory>
@@ -19,8 +19,14 @@ public:
         std::optional<std::filesystem::path> const& pak_path = std::nullopt);
 
     // accessors
-    std::filesystem::path const& root_dir() const { return root_dir_; }
-    std::filesystem::path const& shaders_dir() const { return shaders_dir_; }
+    [[nodiscard]] std::filesystem::path const& root_dir() const {
+        return root_dir_;
+    }
+
+    [[nodiscard]] std::filesystem::path const& shaders_dir() const {
+        return shaders_dir_;
+    }
+
     PAK& pak() {
         gsl_Assert(pak_);
         return *pak_;

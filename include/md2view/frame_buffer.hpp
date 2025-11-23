@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gl.hpp"
+#include "md2view/gl/gl.hpp"
 
 #include <optional>
 #include <stdexcept>

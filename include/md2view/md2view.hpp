@@ -1,11 +1,11 @@
 #pragma once
 
-#include "camera.hpp"
-#include "frame_buffer.hpp"
-#include "md2.hpp"
-#include "model_selector.hpp"
-#include "screen_quad.hpp"
-#include "texture2D.hpp"
+#include "md2view/camera.hpp"
+#include "md2view/frame_buffer.hpp"
+#include "md2view/md2.hpp"
+#include "md2view/model_selector.hpp"
+#include "md2view/screen_quad.hpp"
+#include "md2view/texture2D.hpp"
 
 #include <glm/glm.hpp>
 

@@ -1,8 +1,7 @@
 #pragma once
 
-#include "engine.hpp"
-
-#include "vk.hpp"
+#include "md2view/engine.hpp"
+#include "md2view/vk/vk.hpp"
 
 #include <optional>
 

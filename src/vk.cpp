@@ -1,4 +1,4 @@
-#include "md2view/vk.hpp"
+#include "md2view/vk/vk.hpp"
 
 #include <fmt/core.h>
 #include <glm/glm.hpp>
@@ -13,8 +13,6 @@
 #include <ranges>
 #include <string_view>
 #include <vector>
-
-#include <iostream>
 
 namespace myvk {
 

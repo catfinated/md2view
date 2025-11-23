@@ -5,7 +5,7 @@ http://tfc.duke.free.fr/coding/md2-specs-en.html
 http://tfc.duke.free.fr/old/models/md2.htm
 */
 
-#include "gl.hpp"
+#include "md2view/gl/gl.hpp"
 
 #include <boost/algorithm/clamp.hpp>
 #include <glm/glm.hpp>

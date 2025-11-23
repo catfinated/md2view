@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gl.hpp"
+#include "md2view/gl/gl.hpp"
 
 #include <GLFW/glfw3.h>
 #include <gsl-lite/gsl-lite.hpp>
