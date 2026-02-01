@@ -2,7 +2,6 @@
 
 #include <boost/algorithm/string/predicate.hpp>
 
-#include <array>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
