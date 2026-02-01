@@ -1,9 +1,8 @@
 #pragma once
 
 #include <array>
-#include <cstddef>
 #include <cstdint>
-#include <memory>
+#include <iosfwd>
 #include <vector>
 
 // https://www.fileformat.info/format/pcx/egff.htm

@@ -3,7 +3,6 @@
 #include "md2view/gl/gl.hpp"
 
 #include <optional>
-#include <stdexcept>
 #include <vector>
 
 class FrameBuffer {

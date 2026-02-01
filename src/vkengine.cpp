@@ -5,7 +5,6 @@
 
 #include <array>
 #include <cstdint>
-#include <iostream>
 #include <stdexcept>
 
 namespace md2v {

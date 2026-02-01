@@ -3,7 +3,6 @@
 #include <glm/glm.hpp>
 
 #include <cstdint>
-#include <vector>
 
 // based on camera tutorial from https://learnopengl.com/Getting-started/Camera
 class Camera {

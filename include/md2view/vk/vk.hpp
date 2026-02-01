@@ -3,8 +3,8 @@
  */
 #pragma once
 
-#include "md2view/vk/buffer.hpp"
-#include "md2view/vk/vertex.hpp"
+#include "md2view/vk/buffer.hpp" // IWYU pragma: export
+#include "md2view/vk/vertex.hpp" // IWYU pragma: export
 #include "md2view/vk/window.hpp"
 
 #include <vulkan/vulkan.hpp>

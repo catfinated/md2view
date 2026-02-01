@@ -7,7 +7,6 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
-#include <cstdlib>
 
 MD2View::MD2View() { reset_model_matrix(); }
 

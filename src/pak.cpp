@@ -7,7 +7,6 @@
 
 #include <algorithm>
 #include <fstream>
-#include <vector>
 
 #pragma pack(push, 1)
 struct Header {

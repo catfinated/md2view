@@ -1,1 +1,45 @@
-nick@planet-express.1272368:1768513768
+# .clangd configuration file
+# Place this in your C++ project root directory
+
+# Compiler configuration
+CompileFlags:
+  # Add standard flags
+  Add: 
+    - -std=c++23
+    - -Wall
+    - -Wextra
+    - -Wpedantic
+  # Use clang++ as compiler
+  Compiler: clang++
+
+# Code completion settings
+Completion:
+  AllScopes: true
+
+# Diagnostics configuration
+Diagnostics:
+  # Enable clang-tidy checks
+  ClangTidy:
+    Add: 
+      - performance-*
+      - modernize-*
+      - readability-*
+      - bugprone-*
+      - cppcoreguidelines-*
+    Remove:
+      - modernize-use-trailing-return-type
+      - readability-magic-numbers
+      - cppcoreguidelines-avoid-magic-numbers
+
+  UnusedIncludes: Strict
+  # Suppress unwanted warnings
+  Suppress: pragma-pack  
+
+# Index configuration for better performance
+Index:
+  Background: Build
+  StandardLibrary: Yes
+
+# Hover information
+Hover:
+  ShowAKA: Yes

@@ -1,5 +1,4 @@
 #include "md2view/resource_manager.hpp"
-#include "md2view/pcx.hpp"
 
 #include <gsl-lite/gsl-lite.hpp>
 #include <spdlog/spdlog.h>

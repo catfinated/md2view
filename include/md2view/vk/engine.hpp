@@ -8,8 +8,6 @@
 #include "md2view/engine.hpp"
 #include "md2view/vk/vk.hpp"
 
-#include <optional>
-
 namespace md2v {
 
 class VKEngine : public Engine {
