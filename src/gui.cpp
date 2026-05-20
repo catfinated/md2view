@@ -164,8 +164,10 @@ void Gui::render() {
                 GLuint gl_tex{};
                 glGenTextures(1, &gl_tex);
                 glBindTexture(GL_TEXTURE_2D, gl_tex);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                                GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
+                                GL_LINEAR);
                 GLenum const fmt =
                     (tex->Format == ImTextureFormat_RGBA32) ? GL_RGBA : GL_RED;
                 glTexImage2D(GL_TEXTURE_2D, 0, static_cast<GLint>(fmt),
@@ -262,7 +264,7 @@ void Gui::render() {
 
     for (int n = 0; n < draw_data->CmdListsCount; n++) {
         const ImDrawList* cmd_list = draw_data->CmdLists[n];
-        const ImDrawIdx* idx_buffer_offset = nullptr;
+        GLintptr idx_buffer_offset = 0;
 
         glBindBuffer(GL_ARRAY_BUFFER,
                      glbuffers_[static_cast<size_t>(Buffer::vertex)]);
@@ -283,7 +285,8 @@ void Gui::render() {
             if (pcmd->UserCallback != nullptr) {
                 pcmd->UserCallback(cmd_list, pcmd);
             } else {
-                glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd->GetTexID());
+                glBindTexture(GL_TEXTURE_2D,
+                              (GLuint)(intptr_t)pcmd->GetTexID());
                 auto const yf =
                     gsl_lite::narrow_cast<float>(fb_height) - pcmd->ClipRect.w;
 
@@ -296,10 +299,10 @@ void Gui::render() {
                 glDrawElements(GL_TRIANGLES, (GLsizei)pcmd->ElemCount,
                                sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT
                                                       : GL_UNSIGNED_INT,
-                               idx_buffer_offset);
+                               reinterpret_cast<void*>(idx_buffer_offset));
             }
-            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-            idx_buffer_offset += pcmd->ElemCount;
+            idx_buffer_offset +=
+                static_cast<GLintptr>(pcmd->ElemCount * sizeof(ImDrawIdx));
         }
     }
 

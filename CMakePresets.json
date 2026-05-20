@@ -48,6 +48,18 @@
                     "value": "clang-tidy"
                 }
             }
+        },
+        {
+            "name": "asan",
+            "inherits": "debug",
+            "displayName": "debug+asan+ubsan",
+            "binaryDir": "${sourceDir}/build/asan",
+            "cacheVariables": {
+                "CMAKE_CXX_FLAGS_DEBUG": "-g -O0 -fsanitize=address,undefined -fno-omit-frame-pointer",
+                "CMAKE_C_FLAGS_DEBUG": "-g -O0 -fsanitize=address,undefined -fno-omit-frame-pointer",
+                "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address,undefined",
+                "CMAKE_SHARED_LINKER_FLAGS": "-fsanitize=address,undefined"
+            }
         }
     ],
     "buildPresets": [
@@ -62,6 +74,10 @@
         {
             "name": "clang-tidy",
             "configurePreset": "clang-tidy"
+        },
+        {
+            "name": "asan",
+            "configurePreset": "asan"
         }
     ],
     "testPresets": [

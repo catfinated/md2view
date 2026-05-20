@@ -1,0 +1,2 @@
+leak:libnvidia-glcore
+leak:libnvidia-glsi

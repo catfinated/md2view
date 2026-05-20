@@ -58,6 +58,13 @@ The screenshots above come from the Macbook which partly explains the low FPS.
 
 There is also a preset for `release` builds.
 
+There is an `asan` preset that builds with AddressSanitizer and UndefinedBehaviorSanitizer:
+
+```cmd
+> cmake --preset asan
+> cmake --build --preset asan
+```
+
 ### Dependencies
 
 md2view is built using vcpkg to manage dependencies. These dependencies are:
@@ -100,6 +107,14 @@ To run the in progress Vuilkan based executable:
 
 ```cmd
 > VK_LAYER_PATH=build/debug/vcpkg_installed/x64-linux/share/vulkan/explicit_layer.d build/debug/src/vkmd2v
+```
+
+To run the ASan build, use the `build/asan` binaries. LeakSanitizer will report
+leaks from the NVIDIA driver which are not bugs in md2view; suppress them with
+the provided `lsan.supp` file:
+
+```cmd
+> LSAN_OPTIONS=suppressions=lsan.supp build/asan/src/glmd2v
 ```
 
 ### Testing
