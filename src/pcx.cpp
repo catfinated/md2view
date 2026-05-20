@@ -88,9 +88,8 @@ std::vector<PCX::Color> PCX::read_palette(std::istream& is) {
     char byte{}; // marker byte
     is.read(std::addressof(byte), 1);
 
-    while (!is.eof()) {
-        std::array<char, 3> rgb{};
-        is.read(rgb.data(), rgb.size());
+    std::array<char, 3> rgb{};
+    while (is.read(rgb.data(), rgb.size())) {
         colors.emplace_back(static_cast<uint8_t>(rgb[0]),
                             static_cast<uint8_t>(rgb[1]),
                             static_cast<uint8_t>(rgb[2]));
