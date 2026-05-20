@@ -76,22 +76,7 @@ void Gui::init() {
                           GL_BUFFER_OFFSET(offsetof(ImDrawVert, col)));
     glCheckError();
 
-    // create font
-    // Build texture atlas
-    unsigned char* pixels{nullptr};
-    int width{};
-    int height{};
-    io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
-    // Upload texture to graphics system
-    glGenTextures(1, std::addressof(font_texture_));
-    glBindTexture(GL_TEXTURE_2D, font_texture_);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
-                 GL_UNSIGNED_BYTE, pixels);
-
-    // Store our identifier
-    io.Fonts->TexID = (intptr_t)font_texture_;
+    io.BackendFlags |= ImGuiBackendFlags_RendererHasTextures;
 
     // Restore state
     glBindTexture(GL_TEXTURE_2D, last_texture);
@@ -171,6 +156,47 @@ void Gui::render() {
         return;
     }
     draw_data->ScaleClipRects(io.DisplayFramebufferScale);
+
+    // Create/update/destroy textures requested by ImGui
+    if (draw_data->Textures != nullptr) {
+        for (ImTextureData* tex : *draw_data->Textures) {
+            if (tex->Status == ImTextureStatus_WantCreate) {
+                GLuint gl_tex{};
+                glGenTextures(1, &gl_tex);
+                glBindTexture(GL_TEXTURE_2D, gl_tex);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                GLenum const fmt =
+                    (tex->Format == ImTextureFormat_RGBA32) ? GL_RGBA : GL_RED;
+                glTexImage2D(GL_TEXTURE_2D, 0, static_cast<GLint>(fmt),
+                             tex->Width, tex->Height, 0, fmt, GL_UNSIGNED_BYTE,
+                             tex->GetPixels());
+                tex->SetTexID((ImTextureID)(intptr_t)gl_tex);
+                tex->SetStatus(ImTextureStatus_OK);
+            } else if (tex->Status == ImTextureStatus_WantUpdates) {
+                GLenum const fmt =
+                    (tex->Format == ImTextureFormat_RGBA32) ? GL_RGBA : GL_RED;
+                glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)tex->GetTexID());
+                glPixelStorei(GL_UNPACK_ROW_LENGTH, tex->Width);
+                auto const* pixels =
+                    static_cast<unsigned char const*>(tex->GetPixels()) +
+                    (tex->UpdateRect.y * tex->Width + tex->UpdateRect.x) *
+                        tex->BytesPerPixel;
+                glTexSubImage2D(GL_TEXTURE_2D, 0, tex->UpdateRect.x,
+                                tex->UpdateRect.y, tex->UpdateRect.w,
+                                tex->UpdateRect.h, fmt, GL_UNSIGNED_BYTE,
+                                pixels);
+                glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+                tex->SetStatus(ImTextureStatus_OK);
+            } else if (tex->Status == ImTextureStatus_WantDestroy) {
+                auto gl_tex = (GLuint)(intptr_t)tex->GetTexID();
+                if (gl_tex != 0)
+                    glDeleteTextures(1, &gl_tex);
+                tex->SetTexID(ImTextureID_Invalid);
+                tex->SetStatus(ImTextureStatus_Destroyed);
+            }
+        }
+    }
 
     // Backup GL state
     GLint last_active_texture;
@@ -257,7 +283,7 @@ void Gui::render() {
             if (pcmd->UserCallback != nullptr) {
                 pcmd->UserCallback(cmd_list, pcmd);
             } else {
-                glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd->TextureId);
+                glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd->GetTexID());
                 auto const yf =
                     gsl_lite::narrow_cast<float>(fb_height) - pcmd->ClipRect.w;
 
@@ -319,5 +345,13 @@ void Gui::render() {
 }
 
 void Gui::shutdown() {
-    // TODO
+    for (ImTextureData* tex : ImGui::GetPlatformIO().Textures) {
+        auto gl_tex = (GLuint)(intptr_t)tex->GetTexID();
+        if (gl_tex != 0) {
+            glDeleteTextures(1, &gl_tex);
+            tex->SetTexID(ImTextureID_Invalid);
+            tex->SetStatus(ImTextureStatus_Destroyed);
+        }
+    }
+    ImGui::DestroyContext();
 }

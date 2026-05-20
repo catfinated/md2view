@@ -39,6 +39,9 @@ public:
 
     [[nodiscard]] GLint
     uniform_location(gsl_lite::not_null<GLchar const*> name) const;
+    [[nodiscard]] GLint uniform_location(GLchar const* name) const {
+        return uniform_location(gsl_lite::not_null<GLchar const*>(name));
+    }
     [[nodiscard]] GLint uniform_location(std::string const& name) const {
         return uniform_location(
             gsl_lite::not_null<GLchar const*>(name.c_str()));

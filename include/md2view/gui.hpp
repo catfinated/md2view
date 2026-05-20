@@ -35,7 +35,6 @@ private:
     gsl_lite::not_null<GLFWwindow*> window_;
     double time_ = 0.0;
     std::array<bool, 3> mouse_pressed_{false, false, false};
-    GLuint font_texture_ = 0;
     int attrib_location_tex_ = 0;
     int attrib_location_projection_ = 0;
     int attrib_location_position_ = 0;

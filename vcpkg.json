@@ -1,13 +1,18 @@
 {
   "dependencies": [
-      {
+    {
       "name": "glfw3",
-      "features": ["wayland"]
-      },
-      {
+      "features": [
+        "wayland"
+      ]
+    },
+    {
       "name": "vulkan-loader",
-      "features": ["wayland", "xcb"]
-      },
+      "features": [
+        "wayland",
+        "xcb"
+      ]
+    },
     "glew",
     "glm",
     "boost-algorithm",

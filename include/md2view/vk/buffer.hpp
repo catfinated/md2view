@@ -8,6 +8,7 @@
 #include <vulkan/vulkan_raii.hpp>
 
 #include <cstring>
+#include <expected>
 
 namespace md2v {
 
