@@ -1,4 +1,4 @@
-# md2view Design
+# Design
 
 md2view is a Quake II MD2 model viewer written in C++23. It supports two
 rendering backends (OpenGL and Vulkan) and is structured so that model loading,
@@ -7,16 +7,16 @@ animation, and GPU rendering are independent concerns.
 ## Layer architecture
 
 ```
-┌─────────────────────────────────────────────────────┐
-│  Application (MD2View / GLEngine / VKEngine)        │
-├─────────────────────────────────────────────────────┤
-│  Scene composition                                  │
-│  MD2View owns MD2 + GL::Mesh; wires update → sync  │
-├──────────────────────┬──────────────────────────────┤
-│  Data / logic layer  │  GPU layer                   │
+┌───────────────────────────────────────────────────────┐
+│  Application (MD2View / GLEngine / VKEngine)          │
+├───────────────────────────────────────────────────────┤
+│  Scene composition                                    │
+│  MD2View owns MD2 + GL::Mesh; wires update → sync     │
+├──────────────────────┬────────────────────────────────┤
+│  Data / logic layer  │  GPU layer                     │
 │  MD2                 │  GL::Mesh  (or future VK::Mesh)│
-│  PAK  PCX            │                              │
-└──────────────────────┴──────────────────────────────┘
+│  PAK  PCX            │                                │
+└──────────────────────┴────────────────────────────────┘
 ```
 
 There are three layers:

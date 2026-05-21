@@ -123,6 +123,29 @@ the provided `lsan.supp` file:
 > ctest --preset debug
 ```
 
+### Documentation
+
+Requires [Doxygen](https://www.doxygen.nl/) to be installed.
+
+```cmd
+> scripts/docs.sh --open
+```
+
+Output is written to `build/debug/docs/html/index.html`. The docs can also be
+built directly via CMake:
+
+```cmd
+> cmake --build --preset debug --target docs
+```
+
+### Coverage
+
+```cmd
+> scripts/coverage.sh --open
+```
+
+Output is written to `build/coverage/report/index.html`.
+
 ## Attributions
 
 While I have used many resources for learning OpenGL the one I personally like best is:
