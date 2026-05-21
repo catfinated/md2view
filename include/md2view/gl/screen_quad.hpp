@@ -4,9 +4,8 @@
 
 #include <array>
 
-class Shader;
-
 namespace GL {
+class Shader;
 
 /// Full-screen quad for post-processing passes.
 ///

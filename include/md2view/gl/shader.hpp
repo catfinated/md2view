@@ -14,6 +14,8 @@
 #include <sstream>
 #include <string>
 
+namespace GL {
+
 /// OpenGL shader program (vertex + optional geometry + fragment stages).
 ///
 /// Loads GLSL source from files, compiles each stage, and links the program.
@@ -161,3 +163,5 @@ private:
 
     GLuint program_{};
 };
+
+} // namespace GL

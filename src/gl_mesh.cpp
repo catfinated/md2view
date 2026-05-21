@@ -1,5 +1,5 @@
 #include "md2view/gl/mesh.hpp"
-#include "md2view/shader.hpp"
+#include "md2view/gl/shader.hpp"
 
 #include <gsl-lite/gsl-lite.hpp>
 #include <spdlog/spdlog.h>

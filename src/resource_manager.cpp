@@ -12,7 +12,7 @@ ResourceManager::ResourceManager(
     , shaders_dir_(root_dir_ / "shaders")
     , pak_(std::make_unique<PAK>(pak_path.value_or(rootdir / "models"))) {}
 
-std::shared_ptr<Shader>
+std::shared_ptr<GL::Shader>
 ResourceManager::load_shader(std::string const& name,
                              std::optional<std::string_view> vertex,
                              std::optional<std::string_view> fragment,
@@ -31,8 +31,8 @@ ResourceManager::load_shader(std::string const& name,
         geometry_path = shaders_dir() / std::string{*geometry};
     }
 
-    std::shared_ptr<Shader> shader{
-        new Shader{vertex_path, fragment_path, geometry_path}};
+    std::shared_ptr<GL::Shader> shader{
+        new GL::Shader{vertex_path, fragment_path, geometry_path}};
     auto result = shaders_.emplace(name, shader);
 
     gsl_Assert(result.second);

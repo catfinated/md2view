@@ -64,22 +64,22 @@ bool MD2View::on_engine_initialized(Engine& engine) {
     load_current_texture(engine);
     glow_loc_ = shader_->uniform_location("glow_color");
     glow_color_ = glm::vec3(0.0f, 1.0f, 0.0f);
-    Shader::set_uniform(glow_loc_, glow_color_);
+    GL::Shader::set_uniform(glow_loc_, glow_color_);
 
     blur_shader_ = engine.resource_manager().load_shader("blur", "screen");
     blur_shader_->use();
     disable_blur_loc_ = blur_shader_->uniform_location("disable_blur");
-    Shader::set_uniform(disable_blur_loc_, 1);
+    GL::Shader::set_uniform(disable_blur_loc_, 1);
 
     glow_shader_ = engine.resource_manager().load_shader("glow", "screen");
     glow_shader_->use();
 
     auto loc = glow_shader_->uniform_location("screenTexture");
-    Shader::set_uniform(loc, 0);
+    GL::Shader::set_uniform(loc, 0);
     loc = glow_shader_->uniform_location("prepassTexture");
-    Shader::set_uniform(loc, 1);
+    GL::Shader::set_uniform(loc, 1);
     loc = glow_shader_->uniform_location("blurredTexture");
-    Shader::set_uniform(loc, 2);
+    GL::Shader::set_uniform(loc, 2);
 
     camera_.set_position(glm::vec3(0.0f, 0.0f, 3.0f));
 
@@ -170,7 +170,7 @@ void MD2View::render(Engine& engine) {
         // blur solid image
         blur_fb_->bind();
         blur_shader_->use();
-        Shader::set_uniform(disable_blur_loc_, 0);
+        GL::Shader::set_uniform(disable_blur_loc_, 0);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, main_fb_->color_buffer(1));
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -190,7 +190,7 @@ void MD2View::render(Engine& engine) {
     } else {
         GL::FrameBuffer::bind_default();
         blur_shader_->use();
-        Shader::set_uniform(disable_blur_loc_, 1);
+        GL::Shader::set_uniform(disable_blur_loc_, 1);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, main_fb_->color_buffer(0));
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -283,7 +283,7 @@ void MD2View::draw_ui(Engine& engine) {
         ImGui::Checkbox("Glow", &glow_);
         if (ImGui::ColorEdit3("Glow color", glm::value_ptr(glow_color_))) {
             shader_->use();
-            Shader::set_uniform(glow_loc_, glow_color_);
+            GL::Shader::set_uniform(glow_loc_, glow_color_);
         }
 
         bool model_changed = ImGui::SliderInt("Scale Factor", &scale_, 1, 256);

@@ -1,5 +1,5 @@
 #include "md2view/gl/screen_quad.hpp"
-#include "md2view/shader.hpp"
+#include "md2view/gl/shader.hpp"
 
 namespace GL {
 

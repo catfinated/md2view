@@ -7,9 +7,8 @@
 #include <array>
 #include <span>
 
-class Shader;
-
 namespace GL {
+class Shader;
 
 /// Model-agnostic GPU mesh owning a VAO and two VBOs.
 ///

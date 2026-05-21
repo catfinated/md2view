@@ -22,7 +22,7 @@ add_library(libmd2v
   camera.cpp
   model_selector.cpp
   ui.cpp
-  shader.cpp
+  gl_shader.cpp
   gl_texture2d.cpp
   gl_frame_buffer.cpp
   engine.cpp)

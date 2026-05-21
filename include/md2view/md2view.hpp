@@ -41,9 +41,9 @@ private:
     std::unique_ptr<GL::Mesh> md2_mesh_;
     std::unique_ptr<ModelSelector> model_selector_;
     std::shared_ptr<GL::Texture2D> texture_;
-    std::shared_ptr<Shader> shader_;
-    std::shared_ptr<Shader> blur_shader_;
-    std::shared_ptr<Shader> glow_shader_;
+    std::shared_ptr<GL::Shader> shader_;
+    std::shared_ptr<GL::Shader> blur_shader_;
+    std::shared_ptr<GL::Shader> glow_shader_;
     std::unique_ptr<GL::ScreenQuad> screen_quad_;
     std::unique_ptr<GL::FrameBuffer> blur_fb_;
     std::unique_ptr<GL::FrameBuffer> main_fb_;

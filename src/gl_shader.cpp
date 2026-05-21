@@ -1,9 +1,11 @@
-#include "md2view/shader.hpp"
+#include "md2view/gl/shader.hpp"
 
 #include <array>
 #include <fstream>
 #include <stdexcept>
 #include <utility>
+
+namespace GL {
 
 Shader::Shader(std::filesystem::path const& vertex,
                std::filesystem::path const& fragment,
@@ -185,3 +187,5 @@ void Shader::set_uniform(GLint location, GLuint i) {
 void Shader::set_uniform(GLint location, GLfloat f) {
     glUniform1f(location, f);
 }
+
+} // namespace GL

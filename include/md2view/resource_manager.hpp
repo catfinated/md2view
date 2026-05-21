@@ -1,9 +1,9 @@
 #pragma once
 
+#include "md2view/gl/shader.hpp"
 #include "md2view/gl/texture2d.hpp"
 #include "md2view/md2.hpp"
 #include "md2view/pak.hpp"
-#include "md2view/shader.hpp"
 
 #include <filesystem>
 #include <memory>
@@ -49,14 +49,14 @@ public:
     /// @param fragment Override for the fragment shader file stem (defaults to
     /// @p name).
     /// @param geometry Optional geometry shader file name.
-    std::shared_ptr<Shader>
+    std::shared_ptr<GL::Shader>
     load_shader(std::string const& name,
                 std::optional<std::string_view> vertex = {},
                 std::optional<std::string_view> fragment = {},
                 std::optional<std::string_view> geometry = {});
 
     /// Return a previously loaded shader by name.
-    std::shared_ptr<Shader> shader(std::string const& name) {
+    std::shared_ptr<GL::Shader> shader(std::string const& name) {
         return shaders_.at(name);
     }
 
@@ -81,7 +81,7 @@ private:
     std::filesystem::path root_dir_;
     std::filesystem::path shaders_dir_;
     std::unique_ptr<PAK> pak_;
-    std::unordered_map<std::string, std::shared_ptr<Shader>> shaders_;
+    std::unordered_map<std::string, std::shared_ptr<GL::Shader>> shaders_;
     std::unordered_map<std::string, std::shared_ptr<GL::Texture2D>> textures2D_;
     std::unordered_map<std::string, std::shared_ptr<MD2>> models_;
 };
