@@ -10,6 +10,7 @@
 #include <cstdint>
 
 class Engine;
+class ResourceManager;
 
 namespace GL {
 
@@ -17,7 +18,9 @@ namespace GL {
 /// save/restore around each ImGui render pass.
 class Gui {
 public:
-    Gui(Engine& engine, gsl_lite::not_null<GLFWwindow*> window);
+    Gui(::Engine& engine,
+        ResourceManager& rm,
+        gsl_lite::not_null<GLFWwindow*> window);
     ~Gui() = default;
 
     Gui(Gui const&) = delete;
@@ -35,7 +38,8 @@ private:
 
     void init();
 
-    Engine& engine_;
+    ::Engine& engine_;
+    ResourceManager& rm_;
     gsl_lite::not_null<GLFWwindow*> window_;
     double time_ = 0.0;
     std::array<bool, 3> mouse_pressed_{false, false, false};

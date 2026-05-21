@@ -15,10 +15,12 @@ add_library(libmd2
   md2.cpp
   pcx.cpp
   pak.cpp
-  camera.cpp)
+  camera.cpp
+  engine.cpp)
 
 target_link_libraries(libmd2 PUBLIC
    Boost::system
+   Boost::program_options
    glm::glm
    spdlog::spdlog
    gsl::gsl-lite-v1)
@@ -39,8 +41,7 @@ add_library(libmd2gl
   ui.cpp
   gl_shader.cpp
   gl_texture2d.cpp
-  gl_frame_buffer.cpp
-  engine.cpp)
+  gl_frame_buffer.cpp)
 
 target_link_libraries(libmd2gl PUBLIC
    libmd2
@@ -48,8 +49,7 @@ target_link_libraries(libmd2gl PUBLIC
    GLEW::GLEW
    OpenGL::GL
    OpenGL::EGL
-   imgui::imgui
-   Boost::program_options)
+   imgui::imgui)
 
 target_include_directories(libmd2gl PUBLIC
    ${OPENGL_INCLUDE_DIR}

@@ -1,8 +1,8 @@
-#include "glengine.ipp"
+#include "gl_engine.ipp"
 #include "md2view/md2view.hpp"
 
 int main(int argc, char const* argv[]) {
-    GLEngine<MD2View> engine;
+    GL::Engine<MD2View> engine;
 
     if (!engine.init(std::span{argv, static_cast<size_t>(argc)})) {
         return EXIT_FAILURE;

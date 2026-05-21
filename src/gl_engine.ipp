@@ -6,7 +6,7 @@
 #include <utility>
 
 template <typename Game>
-bool GLEngine<Game>::init(std::span<char const*> args) {
+bool GL::Engine<Game>::init(std::span<char const*> args) {
     if (!parse_args(args)) {
         return false;
     }
@@ -41,7 +41,7 @@ bool GLEngine<Game>::init(std::span<char const*> args) {
     // outside code
     auto key_callback = [](GLFWwindow* window, int key, int /* scancode */,
                            int action, int /* mode */) {
-        using EngineType = GLEngine<Game>;
+        using EngineType = GL::Engine<Game>;
         auto* engine =
             static_cast<EngineType*>(glfwGetWindowUserPointer(window));
         gsl_Assert(engine);
@@ -51,7 +51,7 @@ bool GLEngine<Game>::init(std::span<char const*> args) {
     glfwSetKeyCallback(window_, key_callback);
 
     auto mouse_callback = [](GLFWwindow* window, double xpos, double ypos) {
-        using EngineType = GLEngine<Game>;
+        using EngineType = GL::Engine<Game>;
         auto* engine =
             static_cast<EngineType*>(glfwGetWindowUserPointer(window));
         gsl_Assert(engine);
@@ -62,7 +62,7 @@ bool GLEngine<Game>::init(std::span<char const*> args) {
 
     auto scroll_callback = [](GLFWwindow* window, double xoffset,
                               double yoffset) {
-        using EngineType = GLEngine<Game>;
+        using EngineType = GL::Engine<Game>;
         auto* engine =
             static_cast<EngineType*>(glfwGetWindowUserPointer(window));
         gsl_Assert(engine);
@@ -72,7 +72,7 @@ bool GLEngine<Game>::init(std::span<char const*> args) {
     glfwSetScrollCallback(window_, scroll_callback);
 
     auto win_resize_callback = [](GLFWwindow* window, int width, int height) {
-        using EngineType = GLEngine<Game>;
+        using EngineType = GL::Engine<Game>;
         auto* engine =
             static_cast<EngineType*>(glfwGetWindowUserPointer(window));
         gsl_Assert(engine);
@@ -82,7 +82,7 @@ bool GLEngine<Game>::init(std::span<char const*> args) {
     glfwSetWindowSizeCallback(window_, win_resize_callback);
 
     auto fb_resize_callback = [](GLFWwindow* window, int width, int height) {
-        using EngineType = GLEngine<Game>;
+        using EngineType = GL::Engine<Game>;
         auto* engine =
             static_cast<EngineType*>(glfwGetWindowUserPointer(window));
         gsl_Assert(engine);
@@ -127,13 +127,14 @@ bool GLEngine<Game>::init(std::span<char const*> args) {
     mouse_.xpos = width / 2.0;
     mouse_.ypos = height / 2.0;
 
-    gui_ = std::make_unique<GL::Gui>(*this, gsl_lite::not_null{window_});
+    gui_ = std::make_unique<GL::Gui>(*this, *resource_manager_,
+                                     gsl_lite::not_null{window_});
     glCheckError();
 
     return true;
 }
 
-template <typename Game> void GLEngine<Game>::run_game() {
+template <typename Game> void GL::Engine<Game>::run_game() {
     last_frame_ = gsl_lite::narrow_cast<GLfloat>(glfwGetTime());
     // glfwSwapInterval(1);
 
@@ -165,7 +166,7 @@ template <typename Game> void GLEngine<Game>::run_game() {
 }
 
 template <typename Game>
-void GLEngine<Game>::key_callback(int key, int action) {
+void GL::Engine<Game>::key_callback(int key, int action) {
     if (action == GLFW_PRESS) {
         if (key == GLFW_KEY_ESCAPE) {
             glfwSetWindowShouldClose(window_, GL_TRUE);
@@ -183,7 +184,7 @@ void GLEngine<Game>::key_callback(int key, int action) {
 }
 
 template <typename Game>
-void GLEngine<Game>::mouse_callback(double xpos, double ypos) {
+void GL::Engine<Game>::mouse_callback(double xpos, double ypos) {
     GLfloat xoffset = xpos - mouse_.xpos.value_or(xpos);
     GLfloat yoffset = mouse_.ypos.value_or(ypos) -
                       ypos; // reversed since y-coords go from bottom to top
@@ -196,7 +197,7 @@ void GLEngine<Game>::mouse_callback(double xpos, double ypos) {
 }
 
 template <typename Game>
-void GLEngine<Game>::scroll_callback(double xoffset, double yoffset) {
+void GL::Engine<Game>::scroll_callback(double xoffset, double yoffset) {
     mouse_.scroll_xoffset = xoffset;
     mouse_.scroll_yoffset = yoffset;
 
@@ -206,14 +207,14 @@ void GLEngine<Game>::scroll_callback(double xoffset, double yoffset) {
 }
 
 template <typename Game>
-void GLEngine<Game>::window_resize_callback(int x, int y) {
+void GL::Engine<Game>::window_resize_callback(int x, int y) {
     spdlog::info("window resize x={} y={}", x, y);
     screen_width_ = x;
     screen_height_ = y;
 }
 
 template <typename Game>
-void GLEngine<Game>::framebuffer_resize_callback(int x, int y) {
+void GL::Engine<Game>::framebuffer_resize_callback(int x, int y) {
     spdlog::info("framebuffer resize x={} y={}", x, y);
     width_ = x;
     height_ = y;

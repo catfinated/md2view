@@ -1,7 +1,5 @@
 #pragma once
 
-#include "md2view/resource_manager.hpp"
-
 #include <boost/program_options.hpp>
 
 #include <bitset>
@@ -27,10 +25,6 @@ public:
     [[nodiscard]] int screen_width() const { return screen_width_; }
     [[nodiscard]] int screen_height() const { return screen_height_; }
 
-    ResourceManager& resource_manager() {
-        gsl_Expects(resource_manager_);
-        return *resource_manager_;
-    }
     [[nodiscard]] std::bitset<max_keys> const& keys() const { return keys_; }
 
     [[nodiscard]] bool check_key_pressed(unsigned int key);
@@ -55,8 +49,6 @@ protected:
     int height_{};
     int screen_width_{};
     int screen_height_{};
-    std::unique_ptr<ResourceManager> resource_manager_{nullptr};
-
     std::bitset<max_keys> keys_;
     std::bitset<max_keys> keys_pressed_;
     Mouse mouse_;

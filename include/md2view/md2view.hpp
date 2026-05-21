@@ -13,29 +13,31 @@
 #include <memory>
 #include <string>
 
-class Engine;
+namespace GL {
+template <typename Game> class Engine;
+}
 
 class MD2View {
 public:
     MD2View();
 
-    bool on_engine_initialized(Engine& engine);
-    void process_input(Engine& engine, GLfloat delta_time);
+    bool on_engine_initialized(GL::Engine<MD2View>& engine);
+    void process_input(GL::Engine<MD2View>& engine, GLfloat delta_time);
     void on_mouse_movement(GLfloat xoffset, GLfloat yoffset);
     void on_mouse_scroll(double xoffset, double yoffset);
     void on_framebuffer_resized(int width, int height);
-    void update(Engine& engine, GLfloat delta_time);
-    void render(Engine& engine);
+    void update(GL::Engine<MD2View>& engine, GLfloat delta_time);
+    void render(GL::Engine<MD2View>& engine);
     static char const* title() { return "MD2View"; }
 
 private:
     void reset_camera();
     void reset_model_matrix();
-    void load_current_texture(Engine& engine);
+    void load_current_texture(GL::Engine<MD2View>& engine);
     void update_model();
-    void draw_ui(Engine& engine);
+    void draw_ui(GL::Engine<MD2View>& engine);
     void set_vsync() const;
-    void load_model(Engine& engine);
+    void load_model(GL::Engine<MD2View>& engine);
 
     std::shared_ptr<MD2> md2_;
     std::unique_ptr<GL::Mesh> md2_mesh_;

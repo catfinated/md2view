@@ -1,5 +1,6 @@
 #include "md2view/engine.hpp"
 #include "md2view/gl/gui.hpp"
+#include "md2view/resource_manager.hpp"
 
 #include <gsl-lite/gsl-lite.hpp>
 
@@ -8,8 +9,11 @@
 
 namespace GL {
 
-Gui::Gui(Engine& engine, gsl_lite::not_null<GLFWwindow*> window)
+Gui::Gui(::Engine& engine,
+         ResourceManager& rm,
+         gsl_lite::not_null<GLFWwindow*> window)
     : engine_(engine)
+    , rm_(rm)
     , window_(std::move(window)) {
     init();
 }
@@ -30,7 +34,7 @@ void Gui::init() {
 
     glCheckError();
 
-    auto shader = engine_.resource_manager().load_shader("imgui");
+    auto shader = rm_.load_shader("imgui");
 
     attrib_location_tex_ = shader->uniform_location("texture0");
     attrib_location_projection_ = shader->uniform_location("projection");
@@ -255,7 +259,7 @@ void Gui::render() {
         {-1.0f, 1.0f, 0.0f, 1.0f},
     };
     // glUseProgram(g_ShaderHandle);
-    auto shader = engine_.resource_manager().shader("imgui");
+    auto shader = rm_.shader("imgui");
     shader->use();
 
     glUniform1i(attrib_location_tex_, 0);

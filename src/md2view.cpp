@@ -1,5 +1,5 @@
 #include "md2view/md2view.hpp"
-#include "md2view/engine.hpp"
+#include "md2view/gl/engine.hpp"
 #include "md2view/ui.hpp"
 
 #include <GLFW/glfw3.h>
@@ -13,7 +13,7 @@
 
 MD2View::MD2View() { reset_model_matrix(); }
 
-void MD2View::load_model(Engine& engine) {
+void MD2View::load_model(GL::Engine<MD2View>& engine) {
     md2_ = engine.resource_manager().load_model(model_selector_->model_path());
     md2_mesh_ = std::make_unique<GL::Mesh>(md2_->interpolated_vertices(),
                                            md2_->scaled_texcoords());
@@ -30,12 +30,12 @@ void MD2View::reset_model_matrix() {
 
 void MD2View::reset_camera() { camera_.reset(glm::vec3(0.0f, 0.0f, 3.0f)); }
 
-void MD2View::load_current_texture(Engine& engine) {
+void MD2View::load_current_texture(GL::Engine<MD2View>& engine) {
     auto const& path = md2_->current_skin().fpath;
     texture_ = engine.resource_manager().load_texture2D(path);
 }
 
-bool MD2View::on_engine_initialized(Engine& engine) {
+bool MD2View::on_engine_initialized(GL::Engine<MD2View>& engine) {
     if (!engine.resource_manager().pak().has_models()) {
         // NB: converting filesystem path to string in format arg
         // to work-around clang-tidy issue from libfmt:
@@ -127,7 +127,7 @@ void MD2View::update_model() {
     shader_->set_model(model_);
 }
 
-void MD2View::render(Engine& engine) {
+void MD2View::render(GL::Engine<MD2View>& engine) {
     shader_->use();
 
     if (camera_.view_dirty()) {
@@ -202,7 +202,7 @@ void MD2View::render(Engine& engine) {
     glCheckError();
 }
 
-void MD2View::draw_ui(Engine& engine) {
+void MD2View::draw_ui(GL::Engine<MD2View>& engine) {
     static float const vec4width = 275;
     // draw gui
     ImGui::Begin("MD2View");
@@ -331,12 +331,12 @@ void MD2View::draw_ui(Engine& engine) {
 
 void MD2View::set_vsync() const { glfwSwapInterval(vsync_enabled_ ? 1 : 0); }
 
-void MD2View::update(Engine& /* engine */, GLfloat delta_time) {
+void MD2View::update(GL::Engine<MD2View>& /* engine */, GLfloat delta_time) {
     md2_->update(delta_time);
     md2_mesh_->sync(md2_->interpolated_vertices());
 }
 
-void MD2View::process_input(Engine& engine, GLfloat delta_time) {
+void MD2View::process_input(GL::Engine<MD2View>& engine, GLfloat delta_time) {
     if (engine.keys()[GLFW_KEY_W]) {
         camera_.move(Camera::Direction::FORWARD, delta_time);
     }
