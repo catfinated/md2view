@@ -186,11 +186,6 @@ public:
     /// non-looping animation that has reached its last frame.
     void update(float dt);
 
-    /// Draw an ImGui panel for selecting animations, skins, and playback speed.
-    /// @return True if the active skin changed (caller should reload the
-    /// texture).
-    [[nodiscard]] bool draw_ui();
-
     /// Switch to the animation with the given name. No-op if not found.
     void set_animation(std::string const& id);
 

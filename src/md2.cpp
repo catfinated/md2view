@@ -4,7 +4,6 @@
 #include <fmt/ostream.h>
 #include <glm/gtx/compatibility.hpp>
 #include <gsl-lite/gsl-lite.hpp>
-#include <imgui.h>
 #include <spdlog/spdlog.h>
 
 #include <cctype>
@@ -330,45 +329,6 @@ void MD2::update(float dt) {
         vertex = lerp(v1, v2, glm::vec3(t, t, t));
         ++i;
     }
-}
-
-bool MD2::draw_ui() {
-    int index = gsl_lite::narrow_cast<int>(animation_index());
-    constexpr int anim_max_height_in_items = 15;
-
-    ImGui::Combo(
-        "Animation", &index,
-        [](void* data, int idx) -> char const* {
-            auto const* md2 = static_cast<MD2 const*>(data);
-            gsl_Assert(static_cast<size_t>(idx) < md2->animations().size());
-            return md2->animations()[idx].name.c_str();
-        },
-        this, gsl_lite::narrow_cast<int>(animations().size()),
-        anim_max_height_in_items);
-
-    set_animation(static_cast<size_t>(index));
-
-    int sindex = gsl_lite::narrow_cast<int>(skin_index());
-
-    ImGui::Combo(
-        "Skin", &sindex,
-        [](void* data, int idx) -> char const* {
-            auto const* md2 = static_cast<MD2 const*>(data);
-            gsl_Assert(static_cast<size_t>(idx) < md2->skins().size());
-            return md2->skins()[idx].name.c_str();
-        },
-        this, gsl_lite::narrow_cast<int>(skins().size()));
-
-    float fps = frames_per_second();
-    ImGui::InputFloat("Animation FPS", &fps, 1.0f, 5.0f, "%.3f");
-    set_frames_per_second(fps);
-
-    if (static_cast<size_t>(sindex) == skin_index()) {
-        return false;
-    }
-
-    set_skin_index(static_cast<size_t>(sindex));
-    return true;
 }
 
 std::ostream& operator<<(std::ostream& os, MD2::Animation const& anim) {

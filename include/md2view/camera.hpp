@@ -37,6 +37,26 @@ public:
     /// Current field of view in degrees.
     [[nodiscard]] float fov() const { return fov_; }
 
+    /// World-space camera position.
+    [[nodiscard]] glm::vec3 const& position() const { return position_; }
+    /// Unit vector pointing in the direction the camera faces.
+    [[nodiscard]] glm::vec3 const& front() const { return front_; }
+    /// Camera-local up vector (recomputed each time orientation changes).
+    [[nodiscard]] glm::vec3 const& up() const { return up_; }
+    /// Camera-local right vector (recomputed each time orientation changes).
+    [[nodiscard]] glm::vec3 const& right() const { return right_; }
+    /// Current pitch in degrees. Clamped to [-89, 89] when `constrain_pitch` is
+    /// set.
+    [[nodiscard]] float pitch() const { return pitch_; }
+    /// Current yaw in degrees. Increases rightward.
+    [[nodiscard]] float yaw() const { return yaw_; }
+
+    /// Set the field of view in degrees and mark the projection dirty.
+    void set_fov(float fov) {
+        fov_ = fov;
+        fov_dirty_ = true;
+    }
+
     /// Move the camera in a cardinal direction scaled by @p delta_time.
     void move(Direction direction, float delta_time);
 
@@ -57,9 +77,6 @@ public:
     void reset(glm::vec3 const& position);
 
     void set_position(glm::vec3 const& pos) { position_ = pos; }
-
-    /// Draw an ImGui panel exposing camera parameters.
-    void draw_ui();
 
     /// True if the view matrix needs to be recomputed this frame.
     [[nodiscard]] bool view_dirty() const { return view_dirty_; }

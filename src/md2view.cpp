@@ -1,5 +1,6 @@
 #include "md2view/md2view.hpp"
 #include "md2view/engine.hpp"
+#include "md2view/ui.hpp"
 
 #include <glm/gtx/string_cast.hpp>
 #include <spdlog/spdlog.h>
@@ -217,7 +218,7 @@ void MD2View::draw_ui(Engine& engine) {
 
     if (ImGui::TreeNodeEx("Camera", ImGuiTreeNodeFlags_DefaultOpen)) {
 
-        camera_.draw_ui();
+        UI::draw(camera_);
 
         if (ImGui::Button("Reset Camera")) {
             reset_camera();
@@ -259,7 +260,7 @@ void MD2View::draw_ui(Engine& engine) {
         ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Model: %s",
                            model_selector_->model_path().c_str());
 
-        if (md2_->draw_ui()) {
+        if (UI::draw(*md2_)) {
             load_current_texture(engine);
         }
 

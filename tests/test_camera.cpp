@@ -22,6 +22,48 @@ TEST_CASE("camera default ctor", "[cam]") {
     REQUIRE(camera.fov_dirty());
 }
 
+TEST_CASE("camera default accessors", "[cam]") {
+    using Catch::Approx;
+    Camera camera;
+    // Default: pos=origin, yaw=-90, pitch=0 → front=(0,0,-1), right=(1,0,0),
+    // up=(0,1,0)
+    REQUIRE(camera.position() == glm::vec3(0.0f));
+    REQUIRE(camera.front().x == Approx(0.0f).margin(1e-5f));
+    REQUIRE(camera.front().y == Approx(0.0f).margin(1e-5f));
+    REQUIRE(camera.front().z == Approx(-1.0f).margin(1e-5f));
+    REQUIRE(camera.right().x == Approx(1.0f).margin(1e-5f));
+    REQUIRE(camera.right().y == Approx(0.0f).margin(1e-5f));
+    REQUIRE(camera.right().z == Approx(0.0f).margin(1e-5f));
+    REQUIRE(camera.up().x == Approx(0.0f).margin(1e-5f));
+    REQUIRE(camera.up().y == Approx(1.0f).margin(1e-5f));
+    REQUIRE(camera.up().z == Approx(0.0f).margin(1e-5f));
+    REQUIRE(camera.pitch() == Approx(Camera::PITCH));
+    REQUIRE(camera.yaw() == Approx(Camera::YAW));
+}
+
+TEST_CASE("camera set_fov marks fov dirty", "[cam]") {
+    Camera camera;
+    camera.set_fov_clean();
+    camera.set_fov(30.0f);
+    REQUIRE(camera.fov() == Catch::Approx(30.0f));
+    REQUIRE(camera.fov_dirty());
+}
+
+TEST_CASE("camera position updated after move", "[cam]") {
+    Camera camera;
+    camera.move(Camera::Direction::FORWARD, 1.0f);
+    REQUIRE(camera.position().z == Catch::Approx(-3.0f).margin(1e-5f));
+}
+
+TEST_CASE("camera pitch and yaw updated after mouse movement", "[cam]") {
+    using Catch::Approx;
+    Camera camera;
+    // sensitivity=0.25; xoffset=4 → yaw += 1.0; yoffset=4 → pitch += 1.0
+    camera.on_mouse_movement(4.0f, 4.0f);
+    REQUIRE(camera.yaw() == Approx(Camera::YAW + 1.0f).margin(1e-5f));
+    REQUIRE(camera.pitch() == Approx(Camera::PITCH + 1.0f).margin(1e-5f));
+}
+
 TEST_CASE("camera set_view_clean clears flag", "[cam]") {
     Camera camera;
     camera.set_view_clean();

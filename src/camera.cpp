@@ -3,7 +3,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <gsl-lite/gsl-lite.hpp>
-#include <imgui.h>
 
 Camera::Camera(glm::vec3 const& position,
                glm::vec3 const& up,
@@ -92,22 +91,4 @@ void Camera::update_vectors() {
     right_ = glm::normalize(glm::cross(front_, world_up_));
     up_ = glm::normalize(glm::cross(right_, front_));
     view_dirty_ = true;
-}
-
-void Camera::draw_ui() {
-    ImGui::InputFloat3("Position", glm::value_ptr(position_), "%.3f",
-                       ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat3("Front", glm::value_ptr(front_), "%.3f",
-                       ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat3("Up", glm::value_ptr(up_), "%.3f",
-                       ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat3("Right", glm::value_ptr(right_), "%.3f",
-                       ImGuiInputTextFlags_ReadOnly);
-    if (ImGui::SliderFloat("fov", &fov_, 1.0f, 60.0f)) {
-        fov_dirty_ = true;
-    }
-    ImGui::InputFloat("Pitch", &pitch_, 0.0, 0.0, "%.3f",
-                      ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputFloat("Yaw", &yaw_, 0.0, 0.0, "%.3f",
-                      ImGuiInputTextFlags_ReadOnly);
 }
