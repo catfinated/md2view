@@ -8,6 +8,8 @@
 
 class PAK;
 
+namespace GL {
+
 /// An OpenGL 2D texture wrapping a single `GL_TEXTURE_2D` object.
 class Texture2D {
 public:
@@ -72,3 +74,5 @@ private:
     GLuint width_{};
     GLuint height_{};
 };
+
+} // namespace GL

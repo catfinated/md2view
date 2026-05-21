@@ -1,4 +1,4 @@
-#include "md2view/texture2D.hpp"
+#include "md2view/gl/texture2d.hpp"
 #include "md2view/pak.hpp"
 #include "md2view/pcx.hpp"
 
@@ -9,6 +9,8 @@
 
 #include <stdexcept>
 #include <utility>
+
+namespace GL {
 
 Texture2D::Texture2D(GLuint width,
                      GLuint height,
@@ -116,3 +118,5 @@ std::shared_ptr<Texture2D> Texture2D::load(PAK const& pak,
     stbi_image_free(image);
     return texture;
 }
+
+} // namespace GL

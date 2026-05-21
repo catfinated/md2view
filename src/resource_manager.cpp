@@ -40,7 +40,7 @@ ResourceManager::load_shader(std::string const& name,
     return result.first->second;
 }
 
-std::shared_ptr<Texture2D>
+std::shared_ptr<GL::Texture2D>
 ResourceManager::load_texture2D(std::string const& path,
                                 std::optional<std::string> const& name) {
     auto key = name ? *name : path;
@@ -50,7 +50,7 @@ ResourceManager::load_texture2D(std::string const& path,
         return iter->second;
     }
 
-    auto result = textures2D_.emplace(key, Texture2D::load(pak(), path));
+    auto result = textures2D_.emplace(key, GL::Texture2D::load(pak(), path));
     return result.first->second;
 }
 

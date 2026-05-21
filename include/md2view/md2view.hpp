@@ -3,10 +3,10 @@
 #include "md2view/camera.hpp"
 #include "md2view/frame_buffer.hpp"
 #include "md2view/gl/mesh.hpp"
+#include "md2view/gl/texture2d.hpp"
 #include "md2view/md2.hpp"
 #include "md2view/model_selector.hpp"
 #include "md2view/screen_quad.hpp"
-#include "md2view/texture2D.hpp"
 
 #include <glm/glm.hpp>
 
@@ -40,7 +40,7 @@ private:
     std::shared_ptr<MD2> md2_;
     std::unique_ptr<GL::Mesh> md2_mesh_;
     std::unique_ptr<ModelSelector> model_selector_;
-    std::shared_ptr<Texture2D> texture_;
+    std::shared_ptr<GL::Texture2D> texture_;
     std::shared_ptr<Shader> shader_;
     std::shared_ptr<Shader> blur_shader_;
     std::shared_ptr<Shader> glow_shader_;
