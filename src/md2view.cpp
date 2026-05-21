@@ -45,10 +45,10 @@ bool MD2View::on_engine_initialized(Engine& engine) {
     model_selector_ =
         std::make_unique<ModelSelector>(engine.resource_manager().pak());
     load_model(engine);
-    blur_fb_ = std::make_unique<FrameBuffer>(engine.width(), engine.height(), 1,
-                                             false);
-    main_fb_ =
-        std::make_unique<FrameBuffer>(engine.width(), engine.height(), 2, true);
+    blur_fb_ = std::make_unique<GL::FrameBuffer>(engine.width(),
+                                                 engine.height(), 1, false);
+    main_fb_ = std::make_unique<GL::FrameBuffer>(engine.width(),
+                                                 engine.height(), 2, true);
     screen_quad_ = std::make_unique<ScreenQuad>();
 
     clear_color_ = {0.2f, 0.2f, 0.2f, 1.0f};
@@ -86,7 +86,7 @@ bool MD2View::on_engine_initialized(Engine& engine) {
     glDepthFunc(GL_LEQUAL);
     // glDisable(GL_BLEND);
     glEnable(GL_BLEND);
-    FrameBuffer::bind_default();
+    GL::FrameBuffer::bind_default();
 
     set_vsync();
     spdlog::info("done on engine init");
@@ -102,11 +102,11 @@ void MD2View::on_framebuffer_resized(int width, int height) {
     shader_->use();
     shader_->set_projection(projection);
 
-    FrameBuffer::bind_default();
+    GL::FrameBuffer::bind_default();
     glViewport(0, 0, width, height);
 
-    main_fb_ = std::make_unique<FrameBuffer>(width, height, 2, true);
-    blur_fb_ = std::make_unique<FrameBuffer>(width, height, 1, false);
+    main_fb_ = std::make_unique<GL::FrameBuffer>(width, height, 2, true);
+    blur_fb_ = std::make_unique<GL::FrameBuffer>(width, height, 1, false);
 }
 
 void MD2View::update_model() {
@@ -173,7 +173,7 @@ void MD2View::render(Engine& engine) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         screen_quad_->draw(*glow_shader_);
 
-        FrameBuffer::bind_default();
+        GL::FrameBuffer::bind_default();
         glow_shader_->use();
         glClear(GL_COLOR_BUFFER_BIT);
         glActiveTexture(GL_TEXTURE0);
@@ -185,7 +185,7 @@ void MD2View::render(Engine& engine) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         screen_quad_->draw(*glow_shader_);
     } else {
-        FrameBuffer::bind_default();
+        GL::FrameBuffer::bind_default();
         blur_shader_->use();
         Shader::set_uniform(disable_blur_loc_, 1);
         glActiveTexture(GL_TEXTURE0);

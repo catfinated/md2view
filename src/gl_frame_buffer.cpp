@@ -1,6 +1,10 @@
-#include "md2view/frame_buffer.hpp"
+#include "md2view/gl/frame_buffer.hpp"
 
 #include <gsl-lite/gsl-lite.hpp>
+
+#include <stdexcept>
+
+namespace GL {
 
 FrameBuffer::FrameBuffer(GLuint width,
                          GLuint height,
@@ -87,3 +91,5 @@ void FrameBuffer::create_render_buffer_attachement(GLuint width,
     render_buffer_ = rb;
     glCheckError();
 }
+
+} // namespace GL

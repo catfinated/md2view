@@ -23,7 +23,7 @@ add_library(libmd2v
   model_selector.cpp
   shader.cpp
   gl_texture2d.cpp
-  frame_buffer.cpp
+  gl_frame_buffer.cpp
   engine.cpp)
 
 target_link_libraries(libmd2v PUBLIC

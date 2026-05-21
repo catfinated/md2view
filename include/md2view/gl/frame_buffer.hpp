@@ -5,6 +5,8 @@
 #include <optional>
 #include <vector>
 
+namespace GL {
+
 /// OpenGL framebuffer object (FBO) with one or more colour attachments.
 ///
 /// Supports multi-target rendering (multiple colour texture attachments) and an
@@ -62,3 +64,5 @@ private:
     std::vector<GLuint> color_buffers_;
     std::optional<GLuint> render_buffer_;
 };
+
+} // namespace GL

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "md2view/camera.hpp"
-#include "md2view/frame_buffer.hpp"
+#include "md2view/gl/frame_buffer.hpp"
 #include "md2view/gl/mesh.hpp"
 #include "md2view/gl/texture2d.hpp"
 #include "md2view/md2.hpp"
@@ -45,8 +45,8 @@ private:
     std::shared_ptr<Shader> blur_shader_;
     std::shared_ptr<Shader> glow_shader_;
     std::unique_ptr<ScreenQuad> screen_quad_;
-    std::unique_ptr<FrameBuffer> blur_fb_;
-    std::unique_ptr<FrameBuffer> main_fb_;
+    std::unique_ptr<GL::FrameBuffer> blur_fb_;
+    std::unique_ptr<GL::FrameBuffer> main_fb_;
 
     Camera camera_;
     std::string models_dir_;
