@@ -128,23 +128,11 @@ static void write_pak(std::filesystem::path const& path) {
     write_i32le(f, content_len);
 }
 
-// Writes a minimal valid MD2 file with 1 frame, 1 triangle, 3 vertices.
-//
-// Layout:
-//   68 bytes  header   (17 x int32)
-//   12 bytes  texcoords (3 x {int16 s, int16 t})
-//   12 bytes  triangle  (uint16 vertex[3], uint16 st[3])
-//   52 bytes  frame     (scale[3], translate[3], name[16], 3 x Vertex{v[3],
-//   normal})
-//
-// Animation: one frame named "stand0" → animation id "stand"
-//
-// After loading, scaled_texcoords() == [(0,0),(0.5,0),(0,0.5)]
-// After loading, interpolated_vertices() == [(0,0,0),(1,0,0),(0,1,0)]
-//   (MD2 loader remaps: v[0]→x, v[1]→z, v[2]→y)
-static void write_md2(std::filesystem::path const& path) {
-    std::ofstream f(path, std::ios::binary);
-
+// Writes an MD2 header and shared geometry (texcoords + triangle) for 3
+// vertices / 1 triangle.  Returns the file offset just after the triangle so
+// the caller can write frames immediately.
+static int32_t write_md2_header_and_geometry(std::ofstream& f,
+                                             int32_t num_frames) {
     int32_t const ident = 844121161; // "IDP2"
     int32_t const version = 8;
     int32_t const skinwidth = 2;
@@ -154,20 +142,15 @@ static void write_md2(std::filesystem::path const& path) {
     int32_t const num_st = 3;
     int32_t const num_tris = 1;
     int32_t const num_glcmds = 0;
-    int32_t const num_frames = 1;
+    int32_t const framesize = 12 + 12 + 16 + num_xyz * 4; // 52
 
-    // framesize = scale(12) + translate(12) + name(16) + num_xyz *
-    // sizeof(Vertex)(4)
-    int32_t const framesize = 12 + 12 + 16 + num_xyz * 4;
-
-    int32_t const offset_skins = 68;        // after header
-    int32_t const offset_st = offset_skins; // 0 skins
+    int32_t const offset_skins = 68;
+    int32_t const offset_st = offset_skins;
     int32_t const offset_tris = offset_st + num_st * 4;
     int32_t const offset_frames = offset_tris + num_tris * 12;
     int32_t const offset_glcmds = offset_frames + num_frames * framesize;
     int32_t const offset_end = offset_glcmds;
 
-    // Header (17 x int32 = 68 bytes)
     write_i32le(f, ident);
     write_i32le(f, version);
     write_i32le(f, skinwidth);
@@ -186,32 +169,70 @@ static void write_md2(std::filesystem::path const& path) {
     write_i32le(f, offset_glcmds);
     write_i32le(f, offset_end);
 
-    // Texcoords: 3 x {int16 s, int16 t}
-    // With skinwidth=2, skinheight=2: scaled = (s/2, t/2)
-    // tc0=(0,0)→(0.0,0.0)  tc1=(1,0)→(0.5,0.0)  tc2=(0,1)→(0.0,0.5)
+    // Texcoords: (0,0),(1,0),(0,1) → scaled (0,0),(0.5,0),(0,0.5)
     int16_t texcoords[3][2] = {{0, 0}, {1, 0}, {0, 1}};
     f.write(reinterpret_cast<char*>(texcoords), sizeof(texcoords));
 
-    // Triangle: uint16 vertex[3] + uint16 st[3]
-    uint16_t tri[6] = {0, 1, 2,  // vertex indices
-                       0, 1, 2}; // texcoord indices
+    // Triangle: vertices [0,1,2], texcoords [0,1,2]
+    uint16_t tri[6] = {0, 1, 2, 0, 1, 2};
     f.write(reinterpret_cast<char*>(tri), sizeof(tri));
 
-    // Frame: scale[3] + translate[3] + name[16] + vertices
-    // Loader maps: v[0]→x, v[1]→z, v[2]→y
-    // v0=(0,0,0)→(0,0,0)  v1=(1,0,0)→(1,0,0)  v2=(0,0,1)→(0,1,0)
+    return offset_frames;
+}
+
+// Write one MD2 keyframe. Each vertex is {v[0], v[1], v[2], normal}.
+// Loader remaps: v[0]→x, v[1]→z, v[2]→y with scale=(1,1,1) translate=(0,0,0).
+static void
+write_md2_frame(std::ofstream& f, char const* name, uint8_t verts[3][4]) {
+    // scale = (1,1,1), translate = (0,0,0)
     write_f32le(f, 1.0f);
     write_f32le(f, 1.0f);
-    write_f32le(f, 1.0f); // scale
+    write_f32le(f, 1.0f);
     write_f32le(f, 0.0f);
     write_f32le(f, 0.0f);
-    write_f32le(f, 0.0f); // translate
-    std::array<char, 16> name{};
-    std::strncpy(name.data(), "stand0", 15);
-    f.write(name.data(), 16);
-    // vertices: {v[0], v[1], v[2], normal_index}
+    write_f32le(f, 0.0f);
+    std::array<char, 16> fname{};
+    std::strncpy(fname.data(), name, 15);
+    f.write(fname.data(), 16);
+    f.write(reinterpret_cast<char*>(verts[0]), 12); // 3 vertices × 4 bytes
+}
+
+// Two-frame MD2: animation "stand" with frames 0..1.
+// Frame 0 vertices (world): (0,0,0),(2,0,0),(0,2,0)
+// Frame 1 vertices (world): (10,0,0),(12,0,0),(10,10,0)
+// At interpolation t=0.5: vertex[0] ≈ (5,0,0)
+static void write_two_frame_md2(std::filesystem::path const& path) {
+    std::ofstream f(path, std::ios::binary);
+    write_md2_header_and_geometry(f, 2);
+    uint8_t f0[3][4] = {{0, 0, 0, 0}, {2, 0, 0, 0}, {0, 0, 2, 0}};
+    uint8_t f1[3][4] = {{10, 0, 0, 0}, {12, 0, 0, 0}, {10, 0, 10, 0}};
+    write_md2_frame(f, "stand0", f0);
+    write_md2_frame(f, "stand1", f1);
+}
+
+// Four-frame MD2: animations "stand" (frames 0..1) and "run" (frames 2..3).
+static void write_two_anim_md2(std::filesystem::path const& path) {
+    std::ofstream f(path, std::ios::binary);
+    write_md2_header_and_geometry(f, 4);
     uint8_t verts[3][4] = {{0, 0, 0, 0}, {1, 0, 0, 0}, {0, 0, 1, 0}};
-    f.write(reinterpret_cast<char*>(verts), sizeof(verts));
+    write_md2_frame(f, "stand0", verts);
+    write_md2_frame(f, "stand1", verts);
+    write_md2_frame(f, "run0", verts);
+    write_md2_frame(f, "run1", verts);
+}
+
+// Writes a minimal valid MD2 file with 1 frame, 1 triangle, 3 vertices.
+//
+// Animation: one frame named "stand0" → animation id "stand"
+//
+// After loading, scaled_texcoords() == [(0,0),(0.5,0),(0,0.5)]
+// After loading, interpolated_vertices() == [(0,0,0),(1,0,0),(0,1,0)]
+//   (MD2 loader remaps: v[0]→x, v[1]→z, v[2]→y)
+static void write_md2(std::filesystem::path const& path) {
+    std::ofstream f(path, std::ios::binary);
+    write_md2_header_and_geometry(f, 1);
+    uint8_t verts[3][4] = {{0, 0, 0, 0}, {1, 0, 0, 0}, {0, 0, 1, 0}};
+    write_md2_frame(f, "stand0", verts);
 }
 
 int main(int argc, char* argv[]) {
@@ -223,5 +244,7 @@ int main(int argc, char* argv[]) {
     write_pcx(dir / "minimal.pcx");
     write_pak(dir / "minimal.pak");
     write_md2(dir / "minimal.md2");
+    write_two_frame_md2(dir / "two_frame.md2");
+    write_two_anim_md2(dir / "two_anim.md2");
     return 0;
 }

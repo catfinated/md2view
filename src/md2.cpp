@@ -332,38 +332,6 @@ void MD2::update(float dt) {
     }
 }
 
-bool MD2::validate_header(Header const& hdr) {
-    if (hdr.ident != MD2::version) {
-        return false;
-    }
-
-    if (hdr.version != MD2::ident) {
-        return false;
-    }
-
-    if (hdr.num_tris > MD2::max_tris) {
-        return false;
-    }
-
-    if (hdr.num_xyz > MD2::max_vertices) {
-        return false;
-    }
-
-    if (hdr.num_st > MD2::max_texcoords) {
-        return false;
-    }
-
-    if (hdr.num_frames > MD2::max_frames) {
-        return false;
-    }
-
-    if (hdr.num_skins > MD2::max_skins) {
-        return false;
-    }
-
-    return true;
-}
-
 bool MD2::draw_ui() {
     int index = gsl_lite::narrow_cast<int>(animation_index());
     constexpr int anim_max_height_in_items = 15;

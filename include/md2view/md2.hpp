@@ -207,7 +207,6 @@ public:
     }
 
 private:
-    [[nodiscard]] static bool validate_header(Header const& hdr);
     [[nodiscard]] bool load(PAK const& pf, std::string const& filename);
     [[nodiscard]] bool load(std::ifstream& infile);
     [[nodiscard]] bool load_skins(std::ifstream& infile, size_t offset);
