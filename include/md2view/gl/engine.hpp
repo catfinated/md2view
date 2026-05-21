@@ -1,6 +1,7 @@
 #pragma once
 
 #include "md2view/engine.hpp"
+#include "md2view/gl/gui.hpp"
 
 #include <GLFW/glfw3.h>
 
@@ -25,7 +26,7 @@ protected:
 private:
     Game game_;
     GLFWwindow* window_{nullptr};
-    std::unique_ptr<Gui> gui_;
+    std::unique_ptr<GL::Gui> gui_;
     GLfloat delta_time_ = 0.0f;
     GLfloat last_frame_ = 0.0f;
     bool input_goes_to_game_ = false;

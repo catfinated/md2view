@@ -11,6 +11,10 @@
 
 class Engine;
 
+namespace GL {
+
+/// OpenGL ImGui renderer: manages VAO/VBO, GL texture lifecycle, and GL state
+/// save/restore around each ImGui render pass.
 class Gui {
 public:
     Gui(Engine& engine, gsl_lite::not_null<GLFWwindow*> window);
@@ -44,3 +48,5 @@ private:
     std::array<unsigned int, static_cast<size_t>(Buffer::num_buffers)>
         glbuffers_{};
 };
+
+} // namespace GL

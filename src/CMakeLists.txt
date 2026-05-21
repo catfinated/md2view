@@ -12,7 +12,7 @@ find_package(Vulkan REQUIRED)
 
 add_library(libmd2v
   md2view.cpp
-  gui.cpp
+  gl_gui.cpp
   md2.cpp
   gl_mesh.cpp
   pcx.cpp

@@ -2,7 +2,9 @@
 #include "md2view/engine.hpp"
 #include "md2view/ui.hpp"
 
+#include <GLFW/glfw3.h>
 #include <glm/gtx/string_cast.hpp>
+#include <imgui.h>
 #include <spdlog/spdlog.h>
 
 #include <algorithm>

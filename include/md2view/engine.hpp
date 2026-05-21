@@ -1,6 +1,5 @@
 #pragma once
 
-#include "md2view/gui.hpp"
 #include "md2view/resource_manager.hpp"
 
 #include <boost/program_options.hpp>

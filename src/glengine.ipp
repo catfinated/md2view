@@ -127,7 +127,7 @@ bool GLEngine<Game>::init(std::span<char const*> args) {
     mouse_.xpos = width / 2.0;
     mouse_.ypos = height / 2.0;
 
-    gui_ = std::make_unique<Gui>(*this, gsl_lite::not_null{window_});
+    gui_ = std::make_unique<GL::Gui>(*this, gsl_lite::not_null{window_});
     glCheckError();
 
     return true;

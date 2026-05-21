@@ -1,10 +1,12 @@
-#include "md2view/gui.hpp"
 #include "md2view/engine.hpp"
+#include "md2view/gl/gui.hpp"
 
 #include <gsl-lite/gsl-lite.hpp>
 
 #include <array>
 #include <utility>
+
+namespace GL {
 
 Gui::Gui(Engine& engine, gsl_lite::not_null<GLFWwindow*> window)
     : engine_(engine)
@@ -358,3 +360,5 @@ void Gui::shutdown() {
     }
     ImGui::DestroyContext();
 }
+
+} // namespace GL
