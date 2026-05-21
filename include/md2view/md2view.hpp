@@ -3,10 +3,10 @@
 #include "md2view/camera.hpp"
 #include "md2view/gl/frame_buffer.hpp"
 #include "md2view/gl/mesh.hpp"
+#include "md2view/gl/screen_quad.hpp"
 #include "md2view/gl/texture2d.hpp"
 #include "md2view/md2.hpp"
 #include "md2view/model_selector.hpp"
-#include "md2view/screen_quad.hpp"
 
 #include <glm/glm.hpp>
 
@@ -44,7 +44,7 @@ private:
     std::shared_ptr<Shader> shader_;
     std::shared_ptr<Shader> blur_shader_;
     std::shared_ptr<Shader> glow_shader_;
-    std::unique_ptr<ScreenQuad> screen_quad_;
+    std::unique_ptr<GL::ScreenQuad> screen_quad_;
     std::unique_ptr<GL::FrameBuffer> blur_fb_;
     std::unique_ptr<GL::FrameBuffer> main_fb_;
 

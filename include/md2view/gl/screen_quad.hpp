@@ -6,6 +6,8 @@
 
 class Shader;
 
+namespace GL {
+
 /// Full-screen quad for post-processing passes.
 ///
 /// Owns a VAO and VBO covering the NDC clip-space rectangle [-1, 1] with UV
@@ -29,3 +31,5 @@ private:
     GLuint vbo_{};
     static std::array<GLfloat, 24> vertices_;
 };
+
+} // namespace GL

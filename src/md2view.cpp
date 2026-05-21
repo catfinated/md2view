@@ -49,7 +49,7 @@ bool MD2View::on_engine_initialized(Engine& engine) {
                                                  engine.height(), 1, false);
     main_fb_ = std::make_unique<GL::FrameBuffer>(engine.width(),
                                                  engine.height(), 2, true);
-    screen_quad_ = std::make_unique<ScreenQuad>();
+    screen_quad_ = std::make_unique<GL::ScreenQuad>();
 
     clear_color_ = {0.2f, 0.2f, 0.2f, 1.0f};
     glClearColor(clear_color_[0], clear_color_[1], clear_color_[2], 1.0f);

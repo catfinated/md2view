@@ -1,5 +1,7 @@
-#include "md2view/screen_quad.hpp"
+#include "md2view/gl/screen_quad.hpp"
 #include "md2view/shader.hpp"
+
+namespace GL {
 
 std::array<GLfloat, 24> ScreenQuad::vertices_ = {
     {// Positions   // TexCoords
@@ -37,3 +39,5 @@ void ScreenQuad::draw(Shader& /* shader */) const {
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
 }
+
+} // namespace GL

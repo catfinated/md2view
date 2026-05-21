@@ -17,7 +17,7 @@ add_library(libmd2v
   gl_mesh.cpp
   pcx.cpp
   pak.cpp
-  screen_quad.cpp
+  gl_screen_quad.cpp
   resource_manager.cpp
   camera.cpp
   model_selector.cpp
