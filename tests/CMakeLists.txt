@@ -38,7 +38,7 @@ target_include_directories(test_md2v PRIVATE
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_CURRENT_BINARY_DIR}
 )
-target_link_libraries(test_md2v PRIVATE Catch2::Catch2WithMain libmd2v)
+target_link_libraries(test_md2v PRIVATE Catch2::Catch2WithMain libmd2)
 
 include(CTest)
 include(Catch)
