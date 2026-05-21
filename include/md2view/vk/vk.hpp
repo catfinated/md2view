@@ -17,7 +17,7 @@
 #include <stdexcept>
 #include <vector>
 
-namespace md2v {
+namespace VK {
 
 struct QueueFamilyIndices {
     std::optional<uint32_t> graphicsFamily;
@@ -93,4 +93,4 @@ createFrameBuffers(std::vector<vk::raii::ImageView> const& imageViews,
                    vk::Extent2D swapChainExtent,
                    vk::raii::Device const& device) noexcept;
 
-} // namespace md2v
+} // namespace VK

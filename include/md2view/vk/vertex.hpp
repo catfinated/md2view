@@ -8,7 +8,7 @@
 
 #include <array>
 
-namespace md2v {
+namespace VK {
 
 /**
  * @brief Example vertex buffer data
@@ -41,4 +41,4 @@ struct Vertex {
     }
 };
 
-} // namespace md2v
+} // namespace VK

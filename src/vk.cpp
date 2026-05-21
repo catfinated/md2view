@@ -15,7 +15,7 @@
 #include <string_view>
 #include <vector>
 
-namespace md2v {
+namespace VK {
 
 Window::Window(GLFWwindow* window) noexcept
     : window_(window) {}
@@ -623,4 +623,4 @@ void copyBuffer(BoundBuffer const& src,
     graphicsQueue.waitIdle();
 }
 
-} // namespace md2v
+} // namespace VK

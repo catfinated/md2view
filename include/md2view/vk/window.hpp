@@ -9,7 +9,7 @@
 #include <stdexcept>
 #include <utility>
 
-namespace md2v {
+namespace VK {
 
 /**
  * @brief Window that supports Vulkan rendering
@@ -40,4 +40,4 @@ private:
     GLFWwindow* window_;
 };
 
-} // namespace md2v
+} // namespace VK

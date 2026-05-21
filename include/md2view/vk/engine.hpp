@@ -8,7 +8,7 @@
 #include "md2view/engine.hpp"
 #include "md2view/vk/vk.hpp"
 
-namespace md2v {
+namespace VK {
 
 class VKEngine : public Engine {
 public:
@@ -67,4 +67,4 @@ private:
     bool frameBufferResized_{false};
 };
 
-} // namespace md2v
+} // namespace VK

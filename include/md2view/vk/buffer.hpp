@@ -10,7 +10,7 @@
 #include <cstring>
 #include <expected>
 
-namespace md2v {
+namespace VK {
 
 /**
  * @brief Buffer bound to device memory
@@ -131,4 +131,4 @@ void copyBuffer(BoundBuffer const& src,
                 vk::raii::CommandPool const& commandPool,
                 vk::raii::Queue const& graphicsQueue);
 
-} // namespace md2v
+} // namespace VK
