@@ -22,6 +22,15 @@ static void write_i32le(std::ofstream& f, int32_t v) {
     f.put(static_cast<char>((v >> 24) & 0xFF));
 }
 
+static void write_f32le(std::ofstream& f, float v) {
+    uint32_t bits{};
+    std::memcpy(&bits, &v, sizeof(bits));
+    f.put(static_cast<char>(bits & 0xFF));
+    f.put(static_cast<char>((bits >> 8) & 0xFF));
+    f.put(static_cast<char>((bits >> 16) & 0xFF));
+    f.put(static_cast<char>((bits >> 24) & 0xFF));
+}
+
 // Writes a minimal valid 2x2 PCX file.
 //
 // Layout:
@@ -119,6 +128,92 @@ static void write_pak(std::filesystem::path const& path) {
     write_i32le(f, content_len);
 }
 
+// Writes a minimal valid MD2 file with 1 frame, 1 triangle, 3 vertices.
+//
+// Layout:
+//   68 bytes  header   (17 x int32)
+//   12 bytes  texcoords (3 x {int16 s, int16 t})
+//   12 bytes  triangle  (uint16 vertex[3], uint16 st[3])
+//   52 bytes  frame     (scale[3], translate[3], name[16], 3 x Vertex{v[3],
+//   normal})
+//
+// Animation: one frame named "stand0" → animation id "stand"
+//
+// After loading, scaled_texcoords() == [(0,0),(0.5,0),(0,0.5)]
+// After loading, interpolated_vertices() == [(0,0,0),(1,0,0),(0,1,0)]
+//   (MD2 loader remaps: v[0]→x, v[1]→z, v[2]→y)
+static void write_md2(std::filesystem::path const& path) {
+    std::ofstream f(path, std::ios::binary);
+
+    int32_t const ident = 844121161; // "IDP2"
+    int32_t const version = 8;
+    int32_t const skinwidth = 2;
+    int32_t const skinheight = 2;
+    int32_t const num_skins = 0;
+    int32_t const num_xyz = 3;
+    int32_t const num_st = 3;
+    int32_t const num_tris = 1;
+    int32_t const num_glcmds = 0;
+    int32_t const num_frames = 1;
+
+    // framesize = scale(12) + translate(12) + name(16) + num_xyz *
+    // sizeof(Vertex)(4)
+    int32_t const framesize = 12 + 12 + 16 + num_xyz * 4;
+
+    int32_t const offset_skins = 68;        // after header
+    int32_t const offset_st = offset_skins; // 0 skins
+    int32_t const offset_tris = offset_st + num_st * 4;
+    int32_t const offset_frames = offset_tris + num_tris * 12;
+    int32_t const offset_glcmds = offset_frames + num_frames * framesize;
+    int32_t const offset_end = offset_glcmds;
+
+    // Header (17 x int32 = 68 bytes)
+    write_i32le(f, ident);
+    write_i32le(f, version);
+    write_i32le(f, skinwidth);
+    write_i32le(f, skinheight);
+    write_i32le(f, framesize);
+    write_i32le(f, num_skins);
+    write_i32le(f, num_xyz);
+    write_i32le(f, num_st);
+    write_i32le(f, num_tris);
+    write_i32le(f, num_glcmds);
+    write_i32le(f, num_frames);
+    write_i32le(f, offset_skins);
+    write_i32le(f, offset_st);
+    write_i32le(f, offset_tris);
+    write_i32le(f, offset_frames);
+    write_i32le(f, offset_glcmds);
+    write_i32le(f, offset_end);
+
+    // Texcoords: 3 x {int16 s, int16 t}
+    // With skinwidth=2, skinheight=2: scaled = (s/2, t/2)
+    // tc0=(0,0)→(0.0,0.0)  tc1=(1,0)→(0.5,0.0)  tc2=(0,1)→(0.0,0.5)
+    int16_t texcoords[3][2] = {{0, 0}, {1, 0}, {0, 1}};
+    f.write(reinterpret_cast<char*>(texcoords), sizeof(texcoords));
+
+    // Triangle: uint16 vertex[3] + uint16 st[3]
+    uint16_t tri[6] = {0, 1, 2,  // vertex indices
+                       0, 1, 2}; // texcoord indices
+    f.write(reinterpret_cast<char*>(tri), sizeof(tri));
+
+    // Frame: scale[3] + translate[3] + name[16] + vertices
+    // Loader maps: v[0]→x, v[1]→z, v[2]→y
+    // v0=(0,0,0)→(0,0,0)  v1=(1,0,0)→(1,0,0)  v2=(0,0,1)→(0,1,0)
+    write_f32le(f, 1.0f);
+    write_f32le(f, 1.0f);
+    write_f32le(f, 1.0f); // scale
+    write_f32le(f, 0.0f);
+    write_f32le(f, 0.0f);
+    write_f32le(f, 0.0f); // translate
+    std::array<char, 16> name{};
+    std::strncpy(name.data(), "stand0", 15);
+    f.write(name.data(), 16);
+    // vertices: {v[0], v[1], v[2], normal_index}
+    uint8_t verts[3][4] = {{0, 0, 0, 0}, {1, 0, 0, 0}, {0, 0, 1, 0}};
+    f.write(reinterpret_cast<char*>(verts), sizeof(verts));
+}
+
 int main(int argc, char* argv[]) {
     if (argc != 2) {
         return 1;
@@ -127,5 +222,6 @@ int main(int argc, char* argv[]) {
     std::filesystem::create_directories(dir);
     write_pcx(dir / "minimal.pcx");
     write_pak(dir / "minimal.pak");
+    write_md2(dir / "minimal.md2");
     return 0;
 }

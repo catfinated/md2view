@@ -1,6 +1,5 @@
 #include "md2view/md2.hpp"
 #include "md2view/pak.hpp"
-#include "md2view/shader.hpp"
 
 #include <fmt/ostream.h>
 #include <glm/gtx/compatibility.hpp>
@@ -36,11 +35,6 @@ MD2::MD2(std::string const& filename, PAK const& pak) {
     if (!load(pak, filename)) {
         throw std::runtime_error("failed to load MD2 model " + filename);
     }
-}
-
-MD2::~MD2() {
-    glDeleteVertexArrays(1, &vao_);
-    glDeleteBuffers(2, vbo_.data());
 }
 
 bool MD2::load(PAK const& pf, std::string const& filename) {
@@ -114,7 +108,6 @@ bool MD2::load(std::ifstream& infile) {
     gsl_Assert(load_texcoords(infile, offset));
     gsl_Assert(load_frames(infile, offset));
 
-    setup_buffers();
     return true;
 }
 
@@ -281,43 +274,6 @@ bool MD2::load_frames(std::ifstream& infile, size_t offset) {
     return infile.good();
 }
 
-void MD2::setup_buffers() {
-    glGenVertexArrays(1, &vao_);
-    glGenBuffers(2, vbo_.data());
-
-    glBindVertexArray(vao_);
-    spdlog::debug("vertex buffers: {} {}", vbo_[0], vbo_[1]);
-
-    auto const& vertices = interpolated_vertices_;
-
-    spdlog::info("num xyz: {}", vertices.size());
-    static_assert(sizeof(glm::vec3) == 12, "bad vec3 size");
-
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_[0]);
-    glBufferData(
-        GL_ARRAY_BUFFER,
-        gsl_lite::narrow_cast<GLsizeiptr>(vertices.size() * sizeof(glm::vec3)),
-        vertices.data(), GL_DYNAMIC_DRAW);
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-
-    static_assert(sizeof(glm::vec2) == 8, "bad vec2 size");
-
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_[1]);
-    glBufferData(GL_ARRAY_BUFFER,
-                 gsl_lite::narrow_cast<GLsizeiptr>(scaled_texcoords_.size() *
-                                                   sizeof(glm::vec2)),
-                 scaled_texcoords_.data(), GL_STATIC_DRAW);
-
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-
-    glBindVertexArray(0);
-
-    glCheckError();
-}
-
 void MD2::set_animation(std::string const& id) {
     auto iter = animation_index_map_.find(id);
 
@@ -374,19 +330,6 @@ void MD2::update(float dt) {
         vertex = lerp(v1, v2, glm::vec3(t, t, t));
         ++i;
     }
-
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_[0]);
-    glBufferSubData(GL_ARRAY_BUFFER, 0,
-                    gsl_lite::narrow_cast<GLsizeiptr>(
-                        sizeof(glm::vec3) * interpolated_vertices_.size()),
-                    interpolated_vertices_.data());
-}
-
-void MD2::draw(Shader& /* shader */) {
-    glBindVertexArray(vao_);
-    glDrawArrays(GL_TRIANGLES, 0,
-                 gsl_lite::narrow_cast<GLsizei>(interpolated_vertices_.size()));
-    glCheckError();
 }
 
 bool MD2::validate_header(Header const& hdr) {

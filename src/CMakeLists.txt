@@ -14,6 +14,7 @@ add_library(libmd2v
   md2view.cpp
   gui.cpp
   md2.cpp
+  gl_mesh.cpp
   pcx.cpp
   pak.cpp
   screen_quad.cpp

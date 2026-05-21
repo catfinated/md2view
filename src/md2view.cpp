@@ -12,6 +12,8 @@ MD2View::MD2View() { reset_model_matrix(); }
 
 void MD2View::load_model(Engine& engine) {
     md2_ = engine.resource_manager().load_model(model_selector_->model_path());
+    md2_mesh_ = std::make_unique<GL::Mesh>(md2_->interpolated_vertices(),
+                                           md2_->scaled_texcoords());
 }
 
 void MD2View::reset_model_matrix() {
@@ -157,7 +159,7 @@ void MD2View::render(Engine& engine) {
     glCheckError();
 
     glClear(GL_DEPTH_BUFFER_BIT);
-    md2_->draw(*shader_);
+    md2_mesh_->draw(*shader_);
 
     glCheckError();
 
@@ -328,6 +330,7 @@ void MD2View::set_vsync() const { glfwSwapInterval(vsync_enabled_ ? 1 : 0); }
 
 void MD2View::update(Engine& /* engine */, GLfloat delta_time) {
     md2_->update(delta_time);
+    md2_mesh_->sync(md2_->interpolated_vertices());
 }
 
 void MD2View::process_input(Engine& engine, GLfloat delta_time) {

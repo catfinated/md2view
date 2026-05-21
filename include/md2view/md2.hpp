@@ -5,8 +5,6 @@ http://tfc.duke.free.fr/coding/md2-specs-en.html
 http://tfc.duke.free.fr/old/models/md2.htm
 */
 
-#include "md2view/gl/gl.hpp"
-
 #include <boost/algorithm/clamp.hpp>
 #include <glm/glm.hpp>
 #include <gsl-lite/gsl-lite.hpp>
@@ -20,7 +18,6 @@ http://tfc.duke.free.fr/old/models/md2.htm
 #include <utility>
 #include <vector>
 
-class Shader;
 class PAK;
 
 class MD2 {
@@ -107,7 +104,6 @@ public:
     };
 
     explicit MD2(std::string const& filename, PAK const& pak);
-    ~MD2();
 
     MD2(MD2 const&) = delete;
     MD2& operator=(MD2 const&) = delete;
@@ -122,12 +118,18 @@ public:
     std::vector<Animation> const& animations() const { return animations_; }
     float frames_per_second() const { return frames_per_second_; }
 
+    std::vector<glm::vec3> const& interpolated_vertices() const {
+        return interpolated_vertices_;
+    }
+    std::vector<glm::vec2> const& scaled_texcoords() const {
+        return scaled_texcoords_;
+    }
+
     SkinData const& current_skin() const {
         return gsl_lite::at(skins_, current_skin_index_);
     }
 
     // modifiers
-    void draw(Shader& shader);
     void update(float dt);
     [[nodiscard]] bool draw_ui();
 
@@ -139,7 +141,6 @@ public:
     }
 
 private:
-    void setup_buffers();
     [[nodiscard]] static bool validate_header(Header const& hdr);
     [[nodiscard]] bool load(PAK const& pf, std::string const& filename);
     [[nodiscard]] bool load(std::ifstream& infile);
@@ -164,9 +165,6 @@ private:
     std::vector<Animation> animations_;
     std::unordered_map<std::string, size_t> animation_index_map_;
     std::vector<glm::vec3> interpolated_vertices_;
-
-    GLuint vao_{};
-    std::array<GLuint, 2> vbo_{};
 
     // animation state
     int next_frame_{};

@@ -7,12 +7,16 @@ add_custom_command(
     OUTPUT
         ${FIXTURE_DIR}/minimal.pcx
         ${FIXTURE_DIR}/minimal.pak
+        ${FIXTURE_DIR}/minimal.md2
     COMMAND gen_fixtures ${FIXTURE_DIR}
     DEPENDS gen_fixtures
     COMMENT "Generating test fixtures"
 )
 add_custom_target(test_fixtures
-    DEPENDS ${FIXTURE_DIR}/minimal.pcx ${FIXTURE_DIR}/minimal.pak
+    DEPENDS
+        ${FIXTURE_DIR}/minimal.pcx
+        ${FIXTURE_DIR}/minimal.pak
+        ${FIXTURE_DIR}/minimal.md2
 )
 
 configure_file(fixtures.hpp.in fixtures.hpp @ONLY)
