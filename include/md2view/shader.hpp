@@ -14,29 +14,46 @@
 #include <sstream>
 #include <string>
 
+/// OpenGL shader program (vertex + optional geometry + fragment stages).
+///
+/// Loads GLSL source from files, compiles each stage, and links the program.
+/// Provides typed `set_uniform()` overloads for common GLM types and a set of
+/// named convenience helpers (`set_model()`, `set_view()`, etc.) for the
+/// standard MVP uniforms.
 class Shader {
 public:
     Shader() = default;
     ~Shader();
 
-    // non-copyable
     Shader(Shader const&) = delete;
     Shader& operator=(Shader const&) = delete;
 
-    // moveable
     Shader(Shader&& rhs) noexcept;
     Shader& operator=(Shader&& rhs) noexcept;
 
+    /// Compile and link a shader program from source files.
+    ///
+    /// @param vertex   Path to the GLSL vertex shader source.
+    /// @param fragment Path to the GLSL fragment shader source.
+    /// @param geometry Optional path to a GLSL geometry shader source.
+    /// @throws std::runtime_error if any stage fails to compile or the program
+    ///         fails to link.
     Shader(std::filesystem::path const& vertex,
            std::filesystem::path const& fragment,
            std::optional<std::filesystem::path> const& geometry = {});
 
+    /// The linked OpenGL program handle.
     [[nodiscard]] GLuint program() const { return program_; }
+
+    /// Install this program as the current OpenGL pipeline program.
     void use() const { glUseProgram(program()); }
 
+    /// Bind a named uniform block to a binding point.
     void set_uniform_block_binding(gsl_lite::not_null<char const*> block,
                                    GLuint binding_point) const;
 
+    /// @name Uniform location lookup
+    /// @{
     [[nodiscard]] GLint
     uniform_location(gsl_lite::not_null<GLchar const*> name) const;
     [[nodiscard]] GLint uniform_location(GLchar const* name) const {
@@ -46,8 +63,10 @@ public:
         return uniform_location(
             gsl_lite::not_null<GLchar const*>(name.c_str()));
     }
+    /// @}
 
-    // maybe cache some of these
+    /// @name Standard MVP uniform locations
+    /// @{
     [[nodiscard]] GLint model_location() const {
         return uniform_location("model");
     }
@@ -60,16 +79,19 @@ public:
     [[nodiscard]] GLint camera_position_location() const {
         return uniform_location("cameraPos");
     }
+    /// @}
 
-    // type specific implementations
-    static void set_uniform(GLint location, glm::vec3 const& v);
+    /// @name Typed uniform setters (static — call after `use()`)
+    /// @{
     static void set_uniform(GLint location, glm::vec2 const& v);
+    static void set_uniform(GLint location, glm::vec3 const& v);
     static void set_uniform(GLint location, glm::vec4 const& v);
-    static void set_uniform(GLint location, GLboolean b);
     static void set_uniform(GLint location, glm::mat4 const& m);
+    static void set_uniform(GLint location, GLboolean b);
     static void set_uniform(GLint location, GLint i);
     static void set_uniform(GLint location, GLuint i);
     static void set_uniform(GLint location, GLfloat f);
+    /// @}
 
     template <typename T>
     void set_uniform(gsl_lite::not_null<GLchar const*> name, T const& t) {
@@ -104,7 +126,6 @@ public:
     template <std::size_t N>
     void set_uniform(gsl_lite::not_null<GLchar const*> name,
                      std::array<glm::mat4, N> const& a) {
-        // do we need to set each element indvidually? seems slow
         for (size_t i = 0; i < a.size(); ++i) {
             std::ostringstream oss;
             oss << name << "[" << std::to_string(i) << "]";
@@ -113,7 +134,8 @@ public:
         }
     }
 
-    // ergonomic helpers
+    /// @name MVP convenience setters
+    /// @{
     void set_model(glm::mat4 const& m) const {
         set_uniform(model_location(), m);
     }
@@ -124,6 +146,7 @@ public:
     void set_view_position(glm::vec3 const& v) const {
         set_uniform(camera_position_location(), v);
     }
+    /// @}
 
 private:
     [[nodiscard]] bool

@@ -34,10 +34,10 @@ if(DOXYGEN_FOUND)
     set(DOXYGEN_FULL_SIDEBAR        NO)
 
     set(DOXYGEN_EXCLUDE_PATTERNS    "${CMAKE_SOURCE_DIR}/build/*")
+    set(DOXYGEN_EXCLUDE_SYMBOLS     "fmt::*")
 
     doxygen_add_docs(docs
         ${CMAKE_SOURCE_DIR}/include
-        ${CMAKE_SOURCE_DIR}/src
         ${CMAKE_SOURCE_DIR}/README.md
         ${CMAKE_SOURCE_DIR}/docs/DESIGN.md
         COMMENT "Generating HTML documentation")
