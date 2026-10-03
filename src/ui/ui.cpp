@@ -1,4 +1,4 @@
-#include "md2view/ui.hpp"
+#include "md2view/ui/ui.hpp"
 #include "md2view/camera.hpp"
 #include "md2view/md2.hpp"
 

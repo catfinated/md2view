@@ -1,5 +1,5 @@
-#include "gl_engine.ipp"
-#include "md2view/md2view.hpp"
+#include "md2view/gl/engine.ipp"
+#include "md2view/gl/md2view.hpp"
 
 int main(int argc, char const* argv[]) {
     GL::Engine<MD2View> engine;

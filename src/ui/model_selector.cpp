@@ -1,4 +1,4 @@
-#include "md2view/model_selector.hpp"
+#include "md2view/ui/model_selector.hpp"
 #include "md2view/pak.hpp"
 
 #include <gsl-lite/gsl-lite.hpp>

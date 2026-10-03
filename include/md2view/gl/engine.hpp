@@ -2,7 +2,7 @@
 
 #include "md2view/engine.hpp"
 #include "md2view/gl/gui.hpp"
-#include "md2view/resource_manager.hpp"
+#include "md2view/gl/resource_manager.hpp"
 
 #include <GLFW/glfw3.h>
 

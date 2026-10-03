@@ -1,6 +1,6 @@
-#include "md2view/md2view.hpp"
+#include "md2view/gl/md2view.hpp"
 #include "md2view/gl/engine.hpp"
-#include "md2view/ui.hpp"
+#include "md2view/ui/ui.hpp"
 
 #include <GLFW/glfw3.h>
 #include <glm/gtx/string_cast.hpp>

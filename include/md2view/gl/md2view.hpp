@@ -6,7 +6,7 @@
 #include "md2view/gl/screen_quad.hpp"
 #include "md2view/gl/texture2d.hpp"
 #include "md2view/md2.hpp"
-#include "md2view/model_selector.hpp"
+#include "md2view/ui/model_selector.hpp"
 
 #include <glm/glm.hpp>
 
