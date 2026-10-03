@@ -12,6 +12,7 @@
 #include <limits>
 #include <ranges>
 #include <set>
+#include <stdexcept>
 #include <string_view>
 #include <vector>
 
@@ -36,13 +37,22 @@ Window& Window::operator=(Window&& rhs) noexcept {
     return *this;
 }
 
-std::expected<Window, std::runtime_error> Window::create(int width,
-                                                         int height) noexcept {
+Window Window::create(int width, int height) {
     spdlog::info("create window");
     gsl_Expects(width > 0);
     gsl_Expects(height > 0);
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     auto* window = glfwCreateWindow(width, height, "vkmd2v", nullptr, nullptr);
+
+    if (window == nullptr) {
+        // GLFW keeps the reason for the last failure; it is far more useful
+        // than a generic message (no Vulkan loader, no display, ...)
+        char const* description = nullptr;
+        auto const code = glfwGetError(&description);
+        throw std::runtime_error(fmt::format(
+            "failed to create window: {} ({})",
+            description != nullptr ? description : "unknown error", code));
+    }
 
     uint32_t extensionCount = 0;
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
@@ -126,7 +136,7 @@ vk::Extent2D chooseSwapExtent(vk::SurfaceCapabilitiesKHR const& capabilities,
 }
 
 QueueFamilyIndices findQueueFamilies(vk::PhysicalDevice device,
-                                     vk::SurfaceKHR const& surface) noexcept {
+                                     vk::SurfaceKHR const& surface) {
     QueueFamilyIndices indices;
     auto const queueFamilies = device.getQueueFamilyProperties();
 
@@ -147,7 +157,7 @@ QueueFamilyIndices findQueueFamilies(vk::PhysicalDevice device,
     return indices;
 }
 
-bool checkDeviceExtensionSupport(vk::PhysicalDevice device) noexcept {
+bool checkDeviceExtensionSupport(vk::PhysicalDevice device) {
     auto const availableExtensions =
         device.enumerateDeviceExtensionProperties();
     std::set<std::string> requiredExtensions(deviceExtensions.begin(),
@@ -160,8 +170,7 @@ bool checkDeviceExtensionSupport(vk::PhysicalDevice device) noexcept {
     return requiredExtensions.empty();
 }
 
-std::expected<vk::raii::Instance, std::runtime_error>
-createInstance(vk::raii::Context& context) noexcept {
+vk::raii::Instance createInstance(vk::raii::Context& context) {
     spdlog::info("create instance");
     vk::ApplicationInfo appInfo("vkmd2v", 1, "No Engine", 1,
                                 VK_API_VERSION_1_1);
@@ -175,8 +184,8 @@ createInstance(vk::raii::Context& context) noexcept {
                 return sv == std::string_view{layer.layerName};
             });
         if (iter == std::ranges::end(availableLayers)) {
-            std::unexpected(std::runtime_error(
-                fmt::format("validation layer not available {}", sv)));
+            throw std::runtime_error(
+                fmt::format("validation layer not available {}", sv));
         }
         spdlog::info("found validation layer {}", sv);
     }
@@ -206,27 +215,18 @@ createInstance(vk::raii::Context& context) noexcept {
     createInfo.ppEnabledLayerNames = validationLayers.data();
     createInfo.pNext = std::addressof(debugCreateInfo);
 
-    try {
-        return vk::raii::Instance(context, createInfo);
-    } catch (std::exception const& excp) {
-        return std::unexpected(std::runtime_error(excp.what()));
-    }
+    return vk::raii::Instance{context, createInfo};
 }
 
-std::expected<vk::raii::DebugUtilsMessengerEXT, std::runtime_error>
-createDebugUtilsMessenger(vk::raii::Instance& instance) noexcept {
+vk::raii::DebugUtilsMessengerEXT
+createDebugUtilsMessenger(vk::raii::Instance& instance) {
     vk::DebugUtilsMessengerCreateInfoEXT createInfo{};
     populateDebugMessengerCreateInfo(createInfo);
-    try {
-        return vk::raii::DebugUtilsMessengerEXT{instance, createInfo};
-    } catch (std::exception const& excp) {
-        return std::unexpected(std::runtime_error(excp.what()));
-    }
+    return vk::raii::DebugUtilsMessengerEXT{instance, createInfo};
 }
 
-std::expected<vk::raii::Device, std::runtime_error>
-createDevice(vk::raii::PhysicalDevice const& physicalDevice,
-             QueueFamilyIndices const& queueFamilyIndices) noexcept {
+vk::raii::Device createDevice(vk::raii::PhysicalDevice const& physicalDevice,
+                              QueueFamilyIndices const& queueFamilyIndices) {
     spdlog::info("create logical device");
     static constexpr float queuePriority = 1.0f;
 
@@ -250,9 +250,8 @@ createDevice(vk::raii::PhysicalDevice const& physicalDevice,
     return vk::raii::Device{physicalDevice, createInfo};
 }
 
-SwapChainSupportDetails
-querySwapChainSupport(vk::PhysicalDevice physicalDevice,
-                      vk::SurfaceKHR const& surface) noexcept {
+SwapChainSupportDetails querySwapChainSupport(vk::PhysicalDevice physicalDevice,
+                                              vk::SurfaceKHR const& surface) {
     SwapChainSupportDetails details;
     details.capabilities = physicalDevice.getSurfaceCapabilitiesKHR(surface);
     details.formats = physicalDevice.getSurfaceFormatsKHR(surface);
@@ -260,10 +259,9 @@ querySwapChainSupport(vk::PhysicalDevice physicalDevice,
     return details;
 }
 
-std::expected<std::pair<vk::raii::PhysicalDevice, QueueFamilyIndices>,
-              std::runtime_error>
+std::pair<vk::raii::PhysicalDevice, QueueFamilyIndices>
 pickPhysicalDevice(vk::raii::Instance& instance,
-                   vk::SurfaceKHR const& surface) noexcept {
+                   vk::SurfaceKHR const& surface) {
     spdlog::info("pick physical device");
     auto devices = instance.enumeratePhysicalDevices();
 
@@ -291,33 +289,28 @@ pickPhysicalDevice(vk::raii::Instance& instance,
             return std::make_pair(device, queueFamilyIndices);
         }
     }
-    return std::unexpected(std::runtime_error("no suitable device found"));
+    throw std::runtime_error("no suitable device found");
 }
 
-std::expected<vk::raii::SurfaceKHR, std::runtime_error>
-createSurface(vk::raii::Instance& instance, Window const& window) noexcept {
+vk::raii::SurfaceKHR createSurface(vk::raii::Instance& instance,
+                                   Window const& window) {
     spdlog::info("create surface");
     VkSurfaceKHR surface;
     auto const result =
         glfwCreateWindowSurface(*instance, window.get(), nullptr, &surface);
     if (result != VK_SUCCESS) {
-        return std::unexpected(std::runtime_error(fmt::format(
-            "failed to create window surface! {}", static_cast<int>(result))));
+        throw std::runtime_error(fmt::format(
+            "failed to create window surface! {}", static_cast<int>(result)));
     }
-    try {
-        return vk::raii::SurfaceKHR{instance, surface};
-    } catch (std::exception const& excp) {
-        return std::unexpected(std::runtime_error(excp.what()));
-    }
+    return vk::raii::SurfaceKHR{instance, surface};
 }
 
-std::expected<std::pair<vk::raii::SwapchainKHR, SwapChainSupportDetails>,
-              std::runtime_error>
+std::pair<vk::raii::SwapchainKHR, SwapChainSupportDetails>
 createSwapChain(vk::raii::PhysicalDevice const& physicalDevice,
                 vk::raii::Device const& device,
                 Window const& window,
                 vk::SurfaceKHR const& surface,
-                QueueFamilyIndices const& queueFamilyIndices) noexcept {
+                QueueFamilyIndices const& queueFamilyIndices) {
     spdlog::debug("create swap chain");
     auto swapChainSupport = querySwapChainSupport(*physicalDevice, surface);
     swapChainSupport.surfaceFormat =
@@ -364,16 +357,11 @@ createSwapChain(vk::raii::PhysicalDevice const& physicalDevice,
     createInfo.clipped = VK_TRUE;
     createInfo.oldSwapchain = VK_NULL_HANDLE;
 
-    try {
-        return std::make_pair(vk::raii::SwapchainKHR(device, createInfo),
-                              swapChainSupport);
-    } catch (std::exception const& excp) {
-        spdlog::error(excp.what());
-        return std::unexpected(std::runtime_error(excp.what()));
-    }
+    return std::make_pair(vk::raii::SwapchainKHR{device, createInfo},
+                          swapChainSupport);
 }
 
-std::expected<std::vector<vk::raii::ImageView>, std::runtime_error>
+std::vector<vk::raii::ImageView>
 createImageViews(vk::raii::Device const& device,
                  std::vector<vk::Image>& images,
                  SwapChainSupportDetails const& swapChainSupport) {
@@ -397,27 +385,22 @@ createImageViews(vk::raii::Device const& device,
         createInfo.subresourceRange.baseArrayLayer = 0;
         createInfo.subresourceRange.layerCount = 1;
 
-        try {
-            views.emplace_back(device, createInfo);
-        } catch (std::runtime_error const& err) {
-            return std::unexpected(err);
-        }
+        views.emplace_back(device, createInfo);
     }
 
     return views;
 }
 
-std::expected<vk::raii::ShaderModule, std::runtime_error>
-createShaderModule(std::filesystem::path const& path,
-                   vk::raii::Device const& device) noexcept {
+vk::raii::ShaderModule createShaderModule(std::filesystem::path const& path,
+                                          vk::raii::Device const& device) {
     spdlog::info("creating shader module for {}", path.string());
     std::vector<char> buffer;
     {
         std::ifstream inf(path, std::ios::ate | std::ios::binary);
 
         if (!inf.is_open()) {
-            return std::unexpected(std::runtime_error(
-                fmt::format("failed to open file '{}'!", path.string())));
+            throw std::runtime_error(
+                fmt::format("failed to open file '{}'!", path.string()));
         }
 
         auto const fileSize = static_cast<size_t>(inf.tellg());
@@ -432,11 +415,11 @@ createShaderModule(std::filesystem::path const& path,
     return device.createShaderModule(createInfo);
 }
 
-std::expected<std::vector<vk::raii::Framebuffer>, std::runtime_error>
+std::vector<vk::raii::Framebuffer>
 createFrameBuffers(std::vector<vk::raii::ImageView> const& imageViews,
                    vk::raii::RenderPass const& renderPass,
                    vk::Extent2D swapChainExtent,
-                   vk::raii::Device const& device) noexcept {
+                   vk::raii::Device const& device) {
     spdlog::debug("create frame buffer");
     std::vector<vk::raii::Framebuffer> frameBuffers;
     frameBuffers.reserve(imageViews.size());
@@ -457,48 +440,34 @@ createFrameBuffers(std::vector<vk::raii::ImageView> const& imageViews,
     return frameBuffers;
 }
 
-std::expected<vk::raii::CommandPool, std::runtime_error>
-createCommandPool(vk::raii::Device const& device,
-                  QueueFamilyIndices const& indices) noexcept {
+vk::raii::CommandPool createCommandPool(vk::raii::Device const& device,
+                                        QueueFamilyIndices const& indices) {
     spdlog::info("creating command pool");
-    try {
-        return device.createCommandPool(vk::CommandPoolCreateInfo(
-            vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
-            indices.graphicsFamily.value()));
-    } catch (std::runtime_error const& excp) {
-        return std::unexpected(excp);
-    }
+    return device.createCommandPool(vk::CommandPoolCreateInfo(
+        vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
+        indices.graphicsFamily.value()));
 }
 
-std::expected<std::vector<vk::raii::Fence>, std::runtime_error>
-createFences(vk::raii::Device const& device, unsigned int numFences) noexcept {
+std::vector<vk::raii::Fence> createFences(vk::raii::Device const& device,
+                                          unsigned int numFences) {
     std::vector<vk::raii::Fence> fences;
     fences.reserve(numFences);
 
     for (auto i{0U}; i < numFences; ++i) {
-        try {
-            fences.emplace_back(device.createFence(
-                vk::FenceCreateInfo{vk::FenceCreateFlagBits::eSignaled}));
-        } catch (std::runtime_error const& excp) {
-            return std::unexpected(excp);
-        }
+        fences.emplace_back(device.createFence(
+            vk::FenceCreateInfo{vk::FenceCreateFlagBits::eSignaled}));
     }
     return fences;
 }
 
-std::expected<std::vector<vk::raii::Semaphore>, std::runtime_error>
-createSemaphores(vk::raii::Device const& device,
-                 unsigned int numSemaphores) noexcept {
+std::vector<vk::raii::Semaphore>
+createSemaphores(vk::raii::Device const& device, unsigned int numSemaphores) {
     std::vector<vk::raii::Semaphore> semaphores;
     semaphores.reserve(numSemaphores);
 
     for (auto i{0U}; i < numSemaphores; ++i) {
-        try {
-            semaphores.emplace_back(
-                device.createSemaphore(vk::SemaphoreCreateInfo{}));
-        } catch (std::runtime_error const& excp) {
-            return std::unexpected(excp);
-        }
+        semaphores.emplace_back(
+            device.createSemaphore(vk::SemaphoreCreateInfo{}));
     }
     return semaphores;
 }
@@ -522,71 +491,64 @@ uint32_t findMemoryType(uint32_t typeFilter,
     throw std::runtime_error("failed to find suitable memory type!");
 }
 
-std::expected<BoundBuffer, std::runtime_error>
-BoundBuffer::create(vk::raii::Device const& device,
-                    vk::raii::PhysicalDevice const& physicalDevice,
-                    vk::DeviceSize size,
-                    vk::BufferUsageFlags usage,
-                    vk::MemoryPropertyFlags properties) noexcept {
-    try {
-        // first create the buffer
-        vk::BufferCreateInfo bufferInfo{};
-        bufferInfo.size = size;
-        bufferInfo.usage = usage;
-        bufferInfo.sharingMode = vk::SharingMode::eExclusive;
-        auto buf = device.createBuffer(bufferInfo);
+BoundBuffer BoundBuffer::create(vk::raii::Device const& device,
+                                vk::raii::PhysicalDevice const& physicalDevice,
+                                vk::DeviceSize size,
+                                vk::BufferUsageFlags usage,
+                                vk::MemoryPropertyFlags properties) {
+    // first create the buffer
+    vk::BufferCreateInfo bufferInfo{};
+    bufferInfo.size = size;
+    bufferInfo.usage = usage;
+    bufferInfo.sharingMode = vk::SharingMode::eExclusive;
+    auto buf = device.createBuffer(bufferInfo);
 
-        // next allocate the memory
-        auto const memRequirements = buf.getMemoryRequirements();
-        vk::MemoryAllocateInfo allocInfo{};
-        allocInfo.allocationSize = memRequirements.size;
-        allocInfo.memoryTypeIndex = findMemoryType(
-            memRequirements.memoryTypeBits, properties, physicalDevice);
-        auto mem = device.allocateMemory(allocInfo);
+    // next allocate the memory
+    auto const memRequirements = buf.getMemoryRequirements();
+    vk::MemoryAllocateInfo allocInfo{};
+    allocInfo.allocationSize = memRequirements.size;
+    allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits,
+                                               properties, physicalDevice);
+    auto mem = device.allocateMemory(allocInfo);
 
-        // bind buffer to memory and return
-        buf.bindMemory(*mem, 0UL);
-        return BoundBuffer{
-            .buffer = std::move(buf), .memory = std::move(mem), .size = size};
-    } catch (std::runtime_error const& excp) {
-        return std::unexpected(excp);
-    }
+    // bind buffer to memory and return
+    buf.bindMemory(*mem, 0UL);
+    return BoundBuffer{
+        .buffer = std::move(buf), .memory = std::move(mem), .size = size};
 }
 
-std::expected<BoundBuffer, std::runtime_error>
+BoundBuffer
 createDynamicVertexBuffer(vk::raii::Device const& device,
                           vk::raii::PhysicalDevice const& physicalDevice,
-                          vk::DeviceSize size) noexcept {
+                          vk::DeviceSize size) {
     return BoundBuffer::create(device, physicalDevice, size,
                                vk::BufferUsageFlagBits::eVertexBuffer,
                                vk::MemoryPropertyFlagBits::eHostVisible |
                                    vk::MemoryPropertyFlagBits::eHostCoherent);
 }
 
-std::expected<BoundBuffer, std::runtime_error>
+BoundBuffer
 createStaticVertexBuffer(vk::raii::Device const& device,
                          vk::raii::PhysicalDevice const& physicalDevice,
-                         vk::DeviceSize size) noexcept {
+                         vk::DeviceSize size) {
     return BoundBuffer::create(device, physicalDevice, size,
                                vk::BufferUsageFlagBits::eTransferDst |
                                    vk::BufferUsageFlagBits::eVertexBuffer,
                                vk::MemoryPropertyFlagBits::eDeviceLocal);
 }
 
-std::expected<BoundBuffer, std::runtime_error>
-createIndexBuffer(vk::raii::Device const& device,
-                  vk::raii::PhysicalDevice const& physicalDevice,
-                  vk::DeviceSize size) noexcept {
+BoundBuffer createIndexBuffer(vk::raii::Device const& device,
+                              vk::raii::PhysicalDevice const& physicalDevice,
+                              vk::DeviceSize size) {
     return BoundBuffer::create(device, physicalDevice, size,
                                vk::BufferUsageFlagBits::eTransferDst |
                                    vk::BufferUsageFlagBits::eIndexBuffer,
                                vk::MemoryPropertyFlagBits::eDeviceLocal);
 }
 
-std::expected<BoundBuffer, std::runtime_error>
-createStagingBuffer(vk::raii::Device const& device,
-                    vk::raii::PhysicalDevice const& physicalDevice,
-                    vk::DeviceSize size) noexcept {
+BoundBuffer createStagingBuffer(vk::raii::Device const& device,
+                                vk::raii::PhysicalDevice const& physicalDevice,
+                                vk::DeviceSize size) {
     return BoundBuffer::create(device, physicalDevice, size,
                                vk::BufferUsageFlagBits::eTransferSrc,
                                vk::MemoryPropertyFlagBits::eHostVisible |

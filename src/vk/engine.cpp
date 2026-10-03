@@ -17,13 +17,6 @@ static std::vector<Vertex> const vertices = {
 
 static std::vector<uint16_t> const indices = {0, 1, 2, 2, 3, 0};
 
-template <class T, class E> T forceUnwrap(std::expected<T, E>&& expectedT) {
-    if (!expectedT) {
-        throw expectedT.error();
-    }
-    return std::move(expectedT).value();
-}
-
 VKEngine::VKEngine() {
     gsl_Ensures(glfwInit() == GLFW_TRUE);
     spdlog::info("GLFW version: {}", glfwGetVersionString());
@@ -36,7 +29,7 @@ VKEngine::~VKEngine() { glfwTerminate(); }
 bool VKEngine::init(std::span<char const*> args) { return parse_args(args); }
 
 void VKEngine::initWindow() {
-    window_ = forceUnwrap(Window::create(width_, height_));
+    window_ = Window::create(width_, height_);
 
     auto framebufferResizeCallback = [](GLFWwindow* window, int /* width */,
                                         int /* height */) {
@@ -50,60 +43,54 @@ void VKEngine::initWindow() {
 }
 
 void VKEngine::initVulkan() {
-    instance_ = forceUnwrap(createInstance(context_));
-    debugMessenger_ = forceUnwrap(createDebugUtilsMessenger(instance_));
-    surface_ = forceUnwrap(createSurface(instance_, window_));
+    instance_ = createInstance(context_);
+    debugMessenger_ = createDebugUtilsMessenger(instance_);
+    surface_ = createSurface(instance_, window_);
     std::tie(physicalDevice_, queueFamilyIndices_) =
-        forceUnwrap(pickPhysicalDevice(instance_, *surface_));
-    device_ = forceUnwrap(createDevice(physicalDevice_, queueFamilyIndices_));
+        pickPhysicalDevice(instance_, *surface_);
+    device_ = createDevice(physicalDevice_, queueFamilyIndices_);
 
     graphicsQueue_ =
         device_.getQueue(queueFamilyIndices_.graphicsFamily.value(), 0);
     presentQueue_ =
         device_.getQueue(queueFamilyIndices_.presentFamily.value(), 0);
 
-    std::tie(swapChain_, swapChainSupportDetails_) =
-        forceUnwrap(createSwapChain(physicalDevice_, device_, window_,
-                                    *surface_, queueFamilyIndices_));
+    std::tie(swapChain_, swapChainSupportDetails_) = createSwapChain(
+        physicalDevice_, device_, window_, *surface_, queueFamilyIndices_);
     swapChainImages_ = swapChain_.getImages();
-    imageViews_ = forceUnwrap(
-        createImageViews(device_, swapChainImages_, swapChainSupportDetails_));
+    imageViews_ =
+        createImageViews(device_, swapChainImages_, swapChainSupportDetails_);
 
     createRenderPass();
     createGraphicsPipeline();
-    frameBuffers_ = forceUnwrap(createFrameBuffers(
-        imageViews_, renderPass_, swapChainSupportDetails_.extent, device_));
-    commandPool_ = forceUnwrap(createCommandPool(device_, queueFamilyIndices_));
+    frameBuffers_ = createFrameBuffers(
+        imageViews_, renderPass_, swapChainSupportDetails_.extent, device_);
+    commandPool_ = createCommandPool(device_, queueFamilyIndices_);
 
     vk::CommandBufferAllocateInfo allocInfo{
         *commandPool_, vk::CommandBufferLevel::ePrimary, kMaxFramesInFlight};
     commandBuffers_ = device_.allocateCommandBuffers(allocInfo);
-    imageAvailableSemaphores_ =
-        forceUnwrap(createSemaphores(device_, kMaxFramesInFlight));
+    imageAvailableSemaphores_ = createSemaphores(device_, kMaxFramesInFlight);
     // NB: one per swap chain image rather than per frame in flight. A render
     // finished semaphore stays in use by its presentation until that image is
     // acquired again, so it cannot be cycled with the frame index.
-    renderFinishedSemaphores_ = forceUnwrap(createSemaphores(
-        device_, static_cast<unsigned int>(swapChainImages_.size())));
-    inflightFences_ = forceUnwrap(createFences(device_, kMaxFramesInFlight));
+    renderFinishedSemaphores_ = createSemaphores(
+        device_, static_cast<unsigned int>(swapChainImages_.size()));
+    inflightFences_ = createFences(device_, kMaxFramesInFlight);
 
     // copy vertices to high performance on device gpu memory
     auto bufSize = sizeof(Vertex) * vertices.size();
-    auto stagingBuffer =
-        forceUnwrap(createStagingBuffer(device_, physicalDevice_, bufSize));
+    auto stagingBuffer = createStagingBuffer(device_, physicalDevice_, bufSize);
     stagingBuffer.memcpy(vertices);
-    vertexBuffer_ = forceUnwrap(
-        createStaticVertexBuffer(device_, physicalDevice_, bufSize));
+    vertexBuffer_ = createStaticVertexBuffer(device_, physicalDevice_, bufSize);
     copyBuffer(stagingBuffer, vertexBuffer_, device_, commandPool_,
                graphicsQueue_);
 
     // copy indices to high performance on device gpu memory
     bufSize = sizeof(indices[0]) * indices.size();
-    stagingBuffer =
-        forceUnwrap(createStagingBuffer(device_, physicalDevice_, bufSize));
+    stagingBuffer = createStagingBuffer(device_, physicalDevice_, bufSize);
     stagingBuffer.memcpy(indices);
-    indexBuffer_ =
-        forceUnwrap(createIndexBuffer(device_, physicalDevice_, bufSize));
+    indexBuffer_ = createIndexBuffer(device_, physicalDevice_, bufSize);
     copyBuffer(stagingBuffer, indexBuffer_, device_, commandPool_,
                graphicsQueue_);
 
@@ -128,27 +115,26 @@ void VKEngine::recreateSwapChain() {
     imageViews_.clear();
     swapChain_ = nullptr; // NB: must destroy previous swap chain first!
 
-    std::tie(swapChain_, swapChainSupportDetails_) =
-        forceUnwrap(createSwapChain(physicalDevice_, device_, window_,
-                                    *surface_, queueFamilyIndices_));
+    std::tie(swapChain_, swapChainSupportDetails_) = createSwapChain(
+        physicalDevice_, device_, window_, *surface_, queueFamilyIndices_);
     swapChainImages_ = swapChain_.getImages();
-    imageViews_ = forceUnwrap(
-        createImageViews(device_, swapChainImages_, swapChainSupportDetails_));
-    frameBuffers_ = forceUnwrap(createFrameBuffers(
-        imageViews_, renderPass_, swapChainSupportDetails_.extent, device_));
+    imageViews_ =
+        createImageViews(device_, swapChainImages_, swapChainSupportDetails_);
+    frameBuffers_ = createFrameBuffers(
+        imageViews_, renderPass_, swapChainSupportDetails_.extent, device_);
     // the image count can change, and each render finished semaphore belongs
     // to an image, so rebuild them with the swap chain
-    renderFinishedSemaphores_ = forceUnwrap(createSemaphores(
-        device_, static_cast<unsigned int>(swapChainImages_.size())));
+    renderFinishedSemaphores_ = createSemaphores(
+        device_, static_cast<unsigned int>(swapChainImages_.size()));
     spdlog::debug("recreated swap chain");
 }
 
 void VKEngine::createGraphicsPipeline() {
     spdlog::info("creating graphics pipeline");
     auto vertShaderModule =
-        forceUnwrap(createShaderModule("data/shaders/vert.spv", device_));
+        createShaderModule("data/shaders/vert.spv", device_);
     auto fragShaderModule =
-        forceUnwrap(createShaderModule("data/shaders/frag.spv", device_));
+        createShaderModule("data/shaders/frag.spv", device_);
 
     vk::PipelineShaderStageCreateInfo vertShaderStageInfo{};
     vertShaderStageInfo.stage =

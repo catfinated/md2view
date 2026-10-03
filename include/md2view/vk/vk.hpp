@@ -11,7 +11,6 @@
 #include <vulkan/vulkan_raii.hpp>
 
 #include <cstdint>
-#include <expected>
 #include <filesystem>
 #include <optional>
 #include <stdexcept>
@@ -39,58 +38,50 @@ struct SwapChainSupportDetails {
 
 [[nodiscard]] SwapChainSupportDetails
 querySwapChainSupport(vk::PhysicalDevice physicalDevice,
-                      vk::SurfaceKHR const& surface) noexcept;
+                      vk::SurfaceKHR const& surface);
 
-std::expected<vk::raii::Instance, std::runtime_error>
-createInstance(vk::raii::Context& context) noexcept;
+vk::raii::Instance createInstance(vk::raii::Context& context);
 
-std::expected<vk::raii::DebugUtilsMessengerEXT, std::runtime_error>
-createDebugUtilsMessenger(vk::raii::Instance& instance) noexcept;
+vk::raii::DebugUtilsMessengerEXT
+createDebugUtilsMessenger(vk::raii::Instance& instance);
 
-std::expected<vk::raii::SurfaceKHR, std::runtime_error>
-createSurface(vk::raii::Instance& instance, Window const& window) noexcept;
+vk::raii::SurfaceKHR createSurface(vk::raii::Instance& instance,
+                                   Window const& window);
 
-std::expected<std::pair<vk::raii::PhysicalDevice, QueueFamilyIndices>,
-              std::runtime_error>
-pickPhysicalDevice(vk::raii::Instance& instance,
-                   vk::SurfaceKHR const& surface) noexcept;
+std::pair<vk::raii::PhysicalDevice, QueueFamilyIndices>
+pickPhysicalDevice(vk::raii::Instance& instance, vk::SurfaceKHR const& surface);
 
-std::expected<vk::raii::Device, std::runtime_error>
-createDevice(vk::raii::PhysicalDevice const& physicalDevice,
-             QueueFamilyIndices const& queueFamilyIndices) noexcept;
+vk::raii::Device createDevice(vk::raii::PhysicalDevice const& physicalDevice,
+                              QueueFamilyIndices const& queueFamilyIndices);
 
-std::expected<std::vector<vk::raii::Semaphore>, std::runtime_error>
-createSemaphores(vk::raii::Device const& device,
-                 unsigned int numSemaphores) noexcept;
+std::vector<vk::raii::Semaphore>
+createSemaphores(vk::raii::Device const& device, unsigned int numSemaphores);
 
-std::expected<std::vector<vk::raii::Fence>, std::runtime_error>
-createFences(vk::raii::Device const& device, unsigned int numFences) noexcept;
+std::vector<vk::raii::Fence> createFences(vk::raii::Device const& device,
+                                          unsigned int numFences);
 
-std::expected<vk::raii::CommandPool, std::runtime_error>
-createCommandPool(vk::raii::Device const& device,
-                  QueueFamilyIndices const& indices) noexcept;
+vk::raii::CommandPool createCommandPool(vk::raii::Device const& device,
+                                        QueueFamilyIndices const& indices);
 
-std::expected<std::pair<vk::raii::SwapchainKHR, SwapChainSupportDetails>,
-              std::runtime_error>
+std::pair<vk::raii::SwapchainKHR, SwapChainSupportDetails>
 createSwapChain(vk::raii::PhysicalDevice const& physicalDevice,
                 vk::raii::Device const& device,
                 Window const& window,
                 vk::SurfaceKHR const& surface,
-                QueueFamilyIndices const& queueFamilyIndices) noexcept;
+                QueueFamilyIndices const& queueFamilyIndices);
 
-std::expected<std::vector<vk::raii::ImageView>, std::runtime_error>
+std::vector<vk::raii::ImageView>
 createImageViews(vk::raii::Device const& device,
                  std::vector<vk::Image>& images,
                  SwapChainSupportDetails const& support);
 
-std::expected<vk::raii::ShaderModule, std::runtime_error>
-createShaderModule(std::filesystem::path const& path,
-                   vk::raii::Device const& device) noexcept;
+vk::raii::ShaderModule createShaderModule(std::filesystem::path const& path,
+                                          vk::raii::Device const& device);
 
-std::expected<std::vector<vk::raii::Framebuffer>, std::runtime_error>
+std::vector<vk::raii::Framebuffer>
 createFrameBuffers(std::vector<vk::raii::ImageView> const& imageViews,
                    vk::raii::RenderPass const& renderPass,
                    vk::Extent2D swapChainExtent,
-                   vk::raii::Device const& device) noexcept;
+                   vk::raii::Device const& device);
 
 } // namespace VK

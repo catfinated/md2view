@@ -8,7 +8,6 @@
 #include <vulkan/vulkan_raii.hpp>
 
 #include <cstring>
-#include <expected>
 
 namespace VK {
 
@@ -45,14 +44,14 @@ struct BoundBuffer {
      * @param size The size of the buffer
      * @param usage The usage flags for the buffer
      * @param properties The memory properties for the buffer memory
-     * @return An expected BoundBuffer or an error
+     * @return The created BoundBuffer
+     * @throws vk::SystemError if a Vulkan call fails
      */
-    static std::expected<BoundBuffer, std::runtime_error>
-    create(vk::raii::Device const& device,
-           vk::raii::PhysicalDevice const& physicalDevice,
-           vk::DeviceSize size,
-           vk::BufferUsageFlags usage,
-           vk::MemoryPropertyFlags properties) noexcept;
+    static BoundBuffer create(vk::raii::Device const& device,
+                              vk::raii::PhysicalDevice const& physicalDevice,
+                              vk::DeviceSize size,
+                              vk::BufferUsageFlags usage,
+                              vk::MemoryPropertyFlags properties);
 };
 
 /**
@@ -64,12 +63,13 @@ struct BoundBuffer {
  * @param device The logical device to create the buffer for
  * @param physicalDevice The physical device to allocate memory on
  * @param size The size of the buffer
- * @return An expected BoundBuffer or an error
+ * @return The created BoundBuffer
+ * @throws vk::SystemError if a Vulkan call fails
  */
-std::expected<BoundBuffer, std::runtime_error>
+BoundBuffer
 createDynamicVertexBuffer(vk::raii::Device const& device,
                           vk::raii::PhysicalDevice const& physicalDevice,
-                          vk::DeviceSize size) noexcept;
+                          vk::DeviceSize size);
 
 /**
  * @brief Create a BoundBuffer suitable for static vertex data
@@ -80,12 +80,13 @@ createDynamicVertexBuffer(vk::raii::Device const& device,
  * @param device The logical device to create the buffer for
  * @param physicalDevice The physical device to allocate memory on
  * @param size The size of the buffer
- * @return An expected BoundBuffer or an error
+ * @return The created BoundBuffer
+ * @throws vk::SystemError if a Vulkan call fails
  */
-std::expected<BoundBuffer, std::runtime_error>
+BoundBuffer
 createStaticVertexBuffer(vk::raii::Device const& device,
                          vk::raii::PhysicalDevice const& physicalDevice,
-                         vk::DeviceSize size) noexcept;
+                         vk::DeviceSize size);
 
 /**
  * @brief Create a BoundBuffer suitable for index data
@@ -96,12 +97,12 @@ createStaticVertexBuffer(vk::raii::Device const& device,
  * @param device The logical device to create the buffer for
  * @param physicalDevice The physical device to allocate memory on
  * @param size The size of the buffer
- * @return An expected BoundBuffer or an error
+ * @return The created BoundBuffer
+ * @throws vk::SystemError if a Vulkan call fails
  */
-std::expected<BoundBuffer, std::runtime_error>
-createIndexBuffer(vk::raii::Device const& device,
-                  vk::raii::PhysicalDevice const& physicalDevice,
-                  vk::DeviceSize size) noexcept;
+BoundBuffer createIndexBuffer(vk::raii::Device const& device,
+                              vk::raii::PhysicalDevice const& physicalDevice,
+                              vk::DeviceSize size);
 
 /**
  * @brief Create a BoundBuffer suitable for staging data
@@ -109,12 +110,12 @@ createIndexBuffer(vk::raii::Device const& device,
  * @param device The logical device to create the buffer for
  * @param physicalDevice The physical device to allocate memory on
  * @param size The size of the buffer
- * @return An expected BoundBuffer or an error
+ * @return The created BoundBuffer
+ * @throws vk::SystemError if a Vulkan call fails
  */
-std::expected<BoundBuffer, std::runtime_error>
-createStagingBuffer(vk::raii::Device const& device,
-                    vk::raii::PhysicalDevice const& physicalDevice,
-                    vk::DeviceSize size) noexcept;
+BoundBuffer createStagingBuffer(vk::raii::Device const& device,
+                                vk::raii::PhysicalDevice const& physicalDevice,
+                                vk::DeviceSize size);
 
 /**
  * @brief Copy a local buffer to a device buffer

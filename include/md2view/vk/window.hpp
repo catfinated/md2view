@@ -5,8 +5,6 @@
 
 #include <GLFW/glfw3.h>
 
-#include <expected>
-#include <stdexcept>
 #include <utility>
 
 namespace VK {
@@ -33,8 +31,10 @@ public:
 
     [[nodiscard]] GLFWwindow* get() const noexcept { return window_; }
 
-    static std::expected<Window, std::runtime_error>
-    create(int width, int height) noexcept;
+    /// Create a Vulkan-capable window.
+    ///
+    /// @throws std::runtime_error if the window could not be created
+    static Window create(int width, int height);
 
 private:
     GLFWwindow* window_;
