@@ -80,8 +80,11 @@ void VKEngine::initVulkan() {
     commandBuffers_ = device_.allocateCommandBuffers(allocInfo);
     imageAvailableSemaphores_ =
         forceUnwrap(createSemaphores(device_, kMaxFramesInFlight));
-    renderFinishedSemaphores_ =
-        forceUnwrap(createSemaphores(device_, kMaxFramesInFlight));
+    // NB: one per swap chain image rather than per frame in flight. A render
+    // finished semaphore stays in use by its presentation until that image is
+    // acquired again, so it cannot be cycled with the frame index.
+    renderFinishedSemaphores_ = forceUnwrap(createSemaphores(
+        device_, static_cast<unsigned int>(swapChainImages_.size())));
     inflightFences_ = forceUnwrap(createFences(device_, kMaxFramesInFlight));
 
     // copy vertices to high performance on device gpu memory
@@ -133,6 +136,10 @@ void VKEngine::recreateSwapChain() {
         createImageViews(device_, swapChainImages_, swapChainSupportDetails_));
     frameBuffers_ = forceUnwrap(createFrameBuffers(
         imageViews_, renderPass_, swapChainSupportDetails_.extent, device_));
+    // the image count can change, and each render finished semaphore belongs
+    // to an image, so rebuild them with the swap chain
+    renderFinishedSemaphores_ = forceUnwrap(createSemaphores(
+        device_, static_cast<unsigned int>(swapChainImages_.size())));
     spdlog::debug("recreated swap chain");
 }
 
@@ -390,7 +397,7 @@ void VKEngine::drawFrame() {
     submitInfo.commandBufferCount = commandBuffers.size();
     submitInfo.pCommandBuffers = commandBuffers.data();
 
-    auto& renderFinishedSemaphore = renderFinishedSemaphores_.at(currentFrame_);
+    auto& renderFinishedSemaphore = renderFinishedSemaphores_.at(imageIndex);
     std::array<vk::Semaphore, 1UL> signalSemaphores{*renderFinishedSemaphore};
     submitInfo.signalSemaphoreCount = signalSemaphores.size();
     submitInfo.pSignalSemaphores = signalSemaphores.data();

@@ -244,8 +244,9 @@ createDevice(vk::raii::PhysicalDevice const& physicalDevice,
         queueCreateInfos.push_back(queueCreateInfo);
     }
 
-    vk::DeviceCreateInfo createInfo{
-        {}, queueCreateInfos, validationLayers, deviceExtensions};
+    // NB: device layers are deprecated and ignored; the instance layers
+    // already cover the device
+    vk::DeviceCreateInfo createInfo{{}, queueCreateInfos, {}, deviceExtensions};
     return vk::raii::Device{physicalDevice, createInfo};
 }
 
