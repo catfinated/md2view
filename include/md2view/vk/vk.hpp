@@ -15,8 +15,9 @@
 #include <stdexcept>
 #include <vector>
 
-namespace VK {
 class Window;
+
+namespace VK {
 
 struct QueueFamilyIndices {
     std::optional<uint32_t> graphicsFamily;

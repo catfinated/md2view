@@ -3,6 +3,7 @@
 #include <gsl-lite/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 
+#include <array>
 #include <utility>
 
 template <typename Game>
@@ -23,17 +24,16 @@ bool GL::Engine<Game>::init(std::span<char const*> args) {
     }
     resource_manager_ = std::make_unique<ResourceManager>("data", pak);
 
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    constexpr std::array hints{
+        WindowHint{GLFW_CONTEXT_VERSION_MAJOR, 4},
+        WindowHint{GLFW_CONTEXT_VERSION_MINOR, 1},
+        WindowHint{GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE},
+        WindowHint{GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE}};
 
-    window_ = glfwCreateWindow(width, height, game_.title(), nullptr, nullptr);
-    gsl_Assert(window_);
-    glfwMakeContextCurrent(window_);
+    window_ = Window::create(width, height, game_.title(), hints);
+    glfwMakeContextCurrent(window_.get());
 
-    glfwSetWindowUserPointer(window_, this);
+    glfwSetWindowUserPointer(window_.get(), this);
 
     // TODO: Keyboard/InputManager classes
 
@@ -48,7 +48,7 @@ bool GL::Engine<Game>::init(std::span<char const*> args) {
         engine->key_callback(key, action);
     };
 
-    glfwSetKeyCallback(window_, key_callback);
+    glfwSetKeyCallback(window_.get(), key_callback);
 
     auto mouse_callback = [](GLFWwindow* window, double xpos, double ypos) {
         using EngineType = GL::Engine<Game>;
@@ -58,7 +58,7 @@ bool GL::Engine<Game>::init(std::span<char const*> args) {
         engine->mouse_callback(xpos, ypos);
     };
 
-    glfwSetCursorPosCallback(window_, mouse_callback);
+    glfwSetCursorPosCallback(window_.get(), mouse_callback);
 
     auto scroll_callback = [](GLFWwindow* window, double xoffset,
                               double yoffset) {
@@ -69,7 +69,7 @@ bool GL::Engine<Game>::init(std::span<char const*> args) {
         engine->scroll_callback(xoffset, yoffset);
     };
 
-    glfwSetScrollCallback(window_, scroll_callback);
+    glfwSetScrollCallback(window_.get(), scroll_callback);
 
     auto win_resize_callback = [](GLFWwindow* window, int width, int height) {
         using EngineType = GL::Engine<Game>;
@@ -79,7 +79,7 @@ bool GL::Engine<Game>::init(std::span<char const*> args) {
         engine->window_resize_callback(width, height);
     };
 
-    glfwSetWindowSizeCallback(window_, win_resize_callback);
+    glfwSetWindowSizeCallback(window_.get(), win_resize_callback);
 
     auto fb_resize_callback = [](GLFWwindow* window, int width, int height) {
         using EngineType = GL::Engine<Game>;
@@ -89,11 +89,11 @@ bool GL::Engine<Game>::init(std::span<char const*> args) {
         engine->framebuffer_resize_callback(width, height);
     };
 
-    glfwSetFramebufferSizeCallback(window_, fb_resize_callback);
+    glfwSetFramebufferSizeCallback(window_.get(), fb_resize_callback);
 
-    glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetInputMode(window_.get(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    glfwMakeContextCurrent(window_);
+    glfwMakeContextCurrent(window_.get());
 
     spdlog::info("gl version: {}", glStrView(glGetString(GL_VERSION)));
     spdlog::info("gl renderer: {}", glStrView(glGetString(GL_RENDERER)));
@@ -109,7 +109,7 @@ bool GL::Engine<Game>::init(std::span<char const*> args) {
 
     glGetError(); // glewInit is known to cause invalid enum error
 
-    glfwGetFramebufferSize(window_, &width_, &height_);
+    glfwGetFramebufferSize(window_.get(), &width_, &height_);
     glViewport(0, 0, width_, height_);
 
     spdlog::info("Default frame buffer size {}x{}", width_, height_);
@@ -128,7 +128,7 @@ bool GL::Engine<Game>::init(std::span<char const*> args) {
     mouse_.ypos = height / 2.0;
 
     gui_ = std::make_unique<GL::Gui>(*this, *resource_manager_,
-                                     gsl_lite::not_null{window_});
+                                     gsl_lite::not_null{window_.get()});
     glCheckError();
 
     return true;
@@ -138,7 +138,7 @@ template <typename Game> void GL::Engine<Game>::run_game() {
     last_frame_ = gsl_lite::narrow_cast<GLfloat>(glfwGetTime());
     // glfwSwapInterval(1);
 
-    while (glfwWindowShouldClose(window_) == 0) {
+    while (!window_.shouldClose()) {
         auto const current_frame =
             gsl_lite::narrow_cast<GLfloat>(glfwGetTime());
         delta_time_ = current_frame - last_frame_;
@@ -159,7 +159,7 @@ template <typename Game> void GL::Engine<Game>::run_game() {
         gui_->render();
         glCheckError();
 
-        glfwSwapBuffers(window_);
+        glfwSwapBuffers(window_.get());
     }
 
     glCheckError();
@@ -169,7 +169,7 @@ template <typename Game>
 void GL::Engine<Game>::key_callback(int key, int action) {
     if (action == GLFW_PRESS) {
         if (key == GLFW_KEY_ESCAPE) {
-            glfwSetWindowShouldClose(window_, GL_TRUE);
+            glfwSetWindowShouldClose(window_.get(), GL_TRUE);
         } else if (key == GLFW_KEY_F1) {
             input_goes_to_game_ = !input_goes_to_game_;
             spdlog::info("got F1. game input: {}", input_goes_to_game_);

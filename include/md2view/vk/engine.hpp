@@ -7,7 +7,7 @@
 
 #include "md2view/engine.hpp"
 #include "md2view/vk/vk.hpp"
-#include "md2view/vk/window.hpp"
+#include "md2view/window.hpp"
 
 namespace VK {
 

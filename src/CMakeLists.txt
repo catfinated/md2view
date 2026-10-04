@@ -10,42 +10,45 @@ find_package(gsl-lite CONFIG REQUIRED)
 find_path(TREEHH_INCLUDE_DIRS "treehh/tree.hh")
 find_package(Vulkan REQUIRED)
 
-# Core library: MD2 parsing, camera math, PCX/PAK I/O — no OpenGL dependency.
-add_library(libmd2
+add_library(md2v
   md2.cpp
   pcx.cpp
   pak.cpp
   camera.cpp
   engine.cpp)
 
-target_link_libraries(libmd2 PUBLIC
+target_link_libraries(md2v PUBLIC
    Boost::system
    Boost::program_options
    glm::glm
    spdlog::spdlog
    gsl::gsl-lite-v1)
 
-target_include_directories(libmd2 PUBLIC ${CMAKE_SOURCE_DIR}/include)
+target_include_directories(md2v PUBLIC ${CMAKE_SOURCE_DIR}/include)
 
-target_compile_definitions(libmd2
+target_compile_definitions(md2v
    PUBLIC GLM_ENABLE_EXPERIMENTAL FMT_USE_USER_DEFINED_LITERALS=1 gsl_CONFIG_CONTRACT_VIOLATION_THROWS)
 
-# Backend-agnostic ImGui layer: panels that depend only on the ImGui widget API
-# and the core domain types, usable from any renderer backend.
-add_library(libmd2ui
+add_library(md2vw
+  window.cpp)
+
+target_link_libraries(md2vw PUBLIC
+   md2v
+   glfw)
+
+add_library(md2vui
   ui/ui.cpp
   ui/model_selector.cpp)
 
-target_link_libraries(libmd2ui PUBLIC
-   libmd2
+target_link_libraries(md2vui PUBLIC
+   md2v
    imgui::imgui)
 
-target_include_directories(libmd2ui PUBLIC ${TREEHH_INCLUDE_DIRS})
+target_include_directories(md2vui PUBLIC ${TREEHH_INCLUDE_DIRS})
 
-target_compile_definitions(libmd2ui PUBLIC IMGUI_DISABLE_OBSOLETE_FUNCTIONS)
+target_compile_definitions(md2vui PUBLIC IMGUI_DISABLE_OBSOLETE_FUNCTIONS)
 
-# OpenGL rendering layer: shaders, textures, meshes, GUI, resource manager, app.
-add_library(libmd2gl
+add_library(md2vgl
   gl/md2view.cpp
   gl/gui.cpp
   gl/mesh.cpp
@@ -55,36 +58,34 @@ add_library(libmd2gl
   gl/texture2d.cpp
   gl/frame_buffer.cpp)
 
-target_link_libraries(libmd2gl PUBLIC
-   libmd2ui
-   glfw
+target_link_libraries(md2vgl PUBLIC
+   md2vui
+   md2vw
    GLEW::GLEW
    OpenGL::GL
    OpenGL::EGL
    imgui::imgui)
 
-target_include_directories(libmd2gl PUBLIC
+target_include_directories(md2vgl PUBLIC
    ${OPENGL_INCLUDE_DIR}
    ${Stb_INCLUDE_DIR})
 
-target_compile_definitions(libmd2gl
+target_compile_definitions(md2vgl
    PUBLIC GLEW_NO_GLU IMGUI_DISABLE_OBSOLETE_FUNCTIONS)
 
-# Vulkan rendering layer: instance/device/swapchain setup, sync, engine loop.
-add_library(libmd2vk
+add_library(md2vvk
   vk/vk.cpp
-  vk/engine.cpp
-  vk/window.cpp)
+  vk/engine.cpp)
 
-target_link_libraries(libmd2vk PUBLIC
-   libmd2
-   Vulkan::Vulkan
-   glfw)
+target_link_libraries(md2vvk PUBLIC
+   md2v
+   md2vw
+   Vulkan::Vulkan)
 
-target_compile_definitions(libmd2vk PUBLIC GLFW_INCLUDE_VULKAN)
+target_compile_definitions(md2vvk PUBLIC GLFW_INCLUDE_VULKAN)
 
 add_executable(glmd2v gl/main.cpp)
-target_link_libraries(glmd2v PRIVATE libmd2gl)
+target_link_libraries(glmd2v PRIVATE md2vgl)
 
 add_executable(vkmd2v vk/main.cpp)
-target_link_libraries(vkmd2v PRIVATE libmd2vk)
+target_link_libraries(vkmd2v PRIVATE md2vvk)

@@ -31,7 +31,8 @@ VKEngine::VKEngine() {
 bool VKEngine::init(std::span<char const*> args) { return parse_args(args); }
 
 void VKEngine::initWindow() {
-    window_ = Window::create(width_, height_);
+    constexpr std::array hints{WindowHint{GLFW_CLIENT_API, GLFW_NO_API}};
+    window_ = Window::create(width_, height_, "vkmd2v", hints);
 
     auto framebufferResizeCallback = [](GLFWwindow* window, int /* width */,
                                         int /* height */) {

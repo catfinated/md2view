@@ -1,7 +1,8 @@
 #include "md2view/vk/vk.hpp"
 
-#include "md2view/vk/window.hpp"
+#include "md2view/window.hpp"
 
+#include <GLFW/glfw3.h>
 #include <fmt/core.h>
 #include <glm/glm.hpp>
 #include <gsl-lite/gsl-lite.hpp>

@@ -3,6 +3,7 @@
 #include "md2view/engine.hpp"
 #include "md2view/gl/gui.hpp"
 #include "md2view/gl/resource_manager.hpp"
+#include "md2view/window.hpp"
 
 #include <GLFW/glfw3.h>
 
@@ -32,8 +33,11 @@ protected:
     void framebuffer_resize_callback(int x, int y);
 
 private:
+    // NB: declared first so they are destroyed last. The window owns the GL
+    // context, which must outlive everything below that frees GL objects.
+    GlfwContext glfw_;
+    Window window_;
     Game game_;
-    GLFWwindow* window_{nullptr};
     std::unique_ptr<ResourceManager> resource_manager_;
     std::unique_ptr<GL::Gui> gui_;
     GLfloat delta_time_ = 0.0f;
