@@ -609,4 +609,34 @@ createDescriptorSetLayout(vk::raii::Device const& device) {
         vk::DescriptorSetLayoutCreateInfo({}, uboLayoutBinding));
 }
 
+vk::raii::DescriptorPool createDescriptorPool(vk::raii::Device const& device,
+                                              unsigned int maxFramesInFlight) {
+    vk::DescriptorPoolSize poolSize{};
+    poolSize.type = vk::DescriptorType::eUniformBuffer;
+    poolSize.descriptorCount = static_cast<uint32_t>(maxFramesInFlight);
+
+    vk::DescriptorPoolCreateInfo poolInfo{};
+    poolInfo.poolSizeCount = 1;
+    poolInfo.pPoolSizes = &poolSize;
+    poolInfo.maxSets = static_cast<uint32_t>(maxFramesInFlight);
+    poolInfo.flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
+
+    return device.createDescriptorPool(poolInfo);
+}
+
+std::vector<vk::raii::DescriptorSet>
+createDescriptorSets(vk::raii::Device const& device,
+                     vk::raii::DescriptorPool const& pool,
+                     vk::raii::DescriptorSetLayout const& layout,
+                     unsigned int maxFramesInFlight) {
+
+    std::vector<vk::DescriptorSetLayout> layouts(maxFramesInFlight, *layout);
+    vk::DescriptorSetAllocateInfo allocInfo{};
+    allocInfo.descriptorPool = *pool;
+    allocInfo.descriptorSetCount = static_cast<uint32_t>(maxFramesInFlight);
+    allocInfo.pSetLayouts = layouts.data();
+
+    return device.allocateDescriptorSets(allocInfo);
+}
+
 } // namespace VK

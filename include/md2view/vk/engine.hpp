@@ -50,8 +50,11 @@ private:
     std::vector<vk::Image> swapChainImages_;
     SwapChainSupportDetails swapChainSupportDetails_;
     std::vector<vk::raii::ImageView> imageViews_;
+    std::vector<BoundBuffer> uniformBuffers_;
     vk::raii::RenderPass renderPass_{nullptr};
     vk::raii::DescriptorSetLayout descriptorSetLayout_{nullptr};
+    vk::raii::DescriptorPool descriptorPool_{nullptr};
+    std::vector<vk::raii::DescriptorSet> descriptorSets_;
     vk::raii::PipelineLayout pipelineLayout_{nullptr};
     vk::raii::Pipeline graphicsPipeline_{nullptr};
     std::vector<vk::raii::Framebuffer> frameBuffers_;
@@ -62,7 +65,6 @@ private:
     std::vector<vk::raii::Fence> inflightFences_;
     BoundBuffer vertexBuffer_;
     BoundBuffer indexBuffer_;
-    std::vector<BoundBuffer> uniformBuffers_;
 
     vk::ClearValue clearValue_;
 

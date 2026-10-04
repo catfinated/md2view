@@ -9,6 +9,7 @@
 
 #include <array>
 #include <cstdint>
+#include <ranges>
 #include <stdexcept>
 
 namespace VK {
@@ -104,6 +105,29 @@ void VKEngine::initVulkan() {
             device_, physicalDevice_, sizeof(UniformBufferObject)));
     }
 
+    descriptorPool_ = createDescriptorPool(device_, kMaxFramesInFlight);
+    descriptorSets_ = createDescriptorSets(
+        device_, descriptorPool_, descriptorSetLayout_, kMaxFramesInFlight);
+    gsl_Assert(descriptorSets_.size() == uniformBuffers_.size());
+
+    for (auto [boundBuffer, descriptorSet] :
+         std::views::zip(uniformBuffers_, descriptorSets_)) {
+        vk::DescriptorBufferInfo bufferInfo{};
+        bufferInfo.buffer = *boundBuffer.buffer;
+        bufferInfo.offset = 0;
+        bufferInfo.range = sizeof(UniformBufferObject);
+
+        vk::WriteDescriptorSet descriptorWrite{};
+        descriptorWrite.dstSet = *descriptorSet;
+        descriptorWrite.dstBinding = 0;
+        descriptorWrite.dstArrayElement = 0;
+        descriptorWrite.descriptorType = vk::DescriptorType::eUniformBuffer;
+        descriptorWrite.descriptorCount = 1;
+        descriptorWrite.pBufferInfo = &bufferInfo;
+
+        device_.updateDescriptorSets(descriptorWrite, nullptr);
+    }
+
     spdlog::info("vulkan initialization complete. num views={}",
                  imageViews_.size());
 }
@@ -186,8 +210,7 @@ void VKEngine::createGraphicsPipeline() {
     rasterizer.polygonMode = vk::PolygonMode::eFill; // VK_POLYGON_MODE_FILL;
     rasterizer.lineWidth = 1.0f;
     rasterizer.cullMode = vk::CullModeFlagBits::eBack; // VK_CULL_MODE_BACK_BIT;
-    rasterizer.frontFace =
-        vk::FrontFace::eClockwise;          // VK_FRONT_FACE_CLOCKWISE;
+    rasterizer.frontFace = vk::FrontFace::eCounterClockwise;
     rasterizer.depthBiasEnable = vk::False; // VK_FALSE;
 
     vk::PipelineMultisampleStateCreateInfo multisampling{};
@@ -341,6 +364,9 @@ void VKEngine::recordCommandBuffer(vk::raii::CommandBuffer& commandBuffer,
     commandBuffer.bindVertexBuffers(0, vertexBuffers, offsets);
     commandBuffer.bindIndexBuffer(*indexBuffer_.buffer, 0,
                                   vk::IndexType::eUint16);
+    commandBuffer.bindDescriptorSets(
+        vk::PipelineBindPoint::eGraphics, pipelineLayout_, 0,
+        {*descriptorSets_.at(currentFrame_)}, nullptr);
     commandBuffer.drawIndexed(static_cast<uint32_t>(indices.size()), 1, 0, 0,
                               0);
 

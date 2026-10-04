@@ -87,4 +87,13 @@ createFrameBuffers(std::vector<vk::raii::ImageView> const& imageViews,
 vk::raii::DescriptorSetLayout
 createDescriptorSetLayout(vk::raii::Device const& device);
 
+vk::raii::DescriptorPool createDescriptorPool(vk::raii::Device const& device,
+                                              unsigned int maxFramesInFlight);
+
+std::vector<vk::raii::DescriptorSet>
+createDescriptorSets(vk::raii::Device const& device,
+                     vk::raii::DescriptorPool const& pool,
+                     vk::raii::DescriptorSetLayout const& layout,
+                     unsigned int maxFramesInFlight);
+
 } // namespace VK
