@@ -25,3 +25,4 @@ data/*.pak
 data/shaders/*.spv
 .cache
 compile_commands.json
+.#*

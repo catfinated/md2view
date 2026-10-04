@@ -1,6 +1,10 @@
 #include "md2view/vk/engine.hpp"
+#include "md2view/vk/ubo.hpp"
 
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <gsl-lite/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 
 #include <array>
@@ -93,6 +97,12 @@ void VKEngine::initVulkan() {
     indexBuffer_ = createIndexBuffer(device_, physicalDevice_, bufSize);
     copyBuffer(stagingBuffer, indexBuffer_, device_, commandPool_,
                graphicsQueue_);
+
+    uniformBuffers_.reserve(kMaxFramesInFlight);
+    for (auto i = 0U; i < kMaxFramesInFlight; ++i) {
+        uniformBuffers_.push_back(createUniformBuffer(
+            device_, physicalDevice_, sizeof(UniformBufferObject)));
+    }
 
     spdlog::info("vulkan initialization complete. num views={}",
                  imageViews_.size());
@@ -211,10 +221,11 @@ void VKEngine::createGraphicsPipeline() {
     vk::PipelineDynamicStateCreateInfo dynamicState{
         {}, static_cast<uint32_t>(dynamicStates.size()), dynamicStates.data()};
 
-    vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
-    pipelineLayoutInfo.setLayoutCount = 0;
-    pipelineLayoutInfo.pushConstantRangeCount = 0;
+    descriptorSetLayout_ = createDescriptorSetLayout(device_);
 
+    vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
+    pipelineLayoutInfo.setLayoutCount = 1;
+    pipelineLayoutInfo.pSetLayouts = &*descriptorSetLayout_;
     pipelineLayout_ = device_.createPipelineLayout(pipelineLayoutInfo);
 
     vk::GraphicsPipelineCreateInfo pipelineInfo{};
@@ -339,7 +350,7 @@ void VKEngine::recordCommandBuffer(vk::raii::CommandBuffer& commandBuffer,
     commandBuffer.end();
 }
 
-void VKEngine::drawFrame() {
+void VKEngine::drawFrame(float time) {
     auto& fence = inflightFences_.at(currentFrame_);
     gsl_Assert(device_.waitForFences({*fence}, true, UINT64_MAX) ==
                vk::Result::eSuccess);
@@ -375,6 +386,8 @@ void VKEngine::drawFrame() {
     std::array<vk::CommandBuffer, 1UL> commandBuffers{*commandBuffer};
     std::array<vk::PipelineStageFlags, 1UL> waitStages{
         vk::PipelineStageFlagBits::eColorAttachmentOutput};
+
+    updateUniformBuffer(currentFrame_, time);
 
     vk::SubmitInfo submitInfo{};
     submitInfo.waitSemaphoreCount = waitSemaphores.size();
@@ -418,13 +431,29 @@ void VKEngine::drawFrame() {
     }
 }
 
+void VKEngine::updateUniformBuffer(uint32_t currentImage, float time) {
+    UniformBufferObject ubo{};
+    auto const width = swapChainSupportDetails_.extent.width;
+    auto const height =
+        static_cast<float>(swapChainSupportDetails_.extent.height);
+    ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f),
+                            glm::vec3(0.0f, 0.0f, 1.0f));
+    ubo.view =
+        glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f),
+                    glm::vec3(0.0f, 0.0f, 1.0f));
+    ubo.proj =
+        glm::perspective(glm::radians(45.0f), width / height, 0.1f, 10.0f);
+    ubo.proj[1][1] *= -1;
+    uniformBuffers_.at(currentImage).memcpy(ubo);
+}
+
 void VKEngine::run_game() {
     initWindow();
     initVulkan();
 
     while (!window_.shouldClose()) {
         glfwPollEvents();
-        drawFrame();
+        drawFrame(gsl_lite::narrow_cast<float>(glfwGetTime()));
     }
     device_.waitIdle();
     glfwTerminate();

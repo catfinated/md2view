@@ -32,8 +32,9 @@ private:
     void createRenderPass();
     void recordCommandBuffer(vk::raii::CommandBuffer& commandBuffer,
                              uint32_t imageIndex);
-    void drawFrame();
+    void drawFrame(float time);
     void recreateSwapChain();
+    void updateUniformBuffer(uint32_t currentImage, float time);
 
     Window window_;
     vk::raii::Context context_;
@@ -50,6 +51,7 @@ private:
     SwapChainSupportDetails swapChainSupportDetails_;
     std::vector<vk::raii::ImageView> imageViews_;
     vk::raii::RenderPass renderPass_{nullptr};
+    vk::raii::DescriptorSetLayout descriptorSetLayout_{nullptr};
     vk::raii::PipelineLayout pipelineLayout_{nullptr};
     vk::raii::Pipeline graphicsPipeline_{nullptr};
     std::vector<vk::raii::Framebuffer> frameBuffers_;
@@ -60,6 +62,7 @@ private:
     std::vector<vk::raii::Fence> inflightFences_;
     BoundBuffer vertexBuffer_;
     BoundBuffer indexBuffer_;
+    std::vector<BoundBuffer> uniformBuffers_;
 
     vk::ClearValue clearValue_;
 

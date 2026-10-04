@@ -555,6 +555,17 @@ BoundBuffer createStagingBuffer(vk::raii::Device const& device,
                                    vk::MemoryPropertyFlagBits::eHostCoherent);
 }
 
+BoundBuffer createUniformBuffer(vk::raii::Device const& device,
+                                vk::raii::PhysicalDevice const& physicalDevice,
+                                vk::DeviceSize size) {
+    auto buf = BoundBuffer::create(
+        device, physicalDevice, size, vk::BufferUsageFlagBits::eUniformBuffer,
+        vk::MemoryPropertyFlagBits::eHostVisible |
+            vk::MemoryPropertyFlagBits::eHostCoherent);
+    buf.map();
+    return buf;
+}
+
 void copyBuffer(BoundBuffer const& src,
                 BoundBuffer const& dst,
                 vk::raii::Device const& device,
@@ -584,6 +595,18 @@ void copyBuffer(BoundBuffer const& src,
 
     graphicsQueue.submit(submitInfo, nullptr);
     graphicsQueue.waitIdle();
+}
+
+vk::raii::DescriptorSetLayout
+createDescriptorSetLayout(vk::raii::Device const& device) {
+    vk::DescriptorSetLayoutBinding uboLayoutBinding{};
+    uboLayoutBinding.binding = 0;
+    uboLayoutBinding.descriptorType = vk::DescriptorType::eUniformBuffer;
+    uboLayoutBinding.descriptorCount = 1;
+    uboLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eVertex;
+
+    return device.createDescriptorSetLayout(
+        vk::DescriptorSetLayoutCreateInfo({}, uboLayoutBinding));
 }
 
 } // namespace VK

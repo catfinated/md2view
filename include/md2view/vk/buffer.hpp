@@ -8,6 +8,8 @@
 #include <vulkan/vulkan_raii.hpp>
 
 #include <cstring>
+#include <type_traits>
+#include <vector>
 
 namespace VK {
 
@@ -22,6 +24,20 @@ struct BoundBuffer {
     vk::raii::Buffer buffer{nullptr};
     vk::raii::DeviceMemory memory{nullptr};
     vk::DeviceSize size{};
+    void* mapped{nullptr}; ///< non-null if persistently mapped
+
+    /**
+     * @brief Persistently map the whole buffer
+     *
+     * Memory must be host visible. The mapping is released implicitly
+     * when the memory is freed.
+     *
+     * @throws vk::SystemError if a Vulkan call fails
+     */
+    void map() {
+        gsl_Expects(mapped == nullptr);
+        mapped = memory.mapMemory(0U, size);
+    }
 
     /**
      * @brief Copy bytes into the buffer
@@ -29,11 +45,18 @@ struct BoundBuffer {
      * @param vec Source vector
      */
     template <typename T> void memcpy(std::vector<T> const& vec) const {
-        auto const srcSize = sizeof(T) * vec.size();
-        gsl_Assert(srcSize == size);
-        auto* dst = memory.mapMemory(0U, size);
-        std::memcpy(dst, vec.data(), size);
-        memory.unmapMemory();
+        copyBytes(vec.data(), sizeof(T) * vec.size());
+    }
+
+    /**
+     * @brief Copy a single object into the buffer
+     *
+     * @param obj Source object
+     */
+    template <typename T>
+        requires std::is_trivially_copyable_v<T>
+    void memcpy(T const& obj) const {
+        copyBytes(&obj, sizeof(T));
     }
 
     /**
@@ -52,6 +75,18 @@ struct BoundBuffer {
                               vk::DeviceSize size,
                               vk::BufferUsageFlags usage,
                               vk::MemoryPropertyFlags properties);
+
+private:
+    void copyBytes(void const* src, std::size_t srcSize) const {
+        gsl_Assert(srcSize == size);
+        if (mapped != nullptr) {
+            std::memcpy(mapped, src, srcSize);
+        } else {
+            auto* dst = memory.mapMemory(0U, size);
+            std::memcpy(dst, src, srcSize);
+            memory.unmapMemory();
+        }
+    }
 };
 
 /**
@@ -114,6 +149,22 @@ BoundBuffer createIndexBuffer(vk::raii::Device const& device,
  * @throws vk::SystemError if a Vulkan call fails
  */
 BoundBuffer createStagingBuffer(vk::raii::Device const& device,
+                                vk::raii::PhysicalDevice const& physicalDevice,
+                                vk::DeviceSize size);
+
+/**
+ * @brief Create a persistently mapped BoundBuffer for uniform data
+ *
+ * This will be a host visible, host coherent buffer that is mapped
+ * for its entire lifetime.
+ *
+ * @param device The logical device to create the buffer for
+ * @param physicalDevice The physical device to allocate memory on
+ * @param size The size of the buffer
+ * @return The created BoundBuffer
+ * @throws vk::SystemError if a Vulkan call fails
+ */
+BoundBuffer createUniformBuffer(vk::raii::Device const& device,
                                 vk::raii::PhysicalDevice const& physicalDevice,
                                 vk::DeviceSize size);
 

@@ -84,4 +84,7 @@ createFrameBuffers(std::vector<vk::raii::ImageView> const& imageViews,
                    vk::Extent2D swapChainExtent,
                    vk::raii::Device const& device);
 
+vk::raii::DescriptorSetLayout
+createDescriptorSetLayout(vk::raii::Device const& device);
+
 } // namespace VK
