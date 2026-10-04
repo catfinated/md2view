@@ -10,6 +10,17 @@
 namespace VK {
 
 /**
+ * @brief RAII guard for glfwInit/glfwTerminate
+ */
+struct GlfwContext {
+    /// @throws std::runtime_error if GLFW could not be initialized
+    GlfwContext();
+    ~GlfwContext();
+    GlfwContext(GlfwContext const&) = delete;
+    GlfwContext& operator=(GlfwContext const&) = delete;
+};
+
+/**
  * @brief Window that supports Vulkan rendering
  */
 class Window {

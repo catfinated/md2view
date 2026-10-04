@@ -23,13 +23,10 @@ static std::vector<Vertex> const vertices = {
 static std::vector<uint16_t> const indices = {0, 1, 2, 2, 3, 0};
 
 VKEngine::VKEngine() {
-    gsl_Ensures(glfwInit() == GLFW_TRUE);
     spdlog::info("GLFW version: {}", glfwGetVersionString());
     spdlog::info("Vulkan supported: {}",
                  glfwVulkanSupported() != 0 ? "yes" : "no");
 }
-
-VKEngine::~VKEngine() { glfwTerminate(); }
 
 bool VKEngine::init(std::span<char const*> args) { return parse_args(args); }
 
@@ -482,7 +479,6 @@ void VKEngine::run_game() {
         drawFrame(gsl_lite::narrow_cast<float>(glfwGetTime()));
     }
     device_.waitIdle();
-    glfwTerminate();
 }
 
 } // namespace VK

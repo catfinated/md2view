@@ -73,7 +73,8 @@ target_compile_definitions(libmd2gl
 # Vulkan rendering layer: instance/device/swapchain setup, sync, engine loop.
 add_library(libmd2vk
   vk/vk.cpp
-  vk/engine.cpp)
+  vk/engine.cpp
+  vk/window.cpp)
 
 target_link_libraries(libmd2vk PUBLIC
    libmd2

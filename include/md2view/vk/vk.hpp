@@ -5,7 +5,6 @@
 
 #include "md2view/vk/buffer.hpp" // IWYU pragma: export
 #include "md2view/vk/vertex.hpp" // IWYU pragma: export
-#include "md2view/vk/window.hpp"
 
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_raii.hpp>
@@ -17,6 +16,7 @@
 #include <vector>
 
 namespace VK {
+class Window;
 
 struct QueueFamilyIndices {
     std::optional<uint32_t> graphicsFamily;

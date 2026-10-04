@@ -7,13 +7,14 @@
 
 #include "md2view/engine.hpp"
 #include "md2view/vk/vk.hpp"
+#include "md2view/vk/window.hpp"
 
 namespace VK {
 
 class VKEngine : public Engine {
 public:
     VKEngine();
-    ~VKEngine();
+    ~VKEngine() = default;
 
     VKEngine(VKEngine const&) = delete;
     VKEngine& operator=(VKEngine const&) = delete;
@@ -36,6 +37,7 @@ private:
     void recreateSwapChain();
     void updateUniformBuffer(uint32_t currentImage, float time);
 
+    GlfwContext glfw_;
     Window window_;
     vk::raii::Context context_;
     vk::raii::Instance instance_{nullptr};

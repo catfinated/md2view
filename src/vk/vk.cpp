@@ -1,5 +1,7 @@
 #include "md2view/vk/vk.hpp"
 
+#include "md2view/vk/window.hpp"
+
 #include <fmt/core.h>
 #include <glm/glm.hpp>
 #include <gsl-lite/gsl-lite.hpp>
@@ -17,49 +19,6 @@
 #include <vector>
 
 namespace VK {
-
-Window::Window(GLFWwindow* window) noexcept
-    : window_(window) {}
-
-Window::~Window() noexcept {
-    if (window_ != nullptr) {
-        glfwDestroyWindow(window_);
-    }
-}
-
-Window& Window::operator=(Window&& rhs) noexcept {
-    if (this != std::addressof(rhs)) {
-        if (window_ != nullptr) {
-            glfwDestroyWindow(window_);
-        }
-        window_ = std::exchange(rhs.window_, nullptr);
-    }
-    return *this;
-}
-
-Window Window::create(int width, int height) {
-    spdlog::info("create window");
-    gsl_Expects(width > 0);
-    gsl_Expects(height > 0);
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    auto* window = glfwCreateWindow(width, height, "vkmd2v", nullptr, nullptr);
-
-    if (window == nullptr) {
-        // GLFW keeps the reason for the last failure; it is far more useful
-        // than a generic message (no Vulkan loader, no display, ...)
-        char const* description = nullptr;
-        auto const code = glfwGetError(&description);
-        throw std::runtime_error(fmt::format(
-            "failed to create window: {} ({})",
-            description != nullptr ? description : "unknown error", code));
-    }
-
-    uint32_t extensionCount = 0;
-    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
-
-    spdlog::info("{} extensions supported", extensionCount);
-    return Window{window};
-}
 
 static constexpr std::array<char const*, 1> validationLayers = {
     "VK_LAYER_KHRONOS_validation"};
@@ -172,6 +131,13 @@ bool checkDeviceExtensionSupport(vk::PhysicalDevice device) {
 
 vk::raii::Instance createInstance(vk::raii::Context& context) {
     spdlog::info("create instance");
+    auto const supportedExtensions =
+        context.enumerateInstanceExtensionProperties();
+    spdlog::info("{} extensions supported", supportedExtensions.size());
+    for (auto const& ext : supportedExtensions) {
+        spdlog::debug("  {}", std::string_view{ext.extensionName});
+    }
+
     vk::ApplicationInfo appInfo("vkmd2v", 1, "No Engine", 1,
                                 VK_API_VERSION_1_1);
 
