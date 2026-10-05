@@ -337,16 +337,16 @@ void MD2View::update(GL::Engine<MD2View>& /* engine */, GLfloat delta_time) {
 }
 
 void MD2View::process_input(GL::Engine<MD2View>& engine, GLfloat delta_time) {
-    if (engine.keys()[GLFW_KEY_W]) {
+    if (engine.keyboard().keys()[GLFW_KEY_W]) {
         camera_.move(Camera::Direction::FORWARD, delta_time);
     }
-    if (engine.keys()[GLFW_KEY_S]) {
+    if (engine.keyboard().keys()[GLFW_KEY_S]) {
         camera_.move(Camera::Direction::BACKWARD, delta_time);
     }
-    if (engine.keys()[GLFW_KEY_A]) {
+    if (engine.keyboard().keys()[GLFW_KEY_A]) {
         camera_.move(Camera::Direction::LEFT, delta_time);
     }
-    if (engine.keys()[GLFW_KEY_D]) {
+    if (engine.keyboard().keys()[GLFW_KEY_D]) {
         camera_.move(Camera::Direction::RIGHT, delta_time);
     }
 }

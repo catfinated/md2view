@@ -6,8 +6,8 @@
  */
 #pragma once
 
+#include <functional>
 #include <span>
-#include <utility>
 
 struct GLFWwindow;
 
@@ -33,25 +33,65 @@ struct WindowHint {
 };
 
 /**
+ * @brief Receives input events from a Window
+ *
+ * Arguments are passed through unchanged from the corresponding GLFW
+ * callbacks. Every handler defaults to a no-op so listeners only override
+ * the events they care about.
+ */
+class InputListener {
+public:
+    InputListener() = default;
+    InputListener(InputListener const&) = default;
+    InputListener& operator=(InputListener const&) = default;
+    InputListener(InputListener&&) = default;
+    InputListener& operator=(InputListener&&) = default;
+    virtual ~InputListener() = default;
+
+    virtual void
+    onKey(int /*key*/, int /*scancode*/, int /*action*/, int /*mods*/) {}
+    virtual void onMouseButton(int /*button*/, int /*action*/, int /*mods*/) {}
+    virtual void onCursorPos(double /*xpos*/, double /*ypos*/) {}
+    virtual void onScroll(double /*xoffset*/, double /*yoffset*/) {}
+};
+
+/**
  * @brief RAII wrapper for a GLFW window
  *
  * For an OpenGL window this also owns the GL context, so it must outlive
  * every object that makes GL calls in its destructor.
+ *
+ * The Window is the only owner of the GLFW user pointer and callbacks for its
+ * window. Input events are forwarded to an InputListener and resize events to
+ * the registered handlers, so input and rendering concerns can be handled by
+ * different objects.
  */
 class Window {
 public:
+    using ResizeHandler = std::function<void(int width, int height)>;
+
     explicit Window(GLFWwindow* window = nullptr) noexcept;
     ~Window() noexcept;
 
     Window(Window const&) = delete;
     Window& operator=(Window const&) = delete;
 
-    Window(Window&& rhs) noexcept
-        : window_(std::exchange(rhs.window_, nullptr)) {}
-
+    // NB: moves re-point the GLFW user pointer at the new object
+    Window(Window&& rhs) noexcept;
     Window& operator=(Window&& rhs) noexcept;
 
     [[nodiscard]] bool shouldClose() const noexcept;
+    void requestClose() noexcept;
+
+    /// Set the receiver of input events, or nullptr for none. The listener
+    /// must outlive the Window or be cleared before it is destroyed.
+    void setInputListener(InputListener* listener) noexcept;
+
+    /// Called with the new framebuffer size in pixels
+    void setFramebufferResizeHandler(ResizeHandler handler);
+
+    /// Called with the new window size in screen coordinates
+    void setWindowResizeHandler(ResizeHandler handler);
 
     [[nodiscard]] GLFWwindow* get() const noexcept { return window_; }
 
@@ -64,5 +104,10 @@ public:
                          std::span<WindowHint const> hints = {});
 
 private:
+    void installCallbacks() noexcept;
+
     GLFWwindow* window_;
+    InputListener* input_{nullptr};
+    ResizeHandler onFramebufferResize_;
+    ResizeHandler onWindowResize_;
 };

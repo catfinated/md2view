@@ -1,19 +1,29 @@
 #include "md2view/engine.hpp"
 
+#include <GLFW/glfw3.h>
 #include <gsl-lite/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 
 #include <iostream>
 #include <map>
+#include <utility>
 
-bool Engine::check_key_pressed(unsigned int key) {
-    gsl_Expects(key < max_keys);
+bool Engine::Keyboard::keyWasJustPressed(unsigned int key) const {
+    gsl_Expects(key < kMaxKeys);
+    return justPressed_[key];
+}
 
-    if (keys_[key] && !keys_pressed_[key]) {
-        keys_pressed_[key] = true;
-        return true;
+void Engine::Keyboard::onKey(int key, int action) {
+    if (key < 0 || !std::cmp_less(key, kMaxKeys)) {
+        return;
     }
-    return false;
+
+    if (action == GLFW_PRESS) {
+        keys_[key] = true;
+        justPressed_[key] = true;
+    } else if (action == GLFW_RELEASE) {
+        keys_[key] = false;
+    }
 }
 
 bool Engine::parse_args(std::span<char const*> args) {
@@ -59,4 +69,53 @@ bool Engine::parse_args(std::span<char const*> args) {
     spdlog::set_level(it->second);
 
     return true;
+}
+
+bool Engine::init(std::span<char const*> args) {
+    if (!parse_args(args)) {
+        return false;
+    }
+
+    doInit();
+    window_.setInputListener(this);
+    return true;
+}
+
+void Engine::beginFrame() {
+    keyboard_.beginFrame();
+    mouse_.xoffset = 0.0;
+    mouse_.yoffset = 0.0;
+    mouse_.scrollXOffset = 0.0;
+    mouse_.scrollYOffset = 0.0;
+}
+
+void Engine::onKey(int key, int /*scancode*/, int action, int /*mods*/) {
+    keyboard_.onKey(key, action);
+
+    // NB: react to this event rather than polling keyWasJustPressed, which
+    // stays true for the rest of the frame and would fire again on every
+    // other key event
+    if (action != GLFW_PRESS) {
+        return;
+    }
+
+    if (key == GLFW_KEY_ESCAPE) {
+        window_.requestClose();
+    } else if (key == GLFW_KEY_F1) {
+        input_goes_to_game_ = !input_goes_to_game_;
+        spdlog::info("got F1. game input: {}", input_goes_to_game_);
+    }
+}
+
+void Engine::onCursorPos(double xpos, double ypos) {
+    mouse_.xoffset = xpos - mouse_.xpos.value_or(xpos);
+    // reversed since y-coords go from bottom to top
+    mouse_.yoffset = mouse_.ypos.value_or(ypos) - ypos;
+    mouse_.xpos = xpos;
+    mouse_.ypos = ypos;
+}
+
+void Engine::onScroll(double xoffset, double yoffset) {
+    mouse_.scrollXOffset += xoffset;
+    mouse_.scrollYOffset += yoffset;
 }

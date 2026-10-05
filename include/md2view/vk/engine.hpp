@@ -13,7 +13,7 @@ namespace VK {
 
 class VKEngine : public Engine {
 public:
-    VKEngine();
+    VKEngine() = default;
     ~VKEngine() = default;
 
     VKEngine(VKEngine const&) = delete;
@@ -21,11 +21,12 @@ public:
     VKEngine(VKEngine&&) noexcept = delete;
     VKEngine& operator=(VKEngine&&) noexcept = delete;
 
-    bool init(std::span<char const*> args);
     void run_game();
 
 private:
     static constexpr unsigned int kMaxFramesInFlight{2U};
+
+    void doInit() final;
 
     void initWindow();
     void initVulkan();
@@ -37,8 +38,6 @@ private:
     void recreateSwapChain();
     void updateUniformBuffer(uint32_t currentImage, float time);
 
-    GlfwContext glfw_;
-    Window window_;
     vk::raii::Context context_;
     vk::raii::Instance instance_{nullptr};
     vk::raii::DebugUtilsMessengerEXT debugMessenger_{nullptr};

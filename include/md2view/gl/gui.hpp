@@ -30,6 +30,9 @@ public:
     Gui& operator=(Gui&&) noexcept = delete;
 
     void update(double current_time, bool apply_inputs = true);
+
+    /// Record a press so a click shorter than a frame still registers
+    void onMouseButton(int button, int action);
     void render();
     void shutdown();
 

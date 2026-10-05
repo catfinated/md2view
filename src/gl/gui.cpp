@@ -92,6 +92,13 @@ void Gui::init() {
     glCheckError();
 }
 
+void Gui::onMouseButton(int button, int action) {
+    if (action == GLFW_PRESS && button >= 0 &&
+        std::cmp_less(button, mouse_pressed_.size())) {
+        gsl_lite::at(mouse_pressed_, button) = true;
+    }
+}
+
 void Gui::update(double current_time, bool apply_inputs) {
     ImGuiIO& io = ImGui::GetIO();
 
@@ -137,8 +144,8 @@ void Gui::update(double current_time, bool apply_inputs) {
             gsl_lite::at(mouse_pressed_, i) = false;
         }
 
-        io.MouseWheel = gsl_lite::narrow_cast<float>(
-            engine_.mouse().scroll_yoffset.value_or(0.0));
+        io.MouseWheel =
+            gsl_lite::narrow_cast<float>(engine_.mouse().scrollYOffset);
     }
 
     // Hide OS mouse cursor if ImGui is drawing it

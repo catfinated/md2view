@@ -14,8 +14,7 @@ add_library(md2v
   md2.cpp
   pcx.cpp
   pak.cpp
-  camera.cpp
-  engine.cpp)
+  camera.cpp)
 
 target_link_libraries(md2v PUBLIC
    Boost::system
@@ -29,8 +28,11 @@ target_include_directories(md2v PUBLIC ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(md2v
    PUBLIC GLM_ENABLE_EXPERIMENTAL FMT_USE_USER_DEFINED_LITERALS=1 gsl_CONFIG_CONTRACT_VIOLATION_THROWS)
 
+# GLFW-based application layer shared by the renderer backends: window
+# ownership, input dispatch, and the Engine base class.
 add_library(md2vw
-  window.cpp)
+  window.cpp
+  engine.cpp)
 
 target_link_libraries(md2vw PUBLIC
    md2v

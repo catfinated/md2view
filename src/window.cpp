@@ -20,6 +20,12 @@ std::string lastGlfwError() {
                        code);
 }
 
+Window& fromGlfw(GLFWwindow* window) {
+    auto* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
+    gsl_Assert(self != nullptr);
+    return *self;
+}
+
 } // namespace
 
 GlfwContext::GlfwContext() {
@@ -32,7 +38,19 @@ GlfwContext::GlfwContext() {
 GlfwContext::~GlfwContext() { glfwTerminate(); }
 
 Window::Window(GLFWwindow* window) noexcept
-    : window_(window) {}
+    : window_(window) {
+    installCallbacks();
+}
+
+Window::Window(Window&& rhs) noexcept
+    : window_(std::exchange(rhs.window_, nullptr))
+    , input_(std::exchange(rhs.input_, nullptr))
+    , onFramebufferResize_(std::move(rhs.onFramebufferResize_))
+    , onWindowResize_(std::move(rhs.onWindowResize_)) {
+    if (window_ != nullptr) {
+        glfwSetWindowUserPointer(window_, this);
+    }
+}
 
 Window::~Window() noexcept {
     if (window_ != nullptr) {
@@ -46,12 +64,81 @@ Window& Window::operator=(Window&& rhs) noexcept {
             glfwDestroyWindow(window_);
         }
         window_ = std::exchange(rhs.window_, nullptr);
+        input_ = std::exchange(rhs.input_, nullptr);
+        onFramebufferResize_ = std::move(rhs.onFramebufferResize_);
+        onWindowResize_ = std::move(rhs.onWindowResize_);
+        if (window_ != nullptr) {
+            glfwSetWindowUserPointer(window_, this);
+        }
     }
     return *this;
 }
 
+void Window::installCallbacks() noexcept {
+    if (window_ == nullptr) {
+        return;
+    }
+
+    glfwSetWindowUserPointer(window_, this);
+
+    // NB: these must not throw since they are called from C. A missing
+    // listener or handler simply drops the event.
+    glfwSetKeyCallback(window_, [](GLFWwindow* window, int key, int scancode,
+                                   int action, int mods) {
+        if (auto* input = fromGlfw(window).input_; input != nullptr) {
+            input->onKey(key, scancode, action, mods);
+        }
+    });
+    glfwSetMouseButtonCallback(
+        window_, [](GLFWwindow* window, int button, int action, int mods) {
+            if (auto* input = fromGlfw(window).input_; input != nullptr) {
+                input->onMouseButton(button, action, mods);
+            }
+        });
+    glfwSetCursorPosCallback(
+        window_, [](GLFWwindow* window, double xpos, double ypos) {
+            if (auto* input = fromGlfw(window).input_; input != nullptr) {
+                input->onCursorPos(xpos, ypos);
+            }
+        });
+    glfwSetScrollCallback(
+        window_, [](GLFWwindow* window, double xoffset, double yoffset) {
+            if (auto* input = fromGlfw(window).input_; input != nullptr) {
+                input->onScroll(xoffset, yoffset);
+            }
+        });
+    glfwSetFramebufferSizeCallback(
+        window_, [](GLFWwindow* window, int width, int height) {
+            if (auto& handler = fromGlfw(window).onFramebufferResize_) {
+                handler(width, height);
+            }
+        });
+    glfwSetWindowSizeCallback(
+        window_, [](GLFWwindow* window, int width, int height) {
+            if (auto& handler = fromGlfw(window).onWindowResize_) {
+                handler(width, height);
+            }
+        });
+}
+
 bool Window::shouldClose() const noexcept {
     return glfwWindowShouldClose(window_) == GLFW_TRUE;
+}
+
+void Window::requestClose() noexcept {
+    glfwSetWindowShouldClose(window_, GLFW_TRUE);
+}
+
+void Window::setInputListener(InputListener* listener) noexcept {
+    input_ = listener;
+}
+
+void Window::setFramebufferResizeHandler(ResizeHandler handler) {
+    onFramebufferResize_ = std::move(handler);
+}
+
+void Window::setWindowResizeHandler(ResizeHandler handler) {
+    onWindowResize_ = std::move(handler);
 }
 
 Window Window::create(int width,

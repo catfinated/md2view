@@ -22,27 +22,20 @@ static std::vector<Vertex> const vertices = {
 
 static std::vector<uint16_t> const indices = {0, 1, 2, 2, 3, 0};
 
-VKEngine::VKEngine() {
+void VKEngine::doInit() {
     spdlog::info("GLFW version: {}", glfwGetVersionString());
     spdlog::info("Vulkan supported: {}",
                  glfwVulkanSupported() != 0 ? "yes" : "no");
-}
 
-bool VKEngine::init(std::span<char const*> args) { return parse_args(args); }
+    initWindow();
+    initVulkan();
+}
 
 void VKEngine::initWindow() {
     constexpr std::array hints{WindowHint{GLFW_CLIENT_API, GLFW_NO_API}};
     window_ = Window::create(width_, height_, "vkmd2v", hints);
-
-    auto framebufferResizeCallback = [](GLFWwindow* window, int /* width */,
-                                        int /* height */) {
-        auto* engine = static_cast<VKEngine*>(glfwGetWindowUserPointer(window));
-        gsl_Assert(engine);
-        engine->frameBufferResized_ = true;
-    };
-
-    glfwSetWindowUserPointer(window_.get(), this);
-    glfwSetFramebufferSizeCallback(window_.get(), framebufferResizeCallback);
+    window_.setFramebufferResizeHandler(
+        [this](int /*width*/, int /*height*/) { frameBufferResized_ = true; });
 }
 
 void VKEngine::initVulkan() {
@@ -472,10 +465,8 @@ void VKEngine::updateUniformBuffer(uint32_t currentImage, float time) {
 }
 
 void VKEngine::run_game() {
-    initWindow();
-    initVulkan();
-
     while (!window_.shouldClose()) {
+        beginFrame();
         glfwPollEvents();
         drawFrame(gsl_lite::narrow_cast<float>(glfwGetTime()));
     }
