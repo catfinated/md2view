@@ -48,14 +48,6 @@ bool MD2View::on_engine_initialized(GL::Engine<MD2View>& engine) {
     model_selector_ =
         std::make_unique<ModelSelector>(engine.resource_manager().pak());
     load_model(engine);
-    blur_fb_ = std::make_unique<GL::FrameBuffer>(engine.width(),
-                                                 engine.height(), 1, false);
-    main_fb_ = std::make_unique<GL::FrameBuffer>(engine.width(),
-                                                 engine.height(), 2, true);
-    screen_quad_ = std::make_unique<GL::ScreenQuad>();
-
-    clear_color_ = {0.2f, 0.2f, 0.2f, 1.0f};
-    glClearColor(clear_color_[0], clear_color_[1], clear_color_[2], 1.0f);
 
     spdlog::info("begin load shaders");
     shader_ = engine.resource_manager().load_shader("md2");
@@ -65,52 +57,14 @@ bool MD2View::on_engine_initialized(GL::Engine<MD2View>& engine) {
     glow_loc_ = shader_->uniform_location("glow_color");
     glow_color_ = glm::vec3(0.0f, 1.0f, 0.0f);
     GL::Shader::set_uniform(glow_loc_, glow_color_);
-
-    blur_shader_ = engine.resource_manager().load_shader("blur", "screen");
-    blur_shader_->use();
-    disable_blur_loc_ = blur_shader_->uniform_location("disable_blur");
-    GL::Shader::set_uniform(disable_blur_loc_, 1);
-
-    glow_shader_ = engine.resource_manager().load_shader("glow", "screen");
-    glow_shader_->use();
-
-    auto loc = glow_shader_->uniform_location("screenTexture");
-    GL::Shader::set_uniform(loc, 0);
-    loc = glow_shader_->uniform_location("prepassTexture");
-    GL::Shader::set_uniform(loc, 1);
-    loc = glow_shader_->uniform_location("blurredTexture");
-    GL::Shader::set_uniform(loc, 2);
-
-    camera_.set_position(glm::vec3(0.0f, 0.0f, 3.0f));
-
-    main_fb_->bind();
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glDepthFunc(GL_LEQUAL);
-    // glDisable(GL_BLEND);
-    glEnable(GL_BLEND);
-    GL::FrameBuffer::bind_default();
-
-    set_vsync();
-    spdlog::info("done on engine init");
     glCheckError();
+    camera_.set_position(glm::vec3(0.0f, 0.0f, 3.0f));
+    spdlog::info("done on engine init");
+
     return true;
 }
 
-void MD2View::on_framebuffer_resized(int width, int height) {
-    glm::mat4 projection = glm::perspective(
-        glm::radians(camera_.fov()),
-        static_cast<float>(width) / static_cast<float>(height), 0.1f, 500.0f);
-
-    shader_->use();
-    shader_->set_projection(projection);
-
-    GL::FrameBuffer::bind_default();
-    glViewport(0, 0, width, height);
-
-    main_fb_ = std::make_unique<GL::FrameBuffer>(width, height, 2, true);
-    blur_fb_ = std::make_unique<GL::FrameBuffer>(width, height, 1, false);
-}
+void MD2View::onFramebufferResize() { camera_.set_fov_dirty(); }
 
 void MD2View::update_model() {
     // translate, rotate, scale
@@ -137,66 +91,17 @@ void MD2View::render(GL::Engine<MD2View>& engine) {
     }
 
     if (camera_.fov_dirty()) {
-        projection_ = glm::perspective(glm::radians(camera_.fov()),
-                                       engine.aspect_ratio(), 0.1f, 500.0f);
+        projection_ =
+            glm::perspective(glm::radians(camera_.fov()),
+                             engine.renderer().aspectRatio(), 0.1f, 500.0f);
 
         shader_->set_projection(projection_);
         camera_.set_fov_clean();
     }
 
-    glCheckError();
-
-    glActiveTexture(GL_TEXTURE0);
-    texture_->bind();
-
     // render normal frame
-    main_fb_->bind();
-    std::array<GLenum, 2> draw_buffers{GL_COLOR_ATTACHMENT0,
-                                       GL_COLOR_ATTACHMENT1};
-    glDrawBuffers(draw_buffers.size(), draw_buffers.data());
-    glCheckError();
-
-    glClearBufferfv(GL_COLOR, 0, clear_color_.data());
-    static const std::array<float, 4> black = {0.0f, 0.0f, 0.0f, 0.0f};
-    glClearBufferfv(GL_COLOR, 1, black.data());
-    glCheckError();
-
-    glClear(GL_DEPTH_BUFFER_BIT);
+    texture_->bind();
     md2_mesh_->draw(*shader_);
-
-    glCheckError();
-
-    if (glow_) {
-        // blur solid image
-        blur_fb_->bind();
-        blur_shader_->use();
-        GL::Shader::set_uniform(disable_blur_loc_, 0);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, main_fb_->color_buffer(1));
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        screen_quad_->draw(*glow_shader_);
-
-        GL::FrameBuffer::bind_default();
-        glow_shader_->use();
-        glClear(GL_COLOR_BUFFER_BIT);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, main_fb_->color_buffer(0));
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, main_fb_->color_buffer(1));
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, blur_fb_->color_buffer(0));
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        screen_quad_->draw(*glow_shader_);
-    } else {
-        GL::FrameBuffer::bind_default();
-        blur_shader_->use();
-        GL::Shader::set_uniform(disable_blur_loc_, 1);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, main_fb_->color_buffer(0));
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        screen_quad_->draw(*blur_shader_);
-    }
-
     glCheckError();
     draw_ui(engine);
     glCheckError();
@@ -210,12 +115,14 @@ void MD2View::draw_ui(GL::Engine<MD2View>& engine) {
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
                 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
-    if (ImGui::ColorEdit3("Clear color", clear_color_.data())) {
-        glClearColor(clear_color_[0], clear_color_[1], clear_color_[2], 1.0f);
+    auto clearColor = engine.renderer().clearColor();
+    if (ImGui::ColorEdit3("Clear color", clearColor.data())) {
+        engine.renderer().setClearColor(clearColor);
     }
 
-    if (ImGui::Checkbox("V-sync", &vsync_enabled_)) {
-        set_vsync();
+    bool vsyncEnabled{engine.renderer().vsyncOn()};
+    if (ImGui::Checkbox("V-sync", &vsyncEnabled)) {
+        engine.renderer().setVsyncOn(vsyncEnabled);
     }
 
     if (ImGui::TreeNodeEx("Camera", ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -280,7 +187,10 @@ void MD2View::draw_ui(GL::Engine<MD2View>& engine) {
         }
         ImGui::PopItemWidth();
 
-        ImGui::Checkbox("Glow", &glow_);
+        bool glow{engine.renderer().glowOn()};
+        if (ImGui::Checkbox("Glow", &glow)) {
+            engine.renderer().setGlowOn(glow);
+        }
         if (ImGui::ColorEdit3("Glow color", glm::value_ptr(glow_color_))) {
             shader_->use();
             GL::Shader::set_uniform(glow_loc_, glow_color_);
@@ -328,8 +238,6 @@ void MD2View::draw_ui(GL::Engine<MD2View>& engine) {
     }
     ImGui::End();
 }
-
-void MD2View::set_vsync() const { glfwSwapInterval(vsync_enabled_ ? 1 : 0); }
 
 void MD2View::update(GL::Engine<MD2View>& /* engine */, GLfloat delta_time) {
     md2_->update(delta_time);

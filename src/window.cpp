@@ -141,6 +141,18 @@ void Window::setWindowResizeHandler(ResizeHandler handler) {
     onWindowResize_ = std::move(handler);
 }
 
+Window::Extent Window::size() const noexcept {
+    Extent e{};
+    glfwGetWindowSize(window_, &e.width, &e.height);
+    return e;
+}
+
+Window::Extent Window::framebufferSize() const noexcept {
+    Extent e{};
+    glfwGetFramebufferSize(window_, &e.width, &e.height);
+    return e;
+}
+
 Window Window::create(int width,
                       int height,
                       char const* title,

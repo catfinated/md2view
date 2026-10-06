@@ -1,9 +1,7 @@
 #pragma once
 
 #include "md2view/camera.hpp"
-#include "md2view/gl/frame_buffer.hpp"
 #include "md2view/gl/mesh.hpp"
-#include "md2view/gl/screen_quad.hpp"
 #include "md2view/gl/texture2d.hpp"
 #include "md2view/md2.hpp"
 #include "md2view/ui/model_selector.hpp"
@@ -25,7 +23,7 @@ public:
     void process_input(GL::Engine<MD2View>& engine, GLfloat delta_time);
     void on_mouse_movement(GLfloat xoffset, GLfloat yoffset);
     void on_mouse_scroll(double xoffset, double yoffset);
-    void on_framebuffer_resized(int width, int height);
+    void onFramebufferResize();
     void update(GL::Engine<MD2View>& engine, GLfloat delta_time);
     void render(GL::Engine<MD2View>& engine);
     static char const* title() { return "MD2View"; }
@@ -36,7 +34,6 @@ private:
     void load_current_texture(GL::Engine<MD2View>& engine);
     void update_model();
     void draw_ui(GL::Engine<MD2View>& engine);
-    void set_vsync() const;
     void load_model(GL::Engine<MD2View>& engine);
 
     std::shared_ptr<MD2> md2_;
@@ -44,24 +41,15 @@ private:
     std::unique_ptr<ModelSelector> model_selector_;
     std::shared_ptr<GL::Texture2D> texture_;
     std::shared_ptr<GL::Shader> shader_;
-    std::shared_ptr<GL::Shader> blur_shader_;
-    std::shared_ptr<GL::Shader> glow_shader_;
-    std::unique_ptr<GL::ScreenQuad> screen_quad_;
-    std::unique_ptr<GL::FrameBuffer> blur_fb_;
-    std::unique_ptr<GL::FrameBuffer> main_fb_;
 
     Camera camera_;
     std::string models_dir_;
-    bool vsync_enabled_ = true;
     int scale_ = 64.0f;
     std::array<float, 3> rot_{};
     glm::vec3 pos_{};
     glm::mat4 model_{};
     glm::mat4 view_{};
     glm::mat4 projection_{};
-    std::array<float, 4> clear_color_{};
-    GLint disable_blur_loc_{};
-    bool glow_ = false;
     glm::vec3 glow_color_{};
     GLint glow_loc_{};
 };

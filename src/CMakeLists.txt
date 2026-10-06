@@ -58,7 +58,8 @@ add_library(md2vgl
   gl/resource_manager.cpp
   gl/shader.cpp
   gl/texture2d.cpp
-  gl/frame_buffer.cpp)
+  gl/frame_buffer.cpp
+  gl/renderer.cpp)
 
 target_link_libraries(md2vgl PUBLIC
    md2vui

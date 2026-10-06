@@ -95,6 +95,13 @@ public:
 
     [[nodiscard]] GLFWwindow* get() const noexcept { return window_; }
 
+    struct Extent {
+        int width;
+        int height;
+    };
+    [[nodiscard]] Extent size() const noexcept;
+    [[nodiscard]] Extent framebufferSize() const noexcept;
+
     /// Create a window. Hints are applied on top of the GLFW defaults.
     ///
     /// @throws std::runtime_error if the window could not be created

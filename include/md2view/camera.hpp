@@ -85,6 +85,7 @@ public:
     /// True if the projection matrix needs to be recomputed this frame.
     [[nodiscard]] bool fov_dirty() const { return fov_dirty_; }
     void set_fov_clean() { fov_dirty_ = false; }
+    void set_fov_dirty() { fov_dirty_ = true; }
 
 private:
     void update_vectors();

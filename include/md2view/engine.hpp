@@ -48,16 +48,6 @@ public:
 
     [[nodiscard]] bool init(std::span<char const*> args);
 
-    [[nodiscard]] int width() const { return width_; }
-    [[nodiscard]] int height() const { return height_; }
-
-    [[nodiscard]] int screen_width() const { return screen_width_; }
-    [[nodiscard]] int screen_height() const { return screen_height_; }
-
-    [[nodiscard]] float aspect_ratio() const {
-        return static_cast<float>(width_) / static_cast<float>(height_);
-    }
-
     boost::program_options::options_description& options_desc() {
         return opt_desc_;
     }
@@ -85,8 +75,6 @@ protected:
 
     int width_{};
     int height_{};
-    int screen_width_{};
-    int screen_height_{};
     Keyboard keyboard_;
     Mouse mouse_;
     bool input_goes_to_game_{false};
