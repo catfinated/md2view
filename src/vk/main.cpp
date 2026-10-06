@@ -9,7 +9,7 @@
 
 int main(int argc, char const* argv[]) {
     try {
-        VK::VKEngine engine;
+        VK::Engine engine;
 
         if (!engine.init(std::span{argv, static_cast<size_t>(argc)})) {
             return EXIT_FAILURE;
