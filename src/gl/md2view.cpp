@@ -14,7 +14,7 @@
 MD2View::MD2View() { reset_model_matrix(); }
 
 void MD2View::load_model(GL::Engine<MD2View>& engine) {
-    md2_ = engine.resource_manager().load_model(model_selector_->model_path());
+    md2_ = engine.resource_manager().loadModel(model_selector_->model_path());
     md2_mesh_ = std::make_unique<GL::Mesh>(md2_->interpolated_vertices(),
                                            md2_->scaled_texcoords());
 }

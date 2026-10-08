@@ -15,6 +15,7 @@ add_library(md2v
   pcx.cpp
   pak.cpp
   image.cpp
+  asset_loader.cpp
   camera.cpp)
 
 target_link_libraries(md2v PUBLIC

@@ -24,12 +24,11 @@ public:
         GLint filter_max = GL_LINEAR;     ///< Magnification filter.
     };
 
-    ~Texture2D();
-
     /// Upload pixel data to the GPU.
     ///
     /// @param image The image to upload
     explicit Texture2D(Image const& image);
+    ~Texture2D();
 
     Texture2D(Texture2D const&) = delete;
     Texture2D& operator=(Texture2D const&) = delete;
@@ -47,14 +46,6 @@ public:
 
     /// Unbind any texture from `GL_TEXTURE_2D`.
     static void unbind() { glBindTexture(GL_TEXTURE_2D, 0); }
-
-    /// Load a texture from a PAK entry, decoding PCX or common image formats.
-    ///
-    /// @param pak  The archive to load from.
-    /// @param path Archive-relative path to the image file.
-    /// @return A heap-allocated Texture2D ready for use.
-    static std::shared_ptr<Texture2D> load(PAK const& pak,
-                                           std::string const& path);
 
 private:
     void cleanup();

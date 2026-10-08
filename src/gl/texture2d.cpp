@@ -80,10 +80,4 @@ bool Texture2D::init(GLuint width,
 
 void Texture2D::bind() const { glBindTexture(GL_TEXTURE_2D, id_); }
 
-std::shared_ptr<Texture2D> Texture2D::load(PAK const& pak,
-                                           std::string const& path) {
-
-    return std::make_shared<Texture2D>(Image::loadFromPak(pak, path));
-}
-
 } // namespace GL

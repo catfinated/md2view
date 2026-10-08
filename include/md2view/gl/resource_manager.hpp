@@ -1,9 +1,9 @@
 #pragma once
 
+#include "md2view/asset_loader.hpp"
 #include "md2view/gl/shader.hpp"
 #include "md2view/gl/texture2d.hpp"
 #include "md2view/md2.hpp"
-#include "md2view/pak.hpp"
 
 #include <filesystem>
 #include <memory>
@@ -14,10 +14,10 @@
 
 /// Cache and factory for GPU resources loaded from a PAK archive.
 ///
-/// Owns the active PAK and caches loaded shaders, textures, and models by
+/// Caches loaded shaders and textures by
 /// their path strings. Repeated calls for the same path return the cached
 /// instance without re-reading from disk or re-uploading to the GPU.
-class ResourceManager {
+class ResourceManager : public AssetLoader {
 public:
     /// @param rootdir  Project data root (shaders are expected at
     /// `rootdir/shaders/`).
@@ -27,16 +27,8 @@ public:
         std::filesystem::path const& rootdir,
         std::optional<std::filesystem::path> const& pak_path = std::nullopt);
 
-    [[nodiscard]] std::filesystem::path const& root_dir() const {
-        return root_dir_;
-    }
     [[nodiscard]] std::filesystem::path const& shaders_dir() const {
         return shaders_dir_;
-    }
-
-    PAK& pak() {
-        gsl_Assert(pak_);
-        return *pak_;
     }
 
     /// Compile and cache a shader program.
@@ -72,16 +64,8 @@ public:
         return textures2D_.at(name);
     }
 
-    /// Load and cache an MD2 model from the active PAK.
-    ///
-    /// Returns the cached instance if @p path was already loaded.
-    std::shared_ptr<MD2> load_model(std::string const& path);
-
 private:
-    std::filesystem::path root_dir_;
     std::filesystem::path shaders_dir_;
-    std::unique_ptr<PAK> pak_;
     std::unordered_map<std::string, std::shared_ptr<GL::Shader>> shaders_;
     std::unordered_map<std::string, std::shared_ptr<GL::Texture2D>> textures2D_;
-    std::unordered_map<std::string, std::shared_ptr<MD2>> models_;
 };

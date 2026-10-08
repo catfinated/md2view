@@ -1,6 +1,7 @@
 #include "md2view/md2.hpp"
 #include "md2view/pak.hpp"
 
+#include <fmt/core.h>
 #include <fmt/ostream.h>
 #include <glm/gtx/compatibility.hpp>
 #include <gsl-lite/gsl-lite.hpp>
@@ -30,13 +31,14 @@ std::string animation_id_from_frame_name(std::string const& name) {
     return id;
 }
 
-MD2::MD2(std::string const& filename, PAK const& pak) {
+MD2::MD2(std::string_view filename, PAK const& pak) {
     if (!load(pak, filename)) {
-        throw std::runtime_error("failed to load MD2 model " + filename);
+        throw std::runtime_error(
+            fmt::format("failed to load MD2 model {}", filename));
     }
 }
 
-bool MD2::load(PAK const& pf, std::string const& filename) {
+bool MD2::load(PAK const& pf, std::string_view filename) {
     spdlog::info("loading model {} from pak {}", filename, pf.fpath().string());
     gsl_Expects(!filename.empty());
     auto ispak = !pf.is_directory();

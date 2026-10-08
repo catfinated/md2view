@@ -8,9 +8,8 @@
 ResourceManager::ResourceManager(
     std::filesystem::path const& rootdir,
     std::optional<std::filesystem::path> const& pak_path)
-    : root_dir_(rootdir)
-    , shaders_dir_(root_dir_ / "shaders")
-    , pak_(std::make_unique<PAK>(pak_path.value_or(rootdir / "models"))) {}
+    : AssetLoader(rootdir, pak_path)
+    , shaders_dir_(dataDir() / "shaders") {}
 
 std::shared_ptr<GL::Shader>
 ResourceManager::load_shader(std::string const& name,
@@ -50,17 +49,7 @@ ResourceManager::load_texture2D(std::string const& path,
         return iter->second;
     }
 
-    auto result = textures2D_.emplace(key, GL::Texture2D::load(pak(), path));
-    return result.first->second;
-}
-
-std::shared_ptr<MD2> ResourceManager::load_model(std::string const& path) {
-    auto const iter = models_.find(path);
-    if (iter != models_.end()) {
-        return iter->second;
-    }
-
-    auto md2 = std::make_shared<MD2>(path, pak());
-    auto result = models_.emplace(path, std::move(md2));
+    auto result = textures2D_.emplace(
+        key, std::make_shared<GL::Texture2D>(loadImage(path)));
     return result.first->second;
 }

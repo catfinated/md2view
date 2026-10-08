@@ -144,7 +144,7 @@ public:
     /// @param filename Archive-relative path (e.g. `"models/player/tris.md2"`).
     /// @param pak      The archive or directory to load from.
     /// @throws std::runtime_error if the file cannot be opened or parsed.
-    explicit MD2(std::string const& filename, PAK const& pak);
+    explicit MD2(std::string_view filename, PAK const& pak);
 
     MD2(MD2 const&) = delete;
     MD2& operator=(MD2 const&) = delete;
@@ -202,7 +202,7 @@ public:
     }
 
 private:
-    [[nodiscard]] bool load(PAK const& pf, std::string const& filename);
+    [[nodiscard]] bool load(PAK const& pf, std::string_view filename);
     [[nodiscard]] bool load(std::ifstream& infile);
     [[nodiscard]] bool load_skins(std::ifstream& infile, size_t offset);
     [[nodiscard]] bool load_triangles(std::ifstream& infile, size_t offset);
