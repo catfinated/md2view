@@ -3,17 +3,14 @@
 #include <array>
 #include <cstdint>
 #include <iosfwd>
+#include <utility>
 #include <vector>
 
 /// PCX image decoder.
 ///
-/// Decodes a PCX image from a stream into a flat RGB pixel buffer. Only the
+/// Decodes a PCX image from a stream into a flat RGBA pixel buffer. Only the
 /// 8-bit indexed variant (256-colour VGA palette) is supported, which covers
-/// all Quake II skin textures.
-///
-/// After construction, `image()` contains the decoded pixels as packed RGB
-/// triples (3 bytes per pixel, row-major) and `colors()` contains the full
-/// 256-entry palette.
+/// all Quake II skin textures. The alpha channel is always set to opaque.
 ///
 /// @see https://www.fileformat.info/format/pcx/egff.htm
 class PCX {
@@ -65,10 +62,16 @@ public:
     /// @throws gsl_lite::fail_fast if the stream is not in a good state.
     PCX(std::istream& is);
 
-    /// Decoded pixel data as packed RGB triples, row-major.
-    /// Size is `width() * height() * 3` bytes.
-    [[nodiscard]] std::vector<unsigned char> const& image() const {
+    /// Decoded pixel data as packed RGBA8, row-major.
+    /// Size is width * height * 4 bytes
+    [[nodiscard]] std::vector<unsigned char> const& image() const& {
         return image_;
+    }
+
+    /// Decoded pixel data as packed RGBA8, row-major.
+    /// Size is width * height * 4 bytes
+    [[nodiscard]] std::vector<unsigned char> image() && {
+        return std::move(image_);
     }
 
     /// The 256-entry VGA palette decoded from the end of the file.

@@ -30,7 +30,7 @@ TEST_CASE("pcx valid 2x2 dimensions", "[pcx]") {
 
     REQUIRE(pcx.width() == 2);
     REQUIRE(pcx.height() == 2);
-    REQUIRE(pcx.image().size() == 12); // 2 * 2 * 3 channels
+    REQUIRE(pcx.image().size() == 16); // 2 * 2 * 4 channels
 }
 
 TEST_CASE("pcx valid 2x2 palette", "[pcx]") {
@@ -64,19 +64,23 @@ TEST_CASE("pcx valid 2x2 pixels", "[pcx]") {
     REQUIRE(img[0] == 255);
     REQUIRE(img[1] == 0);
     REQUIRE(img[2] == 0);
+    REQUIRE(img[3] == 255);
 
     // pixel (1,0) = palette index 1 = blue
-    REQUIRE(img[3] == 0);
     REQUIRE(img[4] == 0);
-    REQUIRE(img[5] == 255);
+    REQUIRE(img[5] == 0);
+    REQUIRE(img[6] == 255);
+    REQUIRE(img[7] == 255);
 
     // pixel (0,1) = palette index 1 = blue
-    REQUIRE(img[6] == 0);
-    REQUIRE(img[7] == 0);
-    REQUIRE(img[8] == 255);
+    REQUIRE(img[8] == 0);
+    REQUIRE(img[9] == 0);
+    REQUIRE(img[10] == 255);
+    REQUIRE(img[11] == 255);
 
     // pixel (1,1) = palette index 0 = red
-    REQUIRE(img[9] == 255);
-    REQUIRE(img[10] == 0);
-    REQUIRE(img[11] == 0);
+    REQUIRE(img[12] == 255);
+    REQUIRE(img[13] == 0);
+    REQUIRE(img[14] == 0);
+    REQUIRE(img[15] == 255);
 }

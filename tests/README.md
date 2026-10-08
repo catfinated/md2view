@@ -39,3 +39,6 @@ generated at build time by `gen_fixtures.cpp`.
 |------|-------------|
 | `minimal.pcx` | 2×2 PCX image; palette index 0 = red (255,0,0), index 1 = blue (0,0,255); pixels: (0,0)=red (1,0)=blue (0,1)=blue (1,1)=red |
 | `minimal.pak` | PAK archive with one entry `models/player/tris.md2` whose content is the ASCII string `HELLO` |
+| `palette.png` | 2×2 8-bit palette PNG (color type 3) with the same red/blue layout as `minimal.pcx`; stb_image reports 3 channels in the file |
+| `rgba.png` | 2×2 8-bit RGBA PNG (color type 6); pixels: (0,0) = red, alpha 255 (opaque); (1,0) = green, alpha 128 (about half transparent); (0,1) = blue, alpha 64 (about 75% transparent); (1,1) = white, alpha 0 (fully transparent). Each pixel has a different alpha so tests can check that alpha is preserved exactly, rather than replaced with 255 |
+| `skin.pak` | PAK archive with one entry `models/test/skin.pcx` whose content is `minimal.pcx` |

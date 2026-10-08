@@ -5,6 +5,8 @@
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <iterator>
+#include <vector>
 
 static void write_u8(std::ofstream& f, uint8_t v) {
     f.put(static_cast<char>(v));
@@ -95,6 +97,157 @@ static void write_pcx(std::filesystem::path const& path) {
         write_u8(f, 0);
         write_u8(f, 0);
     }
+}
+
+// --- PNG ---
+//
+// Minimal PNG encoder using only the standard library. Pixel data goes in a
+// zlib stream made of a single uncompressed ("stored") deflate block, so no
+// compression library is needed; only CRC-32 and Adler-32 checksums.
+
+using Bytes = std::vector<uint8_t>;
+
+static void append_u32be(Bytes& out, uint32_t v) {
+    out.push_back(static_cast<uint8_t>((v >> 24) & 0xFF));
+    out.push_back(static_cast<uint8_t>((v >> 16) & 0xFF));
+    out.push_back(static_cast<uint8_t>((v >> 8) & 0xFF));
+    out.push_back(static_cast<uint8_t>(v & 0xFF));
+}
+
+static uint32_t crc32(Bytes const& data) {
+    uint32_t crc = 0xFFFFFFFFU;
+    for (uint8_t byte : data) {
+        crc ^= byte;
+        for (int k = 0; k < 8; ++k) {
+            crc = (crc & 1U) != 0 ? (crc >> 1) ^ 0xEDB88320U : crc >> 1;
+        }
+    }
+    return crc ^ 0xFFFFFFFFU;
+}
+
+static uint32_t adler32(Bytes const& data) {
+    uint32_t a = 1;
+    uint32_t b = 0;
+    for (uint8_t byte : data) {
+        a = (a + byte) % 65521U;
+        b = (b + a) % 65521U;
+    }
+    return (b << 16) | a;
+}
+
+static void
+write_png_chunk(std::ofstream& f, char const (&type)[5], Bytes const& data) {
+    Bytes type_and_data(type, type + 4);
+    type_and_data.insert(type_and_data.end(), data.begin(), data.end());
+
+    Bytes header;
+    append_u32be(header, static_cast<uint32_t>(data.size()));
+    f.write(reinterpret_cast<char const*>(header.data()),
+            static_cast<std::streamsize>(header.size()));
+    f.write(reinterpret_cast<char const*>(type_and_data.data()),
+            static_cast<std::streamsize>(type_and_data.size()));
+
+    Bytes crc;
+    append_u32be(crc, crc32(type_and_data));
+    f.write(reinterpret_cast<char const*>(crc.data()),
+            static_cast<std::streamsize>(crc.size()));
+}
+
+// Writes an 8-bit PNG. `rows` holds the raw pixel bytes of each row (palette
+// indices for color type 3, RGBA for color type 6). `palette` is RGB triples
+// and is only written for color type 3.
+static void write_png(std::filesystem::path const& path,
+                      uint32_t width,
+                      uint32_t height,
+                      uint8_t color_type,
+                      std::vector<Bytes> const& rows,
+                      Bytes const& palette = {}) {
+    std::ofstream f(path, std::ios::binary);
+    constexpr std::array<uint8_t, 8> signature{0x89, 'P',  'N',  'G',
+                                               0x0D, 0x0A, 0x1A, 0x0A};
+    f.write(reinterpret_cast<char const*>(signature.data()), signature.size());
+
+    Bytes ihdr;
+    append_u32be(ihdr, width);
+    append_u32be(ihdr, height);
+    ihdr.push_back(8);          // bit depth
+    ihdr.push_back(color_type); // 3 = palette, 6 = RGBA
+    ihdr.push_back(0);          // compression = deflate
+    ihdr.push_back(0);          // filter method
+    ihdr.push_back(0);          // no interlace
+    write_png_chunk(f, "IHDR", ihdr);
+
+    if (color_type == 3) {
+        write_png_chunk(f, "PLTE", palette);
+    }
+
+    // each scanline is prefixed by its filter type (0 = none)
+    Bytes raw;
+    for (auto const& row : rows) {
+        raw.push_back(0);
+        raw.insert(raw.end(), row.begin(), row.end());
+    }
+
+    // a single stored block holds at most 65535 bytes, plenty for fixtures
+    auto const len = static_cast<uint16_t>(raw.size());
+    // NB: cast back to 16 bits; ~ promotes to int and would set the high bits
+    auto const nlen = static_cast<uint16_t>(~len);
+    Bytes idat{0x78, 0x01}; // zlib header: deflate, no preset dictionary
+    idat.push_back(0x01);   // final block, stored (uncompressed)
+    // LEN and its one's complement NLEN, both little-endian (RFC 1951 3.2.4)
+    idat.push_back(static_cast<uint8_t>(len & 0xFF));
+    idat.push_back(static_cast<uint8_t>(len >> 8));
+    idat.push_back(static_cast<uint8_t>(nlen & 0xFF));
+    idat.push_back(static_cast<uint8_t>(nlen >> 8));
+    idat.insert(idat.end(), raw.begin(), raw.end());
+    append_u32be(idat, adler32(raw));
+    write_png_chunk(f, "IDAT", idat);
+
+    write_png_chunk(f, "IEND", {});
+}
+
+// Writes a 2x2 palette PNG (color type 3) with the same layout and colors as
+// minimal.pcx. stb_image reports 3 channels in the file for it, which is the
+// case that broke loading drfreak.png.
+static void write_palette_png(std::filesystem::path const& path) {
+    write_png(path, 2, 2, 3, {{0, 1}, {1, 0}},
+              {255, 0, 0, /* red */ 0, 0, 255 /* blue */});
+}
+
+// Writes a 2x2 RGBA PNG (color type 6) with distinct alpha values, to check
+// that alpha survives loading.
+//   (0,0) = red, opaque       (1,0) = green, alpha 128
+//   (0,1) = blue, alpha 64    (1,1) = white, transparent
+static void write_rgba_png(std::filesystem::path const& path) {
+    write_png(
+        path, 2, 2, 6,
+        {{255, 0, 0, 255, 0, 255, 0, 128}, {0, 0, 255, 64, 255, 255, 255, 0}});
+}
+
+// Writes a PAK archive with one entry, `models/test/skin.pcx`, whose content
+// is the bytes of an existing PCX file. Real Quake II paks only contain PCX
+// images, so this covers loading an image from a real archive.
+static void write_pcx_pak(std::filesystem::path const& path,
+                          std::filesystem::path const& pcx_path) {
+    std::ifstream in(pcx_path, std::ios::binary);
+    Bytes const content{std::istreambuf_iterator<char>(in),
+                        std::istreambuf_iterator<char>()};
+
+    std::ofstream f(path, std::ios::binary);
+    auto const content_ofs = int32_t{12};
+    auto const content_len = static_cast<int32_t>(content.size());
+
+    f.write("PACK", 4);
+    write_i32le(f, content_ofs + content_len); // dirofs
+    write_i32le(f, 64);                        // dirlen: one entry
+
+    f.write(reinterpret_cast<char const*>(content.data()), content_len);
+
+    std::array<char, 56> name{};
+    std::strncpy(name.data(), "models/test/skin.pcx", 55);
+    f.write(name.data(), 56);
+    write_i32le(f, content_ofs);
+    write_i32le(f, content_len);
 }
 
 // Writes a minimal valid PAK file containing one .md2 entry.
@@ -246,5 +399,8 @@ int main(int argc, char* argv[]) {
     write_md2(dir / "minimal.md2");
     write_two_frame_md2(dir / "two_frame.md2");
     write_two_anim_md2(dir / "two_anim.md2");
+    write_palette_png(dir / "palette.png");
+    write_rgba_png(dir / "rgba.png");
+    write_pcx_pak(dir / "skin.pak", dir / "minimal.pcx");
     return 0;
 }

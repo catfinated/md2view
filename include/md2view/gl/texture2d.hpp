@@ -7,6 +7,7 @@
 #include <string>
 
 class PAK;
+class Image;
 
 namespace GL {
 
@@ -15,27 +16,20 @@ class Texture2D {
 public:
     /// Sampling and wrap parameters applied at upload time.
     struct Attributes {
-        GLuint image_format = GL_RGB;   ///< Source pixel format.
-        GLint internal_format = GL_RGB; ///< GPU internal storage format.
-        GLuint wrap_s = GL_REPEAT;      ///< Horizontal wrap mode.
-        GLuint wrap_t = GL_REPEAT;      ///< Vertical wrap mode.
-        GLint filter_min = GL_LINEAR;   ///< Minification filter.
-        GLint filter_max = GL_LINEAR;   ///< Magnification filter.
+        GLuint image_format = GL_RGBA;    ///< Source pixel format.
+        GLint internal_format = GL_RGBA8; ///< GPU internal storage format.
+        GLuint wrap_s = GL_REPEAT;        ///< Horizontal wrap mode.
+        GLuint wrap_t = GL_REPEAT;        ///< Vertical wrap mode.
+        GLint filter_min = GL_LINEAR;     ///< Minification filter.
+        GLint filter_max = GL_LINEAR;     ///< Magnification filter.
     };
 
     ~Texture2D();
 
     /// Upload pixel data to the GPU.
     ///
-    /// @param width  Image width in pixels.
-    /// @param height Image height in pixels.
-    /// @param data   Raw pixel bytes (RGB or RGBA depending on @p alpha).
-    /// @param alpha  If true, treats @p data as RGBA and enables alpha
-    /// blending.
-    Texture2D(GLuint width,
-              GLuint height,
-              std::span<unsigned char const> data,
-              bool alpha = false);
+    /// @param image The image to upload
+    explicit Texture2D(Image const& image);
 
     Texture2D(Texture2D const&) = delete;
     Texture2D& operator=(Texture2D const&) = delete;
@@ -64,10 +58,8 @@ public:
 
 private:
     void cleanup();
-    [[nodiscard]] bool init(GLuint width,
-                            GLuint height,
-                            std::span<unsigned char const> data,
-                            bool alpha);
+    [[nodiscard]] bool
+    init(GLuint width, GLuint height, std::span<unsigned char const> data);
 
     Attributes attr_;
     GLuint id_{};

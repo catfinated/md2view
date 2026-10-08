@@ -31,17 +31,19 @@ PCX::PCX(std::istream& is) {
 
     width_ = width;
     height_ = length;
-    image_.resize(width * length * 3);
+    constexpr auto numChannels{4};
+    image_.resize(width * length * numChannels);
 
     for (auto i = 0; i < length; ++i) {
         for (auto j = 0; j < width; ++j) {
             auto index = scan_lines[i][j];
             assert(index < colors_.size());
-            auto loc = (j + (i * width)) * 3;
+            auto loc = (j + (i * width)) * numChannels;
             auto& color = colors_[index];
             image_[loc + 0] = color.r;
             image_[loc + 1] = color.g;
             image_[loc + 2] = color.b;
+            image_[loc + 3] = 255;
         }
     }
 }

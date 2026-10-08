@@ -14,6 +14,7 @@ add_library(md2v
   md2.cpp
   pcx.cpp
   pak.cpp
+  image.cpp
   camera.cpp)
 
 target_link_libraries(md2v PUBLIC
@@ -23,7 +24,9 @@ target_link_libraries(md2v PUBLIC
    spdlog::spdlog
    gsl::gsl-lite-v1)
 
-target_include_directories(md2v PUBLIC ${CMAKE_SOURCE_DIR}/include)
+target_include_directories(md2v PUBLIC 
+  ${CMAKE_SOURCE_DIR}/include
+  ${Stb_INCLUDE_DIR})
 
 target_compile_definitions(md2v
    PUBLIC GLM_ENABLE_EXPERIMENTAL FMT_USE_USER_DEFINED_LITERALS=1 gsl_CONFIG_CONTRACT_VIOLATION_THROWS)
@@ -69,9 +72,7 @@ target_link_libraries(md2vgl PUBLIC
    OpenGL::EGL
    imgui::imgui)
 
-target_include_directories(md2vgl PUBLIC
-   ${OPENGL_INCLUDE_DIR}
-   ${Stb_INCLUDE_DIR})
+target_include_directories(md2vgl PUBLIC ${OPENGL_INCLUDE_DIR})
 
 target_compile_definitions(md2vgl
    PUBLIC GLEW_NO_GLU IMGUI_DISABLE_OBSOLETE_FUNCTIONS)

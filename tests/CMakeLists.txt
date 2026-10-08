@@ -10,6 +10,9 @@ add_custom_command(
         ${FIXTURE_DIR}/minimal.md2
         ${FIXTURE_DIR}/two_frame.md2
         ${FIXTURE_DIR}/two_anim.md2
+        ${FIXTURE_DIR}/palette.png
+        ${FIXTURE_DIR}/rgba.png
+        ${FIXTURE_DIR}/skin.pak
     COMMAND gen_fixtures ${FIXTURE_DIR}
     DEPENDS gen_fixtures
     COMMENT "Generating test fixtures"
@@ -21,12 +24,16 @@ add_custom_target(test_fixtures
         ${FIXTURE_DIR}/minimal.md2
         ${FIXTURE_DIR}/two_frame.md2
         ${FIXTURE_DIR}/two_anim.md2
+        ${FIXTURE_DIR}/palette.png
+        ${FIXTURE_DIR}/rgba.png
+        ${FIXTURE_DIR}/skin.pak
 )
 
 configure_file(fixtures.hpp.in fixtures.hpp @ONLY)
 
 add_executable(test_md2v
     test_camera.cpp
+    test_image.cpp
     test_md2.cpp
     test_pak.cpp
     test_pcx.cpp
