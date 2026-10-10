@@ -123,5 +123,5 @@ std::ifstream PAK::open_ifstream(std::filesystem::path const& fpath) const {
 
     auto const p = fpath_ / fpath;
     spdlog::info("open file {}", p.string());
-    return {p, flags};
+    return std::ifstream(p, flags);
 }

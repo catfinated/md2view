@@ -1,7 +1,11 @@
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(glew REQUIRED)
-find_package(OpenGL REQUIRED COMPONENTS GLX EGL OpenGL)
+if(APPLE)
+  find_package(OpenGL REQUIRED COMPONENTS OpenGL)
+else()
+  find_package(OpenGL REQUIRED COMPONENTS GLX EGL OpenGL)
+endif()
 find_package(Boost COMPONENTS system program_options REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
@@ -70,8 +74,11 @@ target_link_libraries(md2vgl PUBLIC
    md2vw
    GLEW::GLEW
    OpenGL::GL
-   OpenGL::EGL
    imgui::imgui)
+
+if(NOT APPLE)
+  target_link_libraries(md2vgl PUBLIC OpenGL::EGL)
+endif()
 
 target_include_directories(md2vgl PUBLIC ${OPENGL_INCLUDE_DIR})
 

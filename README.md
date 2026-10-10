@@ -109,6 +109,14 @@ To run the in progress Vuilkan based executable:
 > VK_LAYER_PATH=build/debug/vcpkg_installed/x64-linux/share/vulkan/explicit_layer.d build/debug/src/vkmd2v
 ```
 
+On MacOS you also need to set the `VK_ICD_FILENAMES` environment variable:
+
+```cmd
+> export VK_ICD_FILENAMES=/opt/homebrew/etc/vulkan/icd.d/MoltenVK_icd.json
+> export VK_LAYER_PATH=$PWD/build/debug/vcpkg_installed/arm64-osx/share/vulkan/explicit_layer.d
+> build/debug/src/vkmd2
+```
+
 To run the ASan build, use the `build/asan` binaries. LeakSanitizer will report
 leaks from the NVIDIA driver which are not bugs in md2view; suppress them with
 the provided `lsan.supp` file:

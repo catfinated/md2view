@@ -24,8 +24,14 @@ namespace VK {
 static constexpr std::array<char const*, 1> validationLayers = {
     "VK_LAYER_KHRONOS_validation"};
 
+#ifdef __APPLE__
+// MoltenVK is a portability-subset implementation
+static constexpr std::array<char const*, 2> deviceExtensions = {
+    VK_KHR_SWAPCHAIN_EXTENSION_NAME, "VK_KHR_portability_subset"};
+#else
 static constexpr std::array<char const*, 1> deviceExtensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+#endif
 
 VKAPI_ATTR VkBool32 VKAPI_CALL
 debugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT /* messageSeverity */,
@@ -171,6 +177,10 @@ vk::raii::Instance createInstance(vk::raii::Context& context) {
     std::vector<char const*> extensions(extSpan.begin(), extSpan.end());
 
     extensions.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+#ifdef __APPLE__
+    extensions.emplace_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+    createInfo.flags |= vk::InstanceCreateFlagBits::eEnumeratePortabilityKHR;
+#endif
     for (auto const* ext : extensions) {
         spdlog::info("requesting ext '{}'", ext);
     }
@@ -236,10 +246,18 @@ pickPhysicalDevice(vk::raii::Instance& instance,
         auto const deviceProperties = device.getProperties();
         auto const isDiscrete =
             deviceProperties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu;
-        if (!isDiscrete) {
+#ifdef __APPLE__
+        // Apple GPUs are reported as integrated.
+        auto const isSuitable =
+            isDiscrete ||
+            deviceProperties.deviceType == vk::PhysicalDeviceType::eIntegratedGpu;
+#else
+        auto const isSuitable = isDiscrete;
+#endif
+        if (!isSuitable) {
             continue;
         }
-        spdlog::info("found GPU discrete {}",
+        spdlog::info("found GPU {}",
                      std::string_view{deviceProperties.deviceName});
         auto const queueFamilyIndices = findQueueFamilies(*device, surface);
         if (!queueFamilyIndices.isComplete()) {
