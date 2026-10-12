@@ -25,7 +25,6 @@
 
 #include <algorithm>
 #include <array>
-#include <cstdint>
 #include <memory>
 
 MD2View::MD2View() { reset_model_matrix(); }
@@ -245,7 +244,7 @@ void MD2View::draw_ui(GL::Engine<MD2View>& engine) {
                             std::max(1.0f, ImGui::GetStyle().ImageBorderSize));
         ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(255, 255, 255, 128));
         ImGui::ImageWithBg(
-            std::uintptr_t(texture_->id()),
+            static_cast<ImTextureID>(texture_->id()),
             ImVec2(gsl_lite::narrow_cast<float>(texture_->width()),
                    gsl_lite::narrow_cast<float>(texture_->height())),
             ImVec2(0, 0), ImVec2(1, 1), ImVec4(255, 255, 255, 255));

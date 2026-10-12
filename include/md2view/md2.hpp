@@ -220,6 +220,12 @@ private:
             vertices; ///< num_tris × 3 world-space positions.
     };
 
+    /// Scale a frame's packed vertices and unpack them in triangle order.
+    ///
+    /// @throws std::runtime_error if a triangle references a vertex the frame
+    /// does not have.
+    [[nodiscard]] KeyFrame unpack_frame(Frame const& frame) const;
+
     Header hdr_{};
     std::vector<Triangle> triangles_;
     std::vector<TexCoord> texcoords_;

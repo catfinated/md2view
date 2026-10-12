@@ -1,6 +1,3 @@
-# .clangd configuration file
-# Place this in your C++ project root directory
-
 # Compiler configuration
 CompileFlags:
   # Add standard flags
@@ -31,6 +28,8 @@ Diagnostics:
       - readability-magic-numbers
       - cppcoreguidelines-avoid-magic-numbers
       - readability-identifier-length
+      - cppcoreguidelines-pro-type-union-access
+      - cppcoreguidelines-pro-bounds-avoid-unchecked-container-access
 
   UnusedIncludes: Strict
   MissingIncludes: Strict
@@ -54,3 +53,15 @@ Index:
 # Hover information
 Hover:
   ShowAKA: Yes
+
+# Tests configuration
+If:
+  PathMatch: tests/.*
+Diagnostics:
+  ClangTidy:
+    Remove:
+      - cppcoreguidelines-pro-bounds-array-to-pointer-decay
+      - cppcoreguidelines-pro-bounds-pointer-arithmetic
+      - cppcoreguidelines-avoid-c-arrays
+      - modernize-avoid-c-arrays
+      - readability-function-cognitive-complexity

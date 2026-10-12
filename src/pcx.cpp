@@ -87,7 +87,7 @@ PCX::ScanLine PCX::read_scan_line(std::istream& ds, int32_t length) {
     ScanLine scan_line;
     scan_line.resize(static_cast<size_t>(length));
 
-    auto index = decltype(length)(0);
+    auto index = decltype(length){0};
 
     uint8_t runcount{};
     uint8_t runvalue{};

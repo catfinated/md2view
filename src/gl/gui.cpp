@@ -17,6 +17,10 @@
 
 namespace GL {
 
+// TODO: replace this with imgui_impl_opengl3 backend
+// need to split into input and rendering halves first
+// NOLINTBEGIN(modernize-avoid-c-style-cast,cppcoreguidelines-pro-bounds-pointer-arithmetic,readability-function-cognitive-complexity)
+
 Gui::Gui(::Engine& engine,
          ResourceManager& rm,
          gsl_lite::not_null<GLFWwindow*> window)
@@ -380,5 +384,7 @@ void Gui::render() {
     glScissor(last_scissor_box[0], last_scissor_box[1],
               (GLsizei)last_scissor_box[2], (GLsizei)last_scissor_box[3]);
 }
+
+// NOLINTEND(modernize-avoid-c-style-cast,cppcoreguidelines-pro-bounds-pointer-arithmetic,readability-function-cognitive-complexity)
 
 } // namespace GL

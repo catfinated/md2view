@@ -200,6 +200,40 @@ bool MD2::load_texcoords(std::ifstream& infile, size_t offset) {
     return infile.good();
 }
 
+// key frame contains the scaled vertices unpacked from the triangles
+// into a flat vector since same vertex can have a different tex coord
+// in two different triangles. therefore, KeyFrame has num_tris * 3 entries
+// and tex coord buffer ends up with num_tris * 3 entries too but
+// is shared by all frames.
+MD2::KeyFrame MD2::unpack_frame(Frame const& frame) const {
+    KeyFrame key_frame;
+    key_frame.vertices.reserve(triangles_.size() * 3);
+
+    for (auto const& triangle : triangles_) {
+        for (auto const vertex_index : triangle.vertex) {
+            if (vertex_index >= frame.vertices.size()) {
+                throw std::runtime_error(fmt::format(
+                    "malformed MD2: vertex index {} out of range ({} "
+                    "vertices)",
+                    vertex_index, frame.vertices.size()));
+            }
+            auto const& vertex = frame.vertices[vertex_index];
+            auto const x =
+                (frame.scale[0] * gsl_lite::narrow_cast<float>(vertex.v[0])) +
+                frame.translate[0];
+            auto const z =
+                (frame.scale[1] * gsl_lite::narrow_cast<float>(vertex.v[1])) +
+                frame.translate[1];
+            auto const y =
+                (frame.scale[2] * gsl_lite::narrow_cast<float>(vertex.v[2])) +
+                frame.translate[2];
+            key_frame.vertices.emplace_back(x, y, z);
+        }
+    }
+    assert(key_frame.vertices.size() == static_cast<size_t>(hdr_.num_tris * 3));
+    return key_frame;
+}
+
 bool MD2::load_frames(std::ifstream& infile, size_t offset) {
     gsl_Expects(infile);
 
@@ -242,42 +276,7 @@ bool MD2::load_frames(std::ifstream& infile, size_t offset) {
             current_anim.name = anim_id;
         }
 
-        // our key frame contains the scaled vertices
-        // it also unpacks all the vertices from the triangle
-        // into a flat vector. this is because md2 allows
-        // the same vertex to have a different tex coord in two
-        // different triangles which makes it difficult to use with
-        // glDrawElements / glDrawArrays. so our KeyFrame
-        // has num_tris * 3 entries and our tex coord
-        // buffer ends up with num_tris * 3 entires but
-        // that data is shared by all frames
-        auto& key_frame = key_frames_.at(i);
-        key_frame.vertices.reserve(hdr_.num_tris * 3);
-
-        for (auto const& triangle : triangles_) {
-            for (size_t i = 0; i < 3; ++i) {
-                auto vertex_index = gsl_lite::at(triangle.vertex, i);
-                if (vertex_index >= frame.vertices.size()) {
-                    throw std::runtime_error(fmt::format(
-                        "malformed MD2: vertex index {} out of range ({} "
-                        "vertices)",
-                        vertex_index, frame.vertices.size()));
-                }
-                auto const& vertex = frame.vertices[vertex_index];
-                auto const x = (frame.scale[0] *
-                                gsl_lite::narrow_cast<float>(vertex.v[0])) +
-                               frame.translate[0];
-                auto const z = (frame.scale[1] *
-                                gsl_lite::narrow_cast<float>(vertex.v[1])) +
-                               frame.translate[1];
-                auto const y = (frame.scale[2] *
-                                gsl_lite::narrow_cast<float>(vertex.v[2])) +
-                               frame.translate[2];
-                key_frame.vertices.emplace_back(x, y, z);
-            }
-        }
-        assert(key_frame.vertices.size() ==
-               static_cast<size_t>(hdr_.num_tris * 3));
+        key_frames_.at(i) = unpack_frame(frame);
     }
 
     assert(key_frames_.size() == frames_.size());

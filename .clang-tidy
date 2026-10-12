@@ -1,3 +1,8 @@
+# cppcoreguidelines-pro-type-union-access is off: GLM implements vector
+# components (v.x, v.y, ...) as union members, so every use was flagged.
+# cppcoreguidelines-pro-bounds-avoid-unchecked-container-access is off: it
+# flags every operator[]. Untrusted input (PCX, MD2) is validated explicitly
+# where it is parsed instead.
 Checks: >
   clang-diagnostic-*,
   clang-analyzer-*,
@@ -9,6 +14,8 @@ Checks: >
   -cppcoreguidelines-init-variables,
   -cppcoreguidelines-pro-type-vararg,
   -cppcoreguidelines-non-private-member-variables-in-classes,
+  -cppcoreguidelines-pro-type-union-access,
+  -cppcoreguidelines-pro-bounds-avoid-unchecked-container-access,
   performance-*,
   -performance-no-int-to-ptr,
   readability-*,
@@ -16,7 +23,7 @@ Checks: >
   -readability-magic-numbers,
   -readability-identifier-length,
   misc-include-cleaner,
-WarningsAsErrors: true
+WarningsAsErrors: '*'
 HeaderFilterRegex: md2view
 CheckOptions:
   - key: cppcoreguidelines-pro-type-member-init.IgnoreArrays

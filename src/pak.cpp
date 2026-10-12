@@ -130,5 +130,6 @@ std::ifstream PAK::open_ifstream(std::filesystem::path const& fpath) const {
 
     auto const p = fpath_ / fpath;
     spdlog::info("open file {}", p);
-    return std::ifstream(p, flags);
+    // NB: braced form of ifstream path ctor only compiles with libstdc++.
+    return std::ifstream(p, flags); // NOLINT(modernize-return-braced-init-list)
 }

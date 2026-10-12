@@ -20,8 +20,10 @@ public:
     static constexpr std::array kWindowHints{
         WindowHint{.hint = GLFW_CONTEXT_VERSION_MAJOR, .value = 4},
         WindowHint{.hint = GLFW_CONTEXT_VERSION_MINOR, .value = 1},
-        WindowHint{.hint = GLFW_OPENGL_PROFILE,
-                   .value = GLFW_OPENGL_CORE_PROFILE},
+        WindowHint{
+            .hint = GLFW_OPENGL_PROFILE,
+            .value = GLFW_OPENGL_CORE_PROFILE,
+        },
         WindowHint{.hint = GLFW_OPENGL_FORWARD_COMPAT, .value = GLFW_TRUE},
     };
 
