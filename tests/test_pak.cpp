@@ -10,7 +10,7 @@
 #include <string>
 
 TEST_CASE("pak non-existent", "[pak]") {
-    auto construct = [&]() { PAK pak{"nosuchfile.pak"}; };
+    auto construct = [&] { PAK pak{"nosuchfile.pak"}; };
     REQUIRE_THROWS_AS(construct(), std::runtime_error);
 }
 
@@ -45,7 +45,7 @@ TEST_CASE("pak from pak file invalid magic throws", "[pak]") {
         std::ofstream f(bad_pak, std::ios::binary);
         f.write("NOPE\0\0\0\0\0\0\0\0", 12);
     }
-    auto construct = [&]() { PAK pak{bad_pak}; };
+    auto construct = [&] { PAK pak{bad_pak}; };
     REQUIRE_THROWS_AS(construct(), std::runtime_error);
 }
 

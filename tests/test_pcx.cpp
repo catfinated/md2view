@@ -60,7 +60,7 @@ TEST_CASE("pcx default ctor", "[pcx]") {
 
 TEST_CASE("pcx invalid istream", "[pcx]") {
     std::stringstream ss;
-    auto construct = [&]() { PCX{ss}; };
+    auto construct = [&] { PCX{ss}; };
     REQUIRE_THROWS_AS(construct(), gsl_lite::fail_fast);
 }
 

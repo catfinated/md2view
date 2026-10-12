@@ -339,7 +339,7 @@ void Renderer::recordCommandBuffer(vk::raii::CommandBuffer& commandBuffer,
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-union-access)
     clearValue_.color = vk::ClearColorValue{0.0f, 0.0f, 0.0f, 1.0f};
     vk::RenderPassBeginInfo renderPassInfo{
-        *renderPass_, *(frameBuffers_.at(imageIndex)),
+        *renderPass_, *frameBuffers_.at(imageIndex),
         vk::Rect2D{vk::Offset2D{0, 0}, swapChainSupportDetails_.extent},
         clearValue_};
 

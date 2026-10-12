@@ -215,8 +215,8 @@ void Gui::render() {
                 glPixelStorei(GL_UNPACK_ROW_LENGTH, tex->Width);
                 auto const* pixels =
                     static_cast<unsigned char const*>(tex->GetPixels()) +
-                    (tex->UpdateRect.y * tex->Width + tex->UpdateRect.x) *
-                        tex->BytesPerPixel;
+                    (((tex->UpdateRect.y * tex->Width) + tex->UpdateRect.x) *
+                     tex->BytesPerPixel);
                 glTexSubImage2D(GL_TEXTURE_2D, 0, tex->UpdateRect.x,
                                 tex->UpdateRect.y, tex->UpdateRect.w,
                                 tex->UpdateRect.h, fmt, GL_UNSIGNED_BYTE,
@@ -225,8 +225,9 @@ void Gui::render() {
                 tex->SetStatus(ImTextureStatus_OK);
             } else if (tex->Status == ImTextureStatus_WantDestroy) {
                 auto gl_tex = (GLuint)(intptr_t)tex->GetTexID();
-                if (gl_tex != 0)
+                if (gl_tex != 0) {
                     glDeleteTextures(1, &gl_tex);
+                }
                 tex->SetTexID(ImTextureID_Invalid);
                 tex->SetStatus(ImTextureStatus_Destroyed);
             }

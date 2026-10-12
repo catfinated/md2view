@@ -83,7 +83,7 @@ TEST_CASE("image from rgba png keeps alpha", "[image]") {
 }
 
 TEST_CASE("image from missing file throws", "[image]") {
-    auto construct = []() { Image{test_fixtures_dir() / "nosuchfile.png"}; };
+    auto construct = [] { Image{test_fixtures_dir() / "nosuchfile.png"}; };
     REQUIRE_THROWS_WITH(construct(), Catch::Matchers::ContainsSubstring(
                                          "failed to load image"));
 }
@@ -95,7 +95,7 @@ TEST_CASE("image from invalid file throws", "[image]") {
         std::ofstream f(path, std::ios::binary);
         f << "this is not an image";
     }
-    auto construct = [&]() { Image{path}; };
+    auto construct = [&] { Image{path}; };
     REQUIRE_THROWS_AS(construct(), std::runtime_error);
 }
 

@@ -81,9 +81,11 @@ TEST_CASE("camera view matrix at default is identity", "[cam]") {
     Camera camera;
     auto const view = camera.view_matrix();
     auto const expected = glm::mat4(1.0f);
-    for (int c = 0; c < 4; ++c)
-        for (int r = 0; r < 4; ++r)
+    for (int c = 0; c < 4; ++c) {
+        for (int r = 0; r < 4; ++r) {
             REQUIRE(view[c][r] == Approx(expected[c][r]).margin(1e-5f));
+        }
+    }
 }
 
 TEST_CASE("camera move forward", "[cam]") {
@@ -140,26 +142,32 @@ TEST_CASE("camera pitch clamped at +89 degrees", "[cam]") {
     using Catch::Approx;
     // sensitivity=0.25; both offsets exceed 89/0.25=356 → both clamp to
     // pitch=89
-    Camera a, b;
+    Camera a;
+    Camera b;
     a.on_mouse_movement(0.0f, 400.0f);
     b.on_mouse_movement(0.0f, 1000.0f);
     auto const va = a.view_matrix();
     auto const vb = b.view_matrix();
-    for (int c = 0; c < 4; ++c)
-        for (int r = 0; r < 4; ++r)
+    for (int c = 0; c < 4; ++c) {
+        for (int r = 0; r < 4; ++r) {
             REQUIRE(va[c][r] == Approx(vb[c][r]).margin(1e-5f));
+        }
+    }
 }
 
 TEST_CASE("camera pitch clamped at -89 degrees", "[cam]") {
     using Catch::Approx;
-    Camera a, b;
+    Camera a;
+    Camera b;
     a.on_mouse_movement(0.0f, -400.0f);
     b.on_mouse_movement(0.0f, -1000.0f);
     auto const va = a.view_matrix();
     auto const vb = b.view_matrix();
-    for (int c = 0; c < 4; ++c)
-        for (int r = 0; r < 4; ++r)
+    for (int c = 0; c < 4; ++c) {
+        for (int r = 0; r < 4; ++r) {
             REQUIRE(va[c][r] == Approx(vb[c][r]).margin(1e-5f));
+        }
+    }
 }
 
 TEST_CASE("camera scroll zooms in", "[cam]") {

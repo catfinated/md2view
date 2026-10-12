@@ -64,16 +64,18 @@ static void write_pcx(std::filesystem::path const& path) {
     write_u16le(f, 1); // yend   (height = yend - ystart + 1 = 2)
     write_u16le(f, 2); // horzres
     write_u16le(f, 2); // vertres
-    for (int i = 0; i < 48; ++i)
+    for (int i = 0; i < 48; ++i) {
         write_u8(f, 0); // palette (unused for 8-bit)
-    write_u8(f, 0);     // reserved1
-    write_u8(f, 1);     // num_bit_planes
-    write_u16le(f, 2);  // bytes_per_line (= width)
-    write_u16le(f, 1);  // palette_type
-    write_u16le(f, 0);  // horz_screen_size
-    write_u16le(f, 0);  // vert_screen_size
-    for (int i = 0; i < 54; ++i)
+    }
+    write_u8(f, 0);    // reserved1
+    write_u8(f, 1);    // num_bit_planes
+    write_u16le(f, 2); // bytes_per_line (= width)
+    write_u16le(f, 1); // palette_type
+    write_u16le(f, 0); // horz_screen_size
+    write_u16le(f, 0); // vert_screen_size
+    for (int i = 0; i < 54; ++i) {
         write_u8(f, 0); // reserved2
+    }
 
     // --- Scan lines (scan_line_length = num_bit_planes * bytes_per_line = 2)
     // --- Values 0x00-0xBF are stored as-is (no RLE encoding needed).
@@ -297,13 +299,13 @@ static int32_t write_md2_header_and_geometry(std::ofstream& f,
     int32_t const num_st = 3;
     int32_t const num_tris = 1;
     int32_t const num_glcmds = 0;
-    int32_t const framesize = 12 + 12 + 16 + num_xyz * 4; // 52
+    int32_t const framesize = 12 + 12 + 16 + (num_xyz * 4); // 52
 
     int32_t const offset_skins = 68;
     int32_t const offset_st = offset_skins;
-    int32_t const offset_tris = offset_st + num_st * 4;
-    int32_t const offset_frames = offset_tris + num_tris * 12;
-    int32_t const offset_glcmds = offset_frames + num_frames * framesize;
+    int32_t const offset_tris = offset_st + (num_st * 4);
+    int32_t const offset_frames = offset_tris + (num_tris * 12);
+    int32_t const offset_glcmds = offset_frames + (num_frames * framesize);
     int32_t const offset_end = offset_glcmds;
 
     write_i32le(f, ident);

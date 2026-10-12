@@ -84,7 +84,7 @@ void require_malformed_md2(std::size_t offset,
 TEST_CASE("md2 non-existent", "[md2]") {
     TmpDir tmp_dir;
     PAK pak{tmp_dir.path()};
-    auto construct = [&]() { MD2{"notafile.md2", pak}; };
+    auto construct = [&] { MD2{"notafile.md2", pak}; };
     REQUIRE_THROWS_AS(construct(), gsl_lite::fail_fast);
 }
 
