@@ -42,6 +42,7 @@
             "name": "clang-tidy",
             "inherits": "debug",
             "displayName": "debug+clang-tidy",
+            "binaryDir": "${sourceDir}/build/clang-tidy",
             "cacheVariables": {
                 "CMAKE_CXX_CLANG_TIDY": {
                     "type": "STRING",

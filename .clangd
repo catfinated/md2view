@@ -30,6 +30,7 @@ Diagnostics:
       - modernize-use-trailing-return-type
       - readability-magic-numbers
       - cppcoreguidelines-avoid-magic-numbers
+      - readability-identifier-length
 
   UnusedIncludes: Strict
   MissingIncludes: Strict
