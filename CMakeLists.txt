@@ -19,6 +19,21 @@ if(GIT_FOUND AND EXISTS "${CMAKE_SOURCE_DIR}/.git")
     if(NOT GIT_HOOKS_RESULT EQUAL 0)
         message(WARNING "failed to set git core.hooksPath to scripts/hooks")
     endif()
+
+    # NB: git blame fails if this is set and the file is missing, so only set
+    # it when the file exists
+    if(EXISTS "${CMAKE_SOURCE_DIR}/.git-blame-ignore-revs")
+        execute_process(
+            COMMAND ${GIT_EXECUTABLE} config blame.ignoreRevsFile
+                .git-blame-ignore-revs
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            RESULT_VARIABLE GIT_BLAME_RESULT
+        )
+        if(NOT GIT_BLAME_RESULT EQUAL 0)
+            message(WARNING
+                "failed to set git blame.ignoreRevsFile to .git-blame-ignore-revs")
+        endif()
+    endif()
 endif()
 
 add_subdirectory(src)
