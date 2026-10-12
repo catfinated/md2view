@@ -29,7 +29,8 @@ static std::vector<Vertex> const vertices = {
     {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
     {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
     {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-    {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}};
+    {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}},
+};
 
 static std::vector<uint16_t> const indices = {0, 1, 2, 2, 3, 0};
 
@@ -183,7 +184,9 @@ void Renderer::createGraphicsPipeline() {
     fragShaderStageInfo.pName = "main";
 
     std::array<vk::PipelineShaderStageCreateInfo, 2UL> shaderStages = {
-        vertShaderStageInfo, fragShaderStageInfo};
+        vertShaderStageInfo,
+        fragShaderStageInfo,
+    };
 
     auto bindingDescription = Vertex::getBindingDescription();
     auto attributeDescriptions = Vertex::getAttributeDescriptions();
@@ -238,7 +241,7 @@ void Renderer::createGraphicsPipeline() {
 
     std::vector<vk::DynamicState> dynamicStates = {
         vk::DynamicState::eViewport, // VK_DYNAMIC_STATE_VIEWPORT,
-        vk::DynamicState::eScissor   // VK_DYNAMIC_STATE_SCISSOR
+        vk::DynamicState::eScissor,  // VK_DYNAMIC_STATE_SCISSOR
     };
 
     vk::PipelineDynamicStateCreateInfo dynamicState{
@@ -411,7 +414,8 @@ void Renderer::drawFrame(float time) {
     std::array<vk::Semaphore, 1UL> waitSemaphores{*imageAvailableSemaphore};
     std::array<vk::CommandBuffer, 1UL> commandBuffers{*commandBuffer};
     std::array<vk::PipelineStageFlags, 1UL> waitStages{
-        vk::PipelineStageFlagBits::eColorAttachmentOutput};
+        vk::PipelineStageFlagBits::eColorAttachmentOutput,
+    };
 
     updateUniformBuffer(currentFrame_, time);
 

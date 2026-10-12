@@ -93,8 +93,10 @@ void Renderer::setClearColor(std::array<float, 4> const& color) {
 
 void Renderer::beginFrame() {
     mainFb_->bind();
-    std::array<GLenum, 2> drawBuffers{GL_COLOR_ATTACHMENT0,
-                                      GL_COLOR_ATTACHMENT1};
+    std::array<GLenum, 2> drawBuffers{
+        GL_COLOR_ATTACHMENT0,
+        GL_COLOR_ATTACHMENT1,
+    };
     glDrawBuffers(drawBuffers.size(), drawBuffers.data());
     glCheckError();
 

@@ -33,15 +33,19 @@
 namespace VK {
 
 static constexpr std::array<char const*, 1> validationLayers = {
-    "VK_LAYER_KHRONOS_validation"};
+    "VK_LAYER_KHRONOS_validation",
+};
 
 #ifdef __APPLE__
 // MoltenVK is a portability-subset implementation
 static constexpr std::array<char const*, 2> deviceExtensions = {
-    VK_KHR_SWAPCHAIN_EXTENSION_NAME, "VK_KHR_portability_subset"};
+    VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+    "VK_KHR_portability_subset",
+};
 #else
 static constexpr std::array<char const*, 1> deviceExtensions = {
-    VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+    VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+};
 #endif
 
 VKAPI_ATTR VkBool32 VKAPI_CALL
@@ -222,7 +226,8 @@ vk::raii::Device createDevice(vk::raii::PhysicalDevice const& physicalDevice,
 
     std::set<uint32_t> uniqueQueueFamilies = {
         queueFamilyIndices.graphicsFamily.value(),
-        queueFamilyIndices.presentFamily.value()};
+        queueFamilyIndices.presentFamily.value(),
+    };
 
     std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
     queueCreateInfos.reserve(uniqueQueueFamilies.size());
@@ -334,7 +339,8 @@ createSwapChain(vk::raii::PhysicalDevice const& physicalDevice,
 
     std::array<uint32_t, 2> indices = {
         queueFamilyIndices.graphicsFamily.value(),
-        queueFamilyIndices.presentFamily.value()};
+        queueFamilyIndices.presentFamily.value(),
+    };
 
     if (queueFamilyIndices.graphicsFamily != queueFamilyIndices.presentFamily) {
         createInfo.imageSharingMode = vk::SharingMode::eConcurrent;
@@ -510,7 +516,10 @@ BoundBuffer BoundBuffer::create(vk::raii::Device const& device,
     // bind buffer to memory and return
     buf.bindMemory(*mem, 0UL);
     return BoundBuffer{
-        .buffer = std::move(buf), .memory = std::move(mem), .size = size};
+        .buffer = std::move(buf),
+        .memory = std::move(mem),
+        .size = size,
+    };
 }
 
 BoundBuffer

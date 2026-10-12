@@ -164,8 +164,9 @@ static void write_png(std::filesystem::path const& path,
                       std::vector<Bytes> const& rows,
                       Bytes const& palette = {}) {
     std::ofstream f(path, std::ios::binary);
-    constexpr std::array<uint8_t, 8> signature{0x89, 'P',  'N',  'G',
-                                               0x0D, 0x0A, 0x1A, 0x0A};
+    constexpr std::array<uint8_t, 8> signature{
+        0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A,
+    };
     f.write(reinterpret_cast<char const*>(signature.data()), signature.size());
 
     Bytes ihdr;

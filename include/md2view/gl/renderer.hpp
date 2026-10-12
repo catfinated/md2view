@@ -21,7 +21,8 @@ public:
         WindowHint{GLFW_CONTEXT_VERSION_MAJOR, 4},
         WindowHint{GLFW_CONTEXT_VERSION_MINOR, 1},
         WindowHint{GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE},
-        WindowHint{GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE}};
+        WindowHint{GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE},
+    };
 
     Renderer(Window& window, ResourceManager& resourceManager);
     ~Renderer() = default;

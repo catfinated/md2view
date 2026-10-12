@@ -149,8 +149,12 @@ void MD2View::draw_ui(GL::Engine<MD2View>& engine) {
 
         ImGui::Text("View");
         ImGui::PushItemWidth(vec4width);
-        static std::array view_ids = {"view##0", "view##1", "view##2",
-                                      "view##3"};
+        static std::array view_ids = {
+            "view##0",
+            "view##1",
+            "view##2",
+            "view##3",
+        };
 
         for (auto i = 0U; i < view_ids.size(); ++i) {
             ImGui::PushID(gsl_lite::at(view_ids, i));
@@ -163,8 +167,12 @@ void MD2View::draw_ui(GL::Engine<MD2View>& engine) {
 
         ImGui::Text("Projection");
         ImGui::PushItemWidth(vec4width);
-        static std::array proj_ids = {"proj##0", "proj##1", "proj##2",
-                                      "proj##3"};
+        static std::array proj_ids = {
+            "proj##0",
+            "proj##1",
+            "proj##2",
+            "proj##3",
+        };
 
         for (auto i = 0U; i < proj_ids.size(); ++i) {
             ImGui::PushID(gsl_lite::at(proj_ids, i));
@@ -189,8 +197,12 @@ void MD2View::draw_ui(GL::Engine<MD2View>& engine) {
 
         ImGui::Text("Model");
         ImGui::PushItemWidth(vec4width);
-        static std::array model_ids = {"model##00", "model##1", "model##2",
-                                       "model##3"};
+        static std::array model_ids = {
+            "model##00",
+            "model##1",
+            "model##2",
+            "model##3",
+        };
 
         for (auto i = 0U; i < model_ids.size(); ++i) {
             ImGui::PushID(gsl_lite::at(model_ids, i));

@@ -20,7 +20,8 @@ namespace VK {
 class Renderer {
 public:
     static constexpr std::array kWindowHints{
-        WindowHint{GLFW_CLIENT_API, GLFW_NO_API}};
+        WindowHint{GLFW_CLIENT_API, GLFW_NO_API},
+    };
     explicit Renderer(Window& window);
     ~Renderer();
 
