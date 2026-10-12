@@ -36,7 +36,7 @@ issues draw calls.
 ### PAK (`pak.hpp`)
 Quake II PAK archive reader. Supports both real `.pak` files (binary archive
 with a flat directory) and plain directories treated as a PAK (used during
-development). Exposes a uniform `open_ifstream(path)` interface so callers do
+development). Exposes a uniform `openIfstream(path)` interface so callers do
 not need to distinguish between the two.
 
 ### PCX (`pcx.hpp`)
@@ -59,14 +59,14 @@ Responsibilities:
   triangle vertex) for use with `glDrawArrays`
 - Animation state machine: tracks current/next frame indices and a fractional
   interpolation value; `update(dt)` lerps between keyframes and writes the
-  result into `interpolated_vertices_`
+  result into `interpolatedVertices_`
 
 **MD2 has no OpenGL dependency.** It exposes the current frame data through two
 const accessors:
 
 ```cpp
-std::vector<glm::vec3> const& interpolated_vertices() const;
-std::vector<glm::vec2> const& scaled_texcoords() const;
+std::vector<glm::vec3> const& interpolatedVertices() const;
+std::vector<glm::vec2> const& scaledTexcoords() const;
 ```
 
 These are the only values the GPU layer needs. Because MD2 does not touch any
@@ -82,10 +82,10 @@ model type; it operates purely on `std::span<glm::vec3>` and
 
 ```cpp
 // Allocate GPU resources and upload initial data
-GL::Mesh mesh{model.interpolated_vertices(), model.scaled_texcoords()};
+GL::Mesh mesh{model.interpolatedVertices(), model.scaledTexcoords()};
 
 // Re-upload vertex data after animation update (texcoords are static)
-mesh.sync(model.interpolated_vertices());
+mesh.sync(model.interpolatedVertices());
 
 // Issue draw call
 mesh.draw(shader);
@@ -105,15 +105,15 @@ in sync each frame:
 
 ```
 update(dt):
-    md2_->update(dt);               // advance animation, write interpolated_vertices_
-    md2_mesh_->sync(md2_->interpolated_vertices()); // upload to GPU
+    md2_->update(dt);               // advance animation, write interpolatedVertices_
+    md2Mesh_->sync(md2_->interpolatedVertices()); // upload to GPU
 
 render():
-    md2_mesh_->draw(*shader_);      // glDrawArrays
+    md2Mesh_->draw(*shader_);      // glDrawArrays
 ```
 
-When the user selects a different model, `load_model()` replaces both `md2_`
-and `md2_mesh_`. `ResourceManager` caches `MD2` objects by path and is unaware
+When the user selects a different model, `loadModel()` replaces both `md2_`
+and `md2Mesh_`. `ResourceManager` caches `MD2` objects by path and is unaware
 of the GPU layer.
 
 ## Rendering pipeline (GL backend)

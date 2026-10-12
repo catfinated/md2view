@@ -17,7 +17,7 @@
 /// - **Directory mode**: treats a plain filesystem directory as though it were
 ///   a PAK file, enabling development without a real archive.
 ///
-/// Callers use the same `open_ifstream()` interface in both modes.
+/// Callers use the same `openIfstream()` interface in both modes.
 ///
 /// @see https://quakewiki.org/wiki/.pak
 class PAK {

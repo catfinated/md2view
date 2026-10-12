@@ -31,7 +31,7 @@ class PAK;
 ///   (one entry per triangle corner, not per unique vertex).
 /// - Runs a frame interpolation state machine; `update(dt)` advances the
 ///   animation and writes lerped world-space positions into
-///   `interpolated_vertices_`.
+///   `interpolatedVertices_`.
 ///
 /// **This class has no OpenGL dependency.** GPU upload is handled separately
 /// by `GL::Mesh`. Because no graphics context is required, MD2 objects can be
@@ -55,8 +55,8 @@ public:
 
     /// On-disk file header (17 × int32, no padding).
     struct Header {
-        int32_t ident;       ///< Must equal MD2::ident.
-        int32_t version;     ///< Must equal MD2::version.
+        int32_t ident;       ///< Must equal MD2::kIdent.
+        int32_t version;     ///< Must equal MD2::kVersion.
         int32_t skinwidth;   ///< Skin texture width in pixels.
         int32_t skinheight;  ///< Skin texture height in pixels.
         int32_t framesize;   ///< Size of one frame in bytes.
@@ -116,7 +116,7 @@ public:
         std::string name;
         int startFrame; ///< Index of the first frame (inclusive).
         int endFrame;   ///< Index of the last frame (inclusive).
-        bool loop;      ///< If false, animation stops at end_frame.
+        bool loop;      ///< If false, animation stops at endFrame.
 
         Animation()
             : startFrame(-1)
@@ -168,14 +168,14 @@ public:
     }
 
     /// World-space vertex positions for the current interpolated frame.
-    /// Size is `num_tris × 3` (one entry per triangle corner).
+    /// Size is `numTris × 3` (one entry per triangle corner).
     /// This is the data that should be uploaded to the GPU via
     /// `GL::Mesh::sync()`.
     std::vector<glm::vec3> const& interpolatedVertices() const {
         return interpolatedVertices_;
     }
 
-    /// Normalised texture coordinates, parallel to `interpolated_vertices()`.
+    /// Normalised texture coordinates, parallel to `interpolatedVertices()`.
     /// Static after construction — does not change between frames.
     std::vector<glm::vec2> const& scaledTexcoords() const {
         return scaledTexcoords_;
@@ -183,7 +183,7 @@ public:
     /// @}
 
     /// Advance the animation by @p dt seconds and update
-    /// `interpolated_vertices()`.
+    /// `interpolatedVertices()`.
     ///
     /// No-op if the animation is paused (fps == 0), is a single frame, or is a
     /// non-looping animation that has reached its last frame.
@@ -216,8 +216,7 @@ private:
 
     /// Pre-scaled, triangle-unpacked vertex positions for one keyframe.
     struct KeyFrame {
-        std::vector<glm::vec3>
-            vertices; ///< num_tris × 3 world-space positions.
+        std::vector<glm::vec3> vertices; ///< numTris × 3 world-space positions.
     };
 
     /// Scale a frame's packed vertices and unpack them in triangle order.

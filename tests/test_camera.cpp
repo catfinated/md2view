@@ -6,7 +6,7 @@
 
 // Default camera: pos=(0,0,0), yaw=-90, pitch=0
 // → front=(0,0,-1), right=(1,0,0), up=(0,1,0)
-// → view_matrix() == glm::mat4(1.0f)
+// → viewMatrix() == glm::mat4(1.0f)
 //
 // glm::lookAt stores the translation in column 3 (column-major):
 //   view[3][0] = -dot(right, pos)
@@ -41,7 +41,7 @@ TEST_CASE("camera default accessors", "[cam]") {
     REQUIRE(camera.yaw() == Approx(Camera::kYaw));
 }
 
-TEST_CASE("camera set_fov marks fov dirty", "[cam]") {
+TEST_CASE("camera setFov marks fov dirty", "[cam]") {
     Camera camera;
     camera.setFovClean();
     camera.setFov(30.0f);
@@ -64,13 +64,13 @@ TEST_CASE("camera pitch and yaw updated after mouse movement", "[cam]") {
     REQUIRE(camera.pitch() == Approx(Camera::kPitch + 1.0f).margin(1e-5f));
 }
 
-TEST_CASE("camera set_view_clean clears flag", "[cam]") {
+TEST_CASE("camera setViewClean clears flag", "[cam]") {
     Camera camera;
     camera.setViewClean();
     REQUIRE_FALSE(camera.viewDirty());
 }
 
-TEST_CASE("camera set_fov_clean clears flag", "[cam]") {
+TEST_CASE("camera setFovClean clears flag", "[cam]") {
     Camera camera;
     camera.setFovClean();
     REQUIRE_FALSE(camera.fovDirty());

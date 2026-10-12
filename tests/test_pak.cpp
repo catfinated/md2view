@@ -49,7 +49,7 @@ TEST_CASE("pak from pak file invalid magic throws", "[pak]") {
     REQUIRE_THROWS_AS(construct(), std::runtime_error);
 }
 
-TEST_CASE("pak open_ifstream returns correct content", "[pak]") {
+TEST_CASE("pak openIfstream returns correct content", "[pak]") {
     auto path = testFixturesDir() / "minimal.pak";
     PAK pak{path};
 

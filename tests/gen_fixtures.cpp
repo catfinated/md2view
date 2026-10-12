@@ -68,16 +68,16 @@ static void writePcx(std::filesystem::path const& path) {
         writeU8(f, 0); // palette (unused for 8-bit)
     }
     writeU8(f, 0);    // reserved1
-    writeU8(f, 1);    // num_bit_planes
-    writeU16le(f, 2); // bytes_per_line (= width)
-    writeU16le(f, 1); // palette_type
-    writeU16le(f, 0); // horz_screen_size
-    writeU16le(f, 0); // vert_screen_size
+    writeU8(f, 1);    // numBitPlanes
+    writeU16le(f, 2); // bytesPerLine (= width)
+    writeU16le(f, 1); // paletteType
+    writeU16le(f, 0); // horzScreenSize
+    writeU16le(f, 0); // vertScreenSize
     for (int i = 0; i < 54; ++i) {
         writeU8(f, 0); // reserved2
     }
 
-    // --- Scan lines (scan_line_length = num_bit_planes * bytes_per_line = 2)
+    // --- Scan lines (scanLineLength = numBitPlanes * bytesPerLine = 2)
     // --- Values 0x00-0xBF are stored as-is (no RLE encoding needed).
     writeU8(f, 0x00);
     writeU8(f, 0x01); // row 0: index 0, index 1
@@ -381,8 +381,8 @@ static void writeTwoAnimMd2(std::filesystem::path const& path) {
 //
 // Animation: one frame named "stand0" → animation id "stand"
 //
-// After loading, scaled_texcoords() == [(0,0),(0.5,0),(0,0.5)]
-// After loading, interpolated_vertices() == [(0,0,0),(1,0,0),(0,1,0)]
+// After loading, scaledTexcoords() == [(0,0),(0.5,0),(0,0.5)]
+// After loading, interpolatedVertices() == [(0,0,0),(1,0,0),(0,1,0)]
 //   (MD2 loader remaps: v[0]→x, v[1]→z, v[2]→y)
 static void writeMd2(std::filesystem::path const& path) {
     std::ofstream f(path, std::ios::binary);

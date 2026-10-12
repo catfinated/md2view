@@ -20,7 +20,7 @@ class ResourceManager : public AssetLoader {
 public:
     /// @param rootdir  Project data root (shaders are expected at
     /// `rootdir/shaders/`).
-    /// @param pak_path Path to a `.pak` file or directory. Defaults to
+    /// @param pakPath Path to a `.pak` file or directory. Defaults to
     /// `rootdir/models`.
     explicit ResourceManager(
         std::filesystem::path const& rootdir,

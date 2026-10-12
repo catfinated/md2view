@@ -23,7 +23,7 @@ class Shader;
 /// Typical per-frame usage:
 /// @code
 /// model.update(dt);                          // advance animation
-/// mesh.sync(model.interpolated_vertices());  // upload to GPU
+/// mesh.sync(model.interpolatedVertices());  // upload to GPU
 /// mesh.draw(shader);                         // draw
 /// @endcode
 class Mesh {

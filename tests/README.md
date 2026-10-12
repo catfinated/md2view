@@ -23,7 +23,7 @@ generated at build time by `gen_fixtures.cpp`.
 3. The `test_fixtures` custom target depends on those outputs, and `test_md2v`
    depends on `test_fixtures`, so fixtures are always up to date before tests run.
 4. `fixtures.hpp.in` is processed by `configure_file` into
-   `fixtures.hpp` in the build tree, providing `test_fixtures_dir()` to
+   `fixtures.hpp` in the build tree, providing `testFixturesDir()` to
    test source files.
 
 ### Adding a new fixture

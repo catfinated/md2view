@@ -15,7 +15,7 @@ UI.
 - `VK::Vertex` has `vec2 pos, vec3 color` — not the MD2 vertex format.
 - Renders a hardcoded static quad; no model loading, no texture, no camera,
   no UI.
-- `VKEngine::init()` calls only `parse_args()`; no PAK or MD2 loading.
+- `VKEngine::init()` calls only `parseArgs()`; no PAK or MD2 loading.
 - `include/md2view/vk/ubo.hpp` exists but is empty.
 
 ## Phase 1 — Foundation
@@ -33,8 +33,8 @@ Without a depth buffer, back faces of the MD2 mesh will overwrite front faces.
 ### 2. Vertex format
 Rewrite `include/md2view/vk/vertex.hpp`:
 
-- `vec3 pos` (world-space, matches `MD2::interpolated_vertices()`)
-- `vec2 texcoord` (matches `MD2::scaled_texcoords()`)
+- `vec3 pos` (world-space, matches `MD2::interpolatedVertices()`)
+- `vec2 texcoord` (matches `MD2::scaledTexcoords()`)
 
 Update `getBindingDescription()` and `getAttributeDescriptions()` to match.
 Delete the `vec3 color` field.
@@ -71,7 +71,7 @@ produces a bug that only appears once the cycles drift out of phase.
 ### 4. PAK / MD2 loading
 Mirror the GL engine's startup sequence in `VKEngine::init()`:
 
-- Accept `--models-dir` via `parse_args()` (already in base `Engine`).
+- Accept `--models-dir` via `parseArgs()` (already in base `Engine`).
 - Open a `PAK` for the directory.
 - Load a default `MD2` model; store `shared_ptr<MD2>` on `VKEngine`.
 - Load the first available skin via `PCX`.
@@ -96,7 +96,7 @@ Replace the hardcoded `vertices` / `indices` with live MD2 data:
   `MD2::vertex_count()` entries.
 - Allocate an index buffer from `MD2::triangle_indices()` (static after load).
 - Each frame: call `md2_->update(dt)`, map the vertex buffer, write
-  `interpolated_vertices()` + `scaled_texcoords()` interleaved as `VK::Vertex`.
+  `interpolatedVertices()` + `scaledTexcoords()` interleaved as `VK::Vertex`.
 
 ### 7. Texture / image
 Load the PCX skin decoded pixel buffer into a Vulkan image:
@@ -141,7 +141,7 @@ Register callbacks on `VKEngine`'s GLFW window:
 - `glfwSetCursorPosCallback` — feed `Camera::process_mouse_movement()`.
 - `glfwSetScrollCallback` — feed `Camera::process_mouse_scroll()`.
 
-Compute the view matrix from `Camera::view_matrix()` each frame and write it
+Compute the view matrix from `Camera::viewMatrix()` each frame and write it
 into the UBO.
 
 ## Phase 5 — UI

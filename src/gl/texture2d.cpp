@@ -65,8 +65,8 @@ bool Texture2D::init(GLuint width,
 
     glGenerateMipmap(GL_TEXTURE_2D);
 
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, attr_.wrap_s);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, attr_.wrap_t);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, attr_.wrapS);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, attr_.wrapT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, attr_.filterMin);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, attr_.filterMax);
 

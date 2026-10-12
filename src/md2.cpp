@@ -202,8 +202,8 @@ bool MD2::loadTexcoords(std::ifstream& infile, size_t offset) {
 
 // key frame contains the scaled vertices unpacked from the triangles
 // into a flat vector since same vertex can have a different tex coord
-// in two different triangles. therefore, KeyFrame has num_tris * 3 entries
-// and tex coord buffer ends up with num_tris * 3 entries too but
+// in two different triangles. therefore, KeyFrame has numTris * 3 entries
+// and tex coord buffer ends up with numTris * 3 entries too but
 // is shared by all frames.
 MD2::KeyFrame MD2::unpackFrame(Frame const& frame) const {
     KeyFrame keyFrame;

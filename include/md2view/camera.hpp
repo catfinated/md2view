@@ -7,8 +7,8 @@
 /// First-person fly camera with mouse-look and scroll-to-zoom.
 ///
 /// Tracks position, yaw, pitch, and field of view. View and projection
-/// state is lazily recomputed: callers should check `view_dirty()` and
-/// `fov_dirty()` each frame and only rebuild matrices when the flags are set,
+/// state is lazily recomputed: callers should check `viewDirty()` and
+/// `fovDirty()` each frame and only rebuild matrices when the flags are set,
 /// then call the corresponding `set_*_clean()` to clear them.
 ///
 /// @note Based on the camera tutorial at
@@ -45,7 +45,7 @@ public:
     [[nodiscard]] glm::vec3 const& up() const { return up_; }
     /// Camera-local right vector (recomputed each time orientation changes).
     [[nodiscard]] glm::vec3 const& right() const { return right_; }
-    /// Current pitch in degrees. Clamped to [-89, 89] when `constrain_pitch` is
+    /// Current pitch in degrees. Clamped to [-89, 89] when `constrainPitch` is
     /// set.
     [[nodiscard]] float pitch() const { return pitch_; }
     /// Current yaw in degrees. Increases rightward.
@@ -57,14 +57,14 @@ public:
         fovDirty_ = true;
     }
 
-    /// Move the camera in a cardinal direction scaled by @p delta_time.
+    /// Move the camera in a cardinal direction scaled by @p deltaTime.
     void move(Direction direction, float deltaTime);
 
     /// Update yaw and pitch from a mouse delta.
     ///
     /// @param xoffset        Horizontal mouse delta in pixels.
     /// @param yoffset        Vertical mouse delta in pixels.
-    /// @param constrain_pitch Clamp pitch to ±89° to prevent gimbal flip.
+    /// @param constrainPitch Clamp pitch to ±89° to prevent gimbal flip.
     void
     onMouseMovement(float xoffset, float yoffset, bool constrainPitch = true);
 

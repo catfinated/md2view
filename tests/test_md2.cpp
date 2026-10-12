@@ -112,7 +112,7 @@ TEST_CASE("md2 animation parsed from frame name", "[md2]") {
 
 TEST_CASE("md2 interpolated vertex count", "[md2]") {
     auto md2 = loadFixture();
-    // num_tris * 3 vertices unpacked into flat buffer
+    // numTris * 3 vertices unpacked into flat buffer
     REQUIRE(md2.interpolatedVertices().size() == 3);
 }
 
@@ -164,7 +164,7 @@ TEST_CASE("md2 update does not crash on single-frame animation", "[md2]") {
     REQUIRE(md2.interpolatedVertices().size() == 3);
 }
 
-// --- set_frames_per_second ---
+// --- setFramesPerSecond ---
 
 TEST_CASE("md2 frames per second default", "[md2]") {
     auto md2 = loadFixture();
@@ -195,7 +195,7 @@ TEST_CASE("md2 default skin index", "[md2]") {
     REQUIRE(md2.skinIndex() == 0);
 }
 
-// --- set_animation / set_skin_index error cases ---
+// --- setAnimation / setSkinIndex error cases ---
 
 TEST_CASE("md2 set animation unknown name is no-op", "[md2]") {
     auto md2 = loadFixture();

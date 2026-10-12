@@ -17,12 +17,12 @@ class FrameBuffer {
 public:
     FrameBuffer() = default;
 
-    /// Create an FBO with @p num_color_buffers texture colour attachments.
+    /// Create an FBO with @p numColorBuffers texture colour attachments.
     ///
     /// @param width                Framebuffer width in pixels.
     /// @param height               Framebuffer height in pixels.
-    /// @param num_color_buffers    Number of colour texture attachments.
-    /// @param enable_render_buffer If true, attach a depth renderbuffer.
+    /// @param numColorBuffers    Number of colour texture attachments.
+    /// @param enableRenderBuffer If true, attach a depth renderbuffer.
     FrameBuffer(GLuint width,
                 GLuint height,
                 size_t numColorBuffers = 1,
