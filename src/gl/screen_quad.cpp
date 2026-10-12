@@ -6,7 +6,7 @@
 
 namespace GL {
 
-std::array<GLfloat, 24> ScreenQuad::vertices_ = {
+std::array<GLfloat, 24> ScreenQuad::vertices = {
     {
         // Positions   // TexCoords
         -1.0f, 1.0f, 0.0f, 1.0f,  -1.0f, -1.0f,
@@ -23,13 +23,13 @@ ScreenQuad::ScreenQuad() {
 
     glBindVertexArray(vao_);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices_), vertices_.data(),
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices.data(),
                  GL_STATIC_DRAW);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat),
-                          GL_BUFFER_OFFSET(0));
+                          glBufferOffset(0));
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat),
-                          GL_BUFFER_OFFSET(2 * sizeof(GLfloat)));
+                          glBufferOffset(2 * sizeof(GLfloat)));
     glEnableVertexAttribArray(1);
     glBindVertexArray(0);
     glCheckError();

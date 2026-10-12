@@ -15,45 +15,45 @@ TEST_CASE("pak non-existent", "[pak]") {
 }
 
 TEST_CASE("pak from directory", "[pak]") {
-    TmpDir tmp_dir;
-    PAK pak{tmp_dir.path()};
+    TmpDir tmpDir;
+    PAK pak{tmpDir.path()};
 
-    REQUIRE(pak.is_directory());
-    REQUIRE(pak.fpath() == tmp_dir.path());
-    REQUIRE_FALSE(pak.has_models());
+    REQUIRE(pak.isDirectory());
+    REQUIRE(pak.fpath() == tmpDir.path());
+    REQUIRE_FALSE(pak.hasModels());
 }
 
 TEST_CASE("pak from pak file is not directory", "[pak]") {
-    auto path = test_fixtures_dir() / "minimal.pak";
+    auto path = testFixturesDir() / "minimal.pak";
     PAK pak{path};
 
-    REQUIRE_FALSE(pak.is_directory());
+    REQUIRE_FALSE(pak.isDirectory());
     REQUIRE(pak.fpath() == path);
 }
 
 TEST_CASE("pak from pak file has models", "[pak]") {
-    auto path = test_fixtures_dir() / "minimal.pak";
+    auto path = testFixturesDir() / "minimal.pak";
     PAK pak{path};
 
-    REQUIRE(pak.has_models());
+    REQUIRE(pak.hasModels());
 }
 
 TEST_CASE("pak from pak file invalid magic throws", "[pak]") {
-    TmpDir tmp_dir;
-    auto bad_pak = tmp_dir.path() / "bad.pak";
+    TmpDir tmpDir;
+    auto badPak = tmpDir.path() / "bad.pak";
     {
-        std::ofstream f(bad_pak, std::ios::binary);
+        std::ofstream f(badPak, std::ios::binary);
         f.write("NOPE\0\0\0\0\0\0\0\0", 12);
     }
-    auto construct = [&] { PAK pak{bad_pak}; };
+    auto construct = [&] { PAK pak{badPak}; };
     REQUIRE_THROWS_AS(construct(), std::runtime_error);
 }
 
 TEST_CASE("pak open_ifstream returns correct content", "[pak]") {
-    auto path = test_fixtures_dir() / "minimal.pak";
+    auto path = testFixturesDir() / "minimal.pak";
     PAK pak{path};
 
-    auto inf = pak.open_ifstream("models/player/tris.md2");
+    auto inf = pak.openIfstream("models/player/tris.md2");
     REQUIRE(inf.is_open());
 
     std::string content(5, '\0');

@@ -46,30 +46,30 @@ bool PAK::init() {
     }
 
     if (std::filesystem::is_regular_file(fpath_)) {
-        return init_from_file();
+        return initFromFile();
     }
-    init_from_directory();
+    initFromDirectory();
     return true;
 }
 
-void PAK::init_from_directory() {
-    for (auto const& dir_entry :
+void PAK::initFromDirectory() {
+    for (auto const& dirEntry :
          std::filesystem::recursive_directory_iterator(fpath_)) {
-        if (std::filesystem::is_regular_file(dir_entry.path())) {
-            auto path = dir_entry.path().lexically_relative(fpath_).string();
+        if (std::filesystem::is_regular_file(dirEntry.path())) {
+            auto path = dirEntry.path().lexically_relative(fpath_).string();
             std::ranges::replace(path, '\\', '/');
             Node node;
-            node.name = dir_entry.path().stem().string();
+            node.name = dirEntry.path().stem().string();
             node.path = path;
             node.filepos = 0;
-            node.filelen = std::filesystem::file_size(dir_entry.path());
+            node.filelen = std::filesystem::file_size(dirEntry.path());
             spdlog::info("{} {} {}", node.name, node.path, node.filelen);
             entries_.emplace(path, std::move(node));
         }
     }
 }
 
-bool PAK::init_from_file() {
+bool PAK::initFromFile() {
     std::ifstream inf(fpath_, std::ios_base::in | std::ios_base::binary);
 
     if (!inf) {
@@ -90,14 +90,14 @@ bool PAK::init_from_file() {
     }
 
     // TODO: ensure dirofs/dirlen converted from little endian to host
-    auto num_entries = static_cast<size_t>(hdr.dirlen) / sizeof(Entry);
+    auto numEntries = static_cast<size_t>(hdr.dirlen) / sizeof(Entry);
 
     spdlog::info("loaded pak file: {} {} {} {}", fpath_, hdr.dirofs, hdr.dirlen,
-                 num_entries);
+                 numEntries);
 
     inf.seekg(hdr.dirofs);
 
-    for (size_t i = 0; i < num_entries; ++i) {
+    for (size_t i = 0; i < numEntries; ++i) {
         gsl_Assert(inf);
         Entry entry{};
         inf.read(reinterpret_cast<char*>(&entry), sizeof(entry));
@@ -118,10 +118,10 @@ bool PAK::init_from_file() {
     return true;
 }
 
-std::ifstream PAK::open_ifstream(std::filesystem::path const& fpath) const {
+std::ifstream PAK::openIfstream(std::filesystem::path const& fpath) const {
     auto const flags = std::ios_base::in | std::ios_base::binary;
 
-    if (!is_directory()) {
+    if (!isDirectory()) {
         auto const& node = entries().at(fpath.string());
         std::ifstream inf(fpath_, flags);
         inf.seekg(node.filepos);

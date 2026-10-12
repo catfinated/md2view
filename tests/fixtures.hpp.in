@@ -1,5 +1,5 @@
 #pragma once
 #include <filesystem>
-inline std::filesystem::path test_fixtures_dir() {
+inline std::filesystem::path testFixturesDir() {
     return std::filesystem::path{"@FIXTURE_DIR@"};
 }

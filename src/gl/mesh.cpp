@@ -13,7 +13,7 @@ namespace GL {
 
 Mesh::Mesh(std::span<glm::vec3 const> vertices,
            std::span<glm::vec2 const> texcoords) {
-    vertex_count_ = gsl_lite::narrow_cast<GLsizei>(vertices.size());
+    vertexCount_ = gsl_lite::narrow_cast<GLsizei>(vertices.size());
 
     glGenVertexArrays(1, &vao_);
     glGenBuffers(2, vbo_.data());
@@ -61,7 +61,7 @@ void Mesh::sync(std::span<glm::vec3 const> vertices) {
 
 void Mesh::draw(Shader& /* shader */) const {
     glBindVertexArray(vao_);
-    glDrawArrays(GL_TRIANGLES, 0, vertex_count_);
+    glDrawArrays(GL_TRIANGLES, 0, vertexCount_);
     glCheckError();
 }
 

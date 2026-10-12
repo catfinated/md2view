@@ -8,7 +8,7 @@
 namespace detail {
 
 struct StringHash {
-    using is_transparent = void; // Enables heterogeneous lookup
+    using is_transparent = void; // NOLINT(readability-identifier-naming)
 
     std::size_t operator()(std::string_view sv) const {
         return std::hash<std::string_view>{}(sv);

@@ -18,14 +18,14 @@
 
 template <typename Game> void GL::Engine<Game>::doInit() {
     std::optional<std::filesystem::path> pak;
-    if (!pak_path_.empty()) {
-        pak = pak_path_;
+    if (!pakPath_.empty()) {
+        pak = pakPath_;
     }
 
-    resource_manager_ = std::make_unique<ResourceManager>("data", pak);
+    resourceManager_ = std::make_unique<ResourceManager>("data", pak);
     window_ =
         Window::create(width_, height_, game_.title(), Renderer::kWindowHints);
-    renderer_ = std::make_unique<Renderer>(window_, *resource_manager_);
+    renderer_ = std::make_unique<Renderer>(window_, *resourceManager_);
 
     window_.setFramebufferResizeHandler([this](int width, int height) {
         spdlog::debug("framebuffer resize x={} y={}", width, height);
@@ -42,31 +42,30 @@ template <typename Game> void GL::Engine<Game>::doInit() {
 
     gui_ = std::make_unique<GL::Gui>(gsl_lite::not_null{window_.get()});
     glCheckError();
-    if (!game_.on_engine_initialized(*this)) {
+    if (!game_.onEngineInitialized(*this)) {
         throw std::runtime_error("failed to initialize game");
     }
     glCheckError();
 }
 
-template <typename Game> void GL::Engine<Game>::run_game() {
-    last_frame_ = gsl_lite::narrow_cast<GLfloat>(glfwGetTime());
+template <typename Game> void GL::Engine<Game>::runGame() {
+    lastFrame_ = gsl_lite::narrow_cast<GLfloat>(glfwGetTime());
 
     while (!window_.shouldClose()) {
-        auto const current_frame =
-            gsl_lite::narrow_cast<GLfloat>(glfwGetTime());
-        delta_time_ = current_frame - last_frame_;
-        last_frame_ = current_frame;
+        auto const currentFrame = gsl_lite::narrow_cast<GLfloat>(glfwGetTime());
+        deltaTime_ = currentFrame - lastFrame_;
+        lastFrame_ = currentFrame;
 
         beginFrame();
         glfwPollEvents();
 
-        if (input_goes_to_game_) {
-            game_.process_input(*this, delta_time_);
+        if (inputGoesToGame_) {
+            game_.processInput(*this, deltaTime_);
         }
 
         gui_->update();
         glCheckError();
-        game_.update(*this, delta_time_);
+        game_.update(*this, deltaTime_);
         glCheckError();
         renderer_->beginFrame();
         game_.render(*this);
@@ -89,10 +88,10 @@ void GL::Engine<Game>::onKey(int key, int scancode, int action, int mods) {
         }
     }
 
-    auto const game_had_input = input_goes_to_game_;
+    auto const gameHadInput = inputGoesToGame_;
     ::Engine::onKey(key, scancode, action, mods);
-    if (gui_ && input_goes_to_game_ != game_had_input) {
-        gui_->onInputFocus(!input_goes_to_game_);
+    if (gui_ && inputGoesToGame_ != gameHadInput) {
+        gui_->onInputFocus(!inputGoesToGame_);
     }
 }
 
@@ -101,9 +100,9 @@ void GL::Engine<Game>::onCursorPos(double xpos, double ypos) {
     ::Engine::onCursorPos(xpos, ypos);
     if (guiHasInput()) {
         gui_->onCursorPos(xpos, ypos);
-    } else if (input_goes_to_game_) {
-        game_.on_mouse_movement(gsl_lite::narrow_cast<float>(mouse_.xoffset),
-                                gsl_lite::narrow_cast<float>(mouse_.yoffset));
+    } else if (inputGoesToGame_) {
+        game_.onMouseMovement(gsl_lite::narrow_cast<float>(mouse_.xoffset),
+                              gsl_lite::narrow_cast<float>(mouse_.yoffset));
     }
 }
 
@@ -112,8 +111,8 @@ void GL::Engine<Game>::onScroll(double xoffset, double yoffset) {
     ::Engine::onScroll(xoffset, yoffset);
     if (guiHasInput()) {
         gui_->onScroll(xoffset, yoffset);
-    } else if (input_goes_to_game_) {
-        game_.on_mouse_scroll(xoffset, yoffset);
+    } else if (inputGoesToGame_) {
+        game_.onMouseScroll(xoffset, yoffset);
     }
 }
 

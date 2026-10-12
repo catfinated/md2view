@@ -33,7 +33,7 @@ void Engine::Keyboard::onKey(int key, int action) {
     }
 }
 
-bool Engine::parse_args(std::span<char const*> args) {
+bool Engine::parseArgs(std::span<char const*> args) {
     boost::program_options::options_description engine("Engine options");
     engine.add_options()("help,h", "Show this help message")(
         "width,W",
@@ -42,22 +42,22 @@ bool Engine::parse_args(std::span<char const*> args) {
         "height,H",
         boost::program_options::value<int>(&height_)->default_value(800),
         "Screen height")("pak,p",
-                         boost::program_options::value<std::string>(&pak_path_),
+                         boost::program_options::value<std::string>(&pakPath_),
                          "PAK file or directory to emulate as a PAK")(
         "log-level,l",
         boost::program_options::value<std::string>()->default_value("info"),
         "Log level: debug, info, warn, error, off");
 
-    options_desc().add(engine);
+    optionsDesc().add(engine);
 
     boost::program_options::store(boost::program_options::parse_command_line(
                                       gsl_lite::narrow_cast<int>(args.size()),
-                                      args.data(), options_desc()),
-                                  variables_map_);
-    boost::program_options::notify(variables_map_);
+                                      args.data(), optionsDesc()),
+                                  variablesMap_);
+    boost::program_options::notify(variablesMap_);
 
-    if (variables_map_.contains("help")) {
-        std::cerr << options_desc() << '\n';
+    if (variablesMap_.contains("help")) {
+        std::cerr << optionsDesc() << '\n';
         return false;
     }
 
@@ -66,10 +66,10 @@ bool Engine::parse_args(std::span<char const*> args) {
         {"warn", spdlog::level::warn},   {"error", spdlog::level::err},
         {"off", spdlog::level::off},
     };
-    auto const& level_str = variables_map_["log-level"].as<std::string>();
-    auto it = levels.find(level_str);
+    auto const& levelStr = variablesMap_["log-level"].as<std::string>();
+    auto it = levels.find(levelStr);
     if (it == levels.end()) {
-        std::cerr << "unknown log level '" << level_str
+        std::cerr << "unknown log level '" << levelStr
                   << "'; choose: debug, info, warn, error, off\n";
         return false;
     }
@@ -79,7 +79,7 @@ bool Engine::parse_args(std::span<char const*> args) {
 }
 
 bool Engine::init(std::span<char const*> args) {
-    if (!parse_args(args)) {
+    if (!parseArgs(args)) {
         return false;
     }
 
@@ -109,9 +109,9 @@ void Engine::onKey(int key, int /*scancode*/, int action, int /*mods*/) {
     if (key == GLFW_KEY_ESCAPE) {
         window_.requestClose();
     } else if (key == GLFW_KEY_F1) {
-        input_goes_to_game_ = !input_goes_to_game_;
-        spdlog::info("got F1. game input: {}", input_goes_to_game_);
-        if (input_goes_to_game_) {
+        inputGoesToGame_ = !inputGoesToGame_;
+        spdlog::info("got F1. game input: {}", inputGoesToGame_);
+        if (inputGoesToGame_) {
             // NB: ImGui sets a custom cursor and GLFW 3.4 on
             // Wayland keeps animating even when the cursor is
             // disabled so we need to clear it here. ImGui
@@ -120,8 +120,8 @@ void Engine::onKey(int key, int /*scancode*/, int action, int /*mods*/) {
             glfwSetCursor(window_.get(), nullptr);
         }
         glfwSetInputMode(window_.get(), GLFW_CURSOR,
-                         input_goes_to_game_ ? GLFW_CURSOR_DISABLED
-                                             : GLFW_CURSOR_NORMAL);
+                         inputGoesToGame_ ? GLFW_CURSOR_DISABLED
+                                          : GLFW_CURSOR_NORMAL);
     }
 }
 

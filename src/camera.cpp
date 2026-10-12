@@ -17,29 +17,29 @@ Camera::Camera(glm::vec3 const& position,
     , front_(0.0f, 0.0f, -1.0f)
     , up_(up)
     , right_(1.0f, 0.0f, 0.0)
-    , world_up_(up)
+    , worldUp_(up)
     , yaw_(yaw)
     , pitch_(pitch) {
-    update_vectors();
+    updateVectors();
 }
 
 void Camera::reset(glm::vec3 const& position) {
     position_ = position;
     front_ = glm::vec3(0.0f, 0.0f, -1.0f);
-    world_up_ = glm::vec3(0.0f, 1.0f, 0.0f);
-    yaw_ = YAW;
-    pitch_ = PITCH;
-    fov_ = FOV;
+    worldUp_ = glm::vec3(0.0f, 1.0f, 0.0f);
+    yaw_ = kYaw;
+    pitch_ = kPitch;
+    fov_ = kFov;
 
-    update_vectors();
+    updateVectors();
 }
 
-glm::mat4 Camera::view_matrix() const {
+glm::mat4 Camera::viewMatrix() const {
     return glm::lookAt(position_, position_ + front_, up_);
 }
 
-void Camera::move(Direction direction, float delta_time) {
-    float velocity = movement_speed_ * delta_time;
+void Camera::move(Direction direction, float deltaTime) {
+    float velocity = movementSpeed_ * deltaTime;
 
     switch (direction) {
     case Direction::FORWARD:
@@ -58,42 +58,42 @@ void Camera::move(Direction direction, float delta_time) {
         break;
     }
 
-    view_dirty_ = true;
+    viewDirty_ = true;
 }
 
-void Camera::on_mouse_movement(float xoffset,
-                               float yoffset,
-                               bool constrain_pitch) {
-    xoffset *= mouse_sensitivity_;
-    yoffset *= mouse_sensitivity_;
+void Camera::onMouseMovement(float xoffset,
+                             float yoffset,
+                             bool constrainPitch) {
+    xoffset *= mouseSensitivity_;
+    yoffset *= mouseSensitivity_;
 
     yaw_ += xoffset;
     pitch_ += yoffset;
 
-    if (constrain_pitch) {
+    if (constrainPitch) {
         pitch_ = std::min(89.0f, std::max(-89.0f, pitch_));
     }
 
-    update_vectors();
+    updateVectors();
 }
 
-void Camera::on_mouse_scroll(double /* xoffset */, double yoffset) {
+void Camera::onMouseScroll(double /* xoffset */, double yoffset) {
     if (fov_ >= 1.0f && fov_ <= 45.0f) {
         fov_ -= gsl_lite::narrow_cast<float>(yoffset);
     }
 
     fov_ = std::min(45.0f, std::max(1.0f, fov_));
-    fov_dirty_ = true;
+    fovDirty_ = true;
 }
 
-void Camera::update_vectors() {
+void Camera::updateVectors() {
     auto const x =
         glm::cos(glm::radians(pitch_)) * glm::cos(glm::radians(yaw_));
     auto const y = glm::sin(glm::radians(pitch_));
     auto const z =
         glm::cos(glm::radians(pitch_)) * glm::sin(glm::radians(yaw_));
     front_ = glm::normalize(glm::vec3(x, y, z));
-    right_ = glm::normalize(glm::cross(front_, world_up_));
+    right_ = glm::normalize(glm::cross(front_, worldUp_));
     up_ = glm::normalize(glm::cross(right_, front_));
-    view_dirty_ = true;
+    viewDirty_ = true;
 }

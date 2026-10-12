@@ -28,7 +28,7 @@ public:
 private:
     GLuint vao_{};
     GLuint vbo_{};
-    static std::array<GLfloat, 24> vertices_;
+    static std::array<GLfloat, 24> vertices;
 };
 
 } // namespace GL

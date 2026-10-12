@@ -52,20 +52,20 @@ Renderer::Renderer(Window& window, ResourceManager& resourceManager)
                                                 2, true);
     screenQuad_ = std::make_unique<GL::ScreenQuad>();
 
-    blurShader_ = resourceManager.load_shader("blur", "screen");
+    blurShader_ = resourceManager.loadShader("blur", "screen");
     blurShader_->use();
-    disableBlurLoc_ = blurShader_->uniform_location("disable_blur");
-    GL::Shader::set_uniform(disableBlurLoc_, 1);
+    disableBlurLoc_ = blurShader_->uniformLocation("disable_blur");
+    GL::Shader::setUniform(disableBlurLoc_, 1);
 
-    glowShader_ = resourceManager.load_shader("glow", "screen");
+    glowShader_ = resourceManager.loadShader("glow", "screen");
     glowShader_->use();
 
-    auto loc = glowShader_->uniform_location("screenTexture");
-    GL::Shader::set_uniform(loc, 0);
-    loc = glowShader_->uniform_location("prepassTexture");
-    GL::Shader::set_uniform(loc, 1);
-    loc = glowShader_->uniform_location("blurredTexture");
-    GL::Shader::set_uniform(loc, 2);
+    auto loc = glowShader_->uniformLocation("screenTexture");
+    GL::Shader::setUniform(loc, 0);
+    loc = glowShader_->uniformLocation("prepassTexture");
+    GL::Shader::setUniform(loc, 1);
+    loc = glowShader_->uniformLocation("blurredTexture");
+    GL::Shader::setUniform(loc, 2);
 
     mainFb_->bind();
     glEnable(GL_DEPTH_TEST);
@@ -73,7 +73,7 @@ Renderer::Renderer(Window& window, ResourceManager& resourceManager)
     glDepthFunc(GL_LEQUAL);
     // glDisable(GL_BLEND);
     glEnable(GL_BLEND);
-    GL::FrameBuffer::bind_default();
+    GL::FrameBuffer::bindDefault();
 
     setVsyncOn(true);
     glCheckError();
@@ -116,29 +116,29 @@ void Renderer::postProcessFrame() {
         // blur solid image
         blurFb_->bind();
         blurShader_->use();
-        GL::Shader::set_uniform(disableBlurLoc_, 0);
+        GL::Shader::setUniform(disableBlurLoc_, 0);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, mainFb_->color_buffer(1));
+        glBindTexture(GL_TEXTURE_2D, mainFb_->colorBuffer(1));
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         screenQuad_->draw(*glowShader_);
 
-        GL::FrameBuffer::bind_default();
+        GL::FrameBuffer::bindDefault();
         glowShader_->use();
         glClear(GL_COLOR_BUFFER_BIT);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, mainFb_->color_buffer(0));
+        glBindTexture(GL_TEXTURE_2D, mainFb_->colorBuffer(0));
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, mainFb_->color_buffer(1));
+        glBindTexture(GL_TEXTURE_2D, mainFb_->colorBuffer(1));
         glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, blurFb_->color_buffer(0));
+        glBindTexture(GL_TEXTURE_2D, blurFb_->colorBuffer(0));
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         screenQuad_->draw(*glowShader_);
     } else {
-        GL::FrameBuffer::bind_default();
+        GL::FrameBuffer::bindDefault();
         blurShader_->use();
-        GL::Shader::set_uniform(disableBlurLoc_, 1);
+        GL::Shader::setUniform(disableBlurLoc_, 1);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, mainFb_->color_buffer(0));
+        glBindTexture(GL_TEXTURE_2D, mainFb_->colorBuffer(0));
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         screenQuad_->draw(*blurShader_);
     }
@@ -150,7 +150,7 @@ void Renderer::endFrame() { glfwSwapBuffers(window_.get()); }
 
 void Renderer::onFramebufferResize(Window::Extent extent) {
     fbSize_ = extent;
-    GL::FrameBuffer::bind_default();
+    GL::FrameBuffer::bindDefault();
     glViewport(0, 0, extent.width, extent.height);
     mainFb_ =
         std::make_unique<GL::FrameBuffer>(extent.width, extent.height, 2, true);

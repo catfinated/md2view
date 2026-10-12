@@ -53,7 +53,7 @@ Image Image::loadFromPak(PAK const& pak, std::string_view path) {
     auto const isPcx = std::filesystem::path(path).extension() == ".pcx";
 
     if (isPcx) {
-        auto inf = pak.open_ifstream(path);
+        auto inf = pak.openIfstream(path);
         gsl_Assert(inf.is_open());
         return Image{PCX{inf}};
     }

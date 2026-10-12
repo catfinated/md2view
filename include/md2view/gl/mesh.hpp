@@ -58,7 +58,7 @@ public:
 private:
     GLuint vao_{};
     std::array<GLuint, 2> vbo_{};
-    GLsizei vertex_count_{};
+    GLsizei vertexCount_{};
 };
 
 } // namespace GL

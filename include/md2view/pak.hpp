@@ -42,7 +42,7 @@ public:
     std::filesystem::path const& fpath() const noexcept { return fpath_; }
 
     /// Returns true if this PAK wraps a directory rather than a `.pak` file.
-    [[nodiscard]] bool is_directory() const noexcept {
+    [[nodiscard]] bool isDirectory() const noexcept {
         return fpath_.extension() != ".pak";
     }
 
@@ -54,7 +54,7 @@ public:
     /// @param fpath Archive-relative path of the entry (e.g.
     /// `"models/player/tris.md2"`).
     /// @return An open `std::ifstream` positioned at the start of the entry.
-    std::ifstream open_ifstream(std::filesystem::path const& fpath) const;
+    std::ifstream openIfstream(std::filesystem::path const& fpath) const;
 
     /// Lazy range of all `.md2` model entries in the archive.
     auto models() const {
@@ -65,12 +65,12 @@ public:
     }
 
     /// Returns true if the archive contains at least one `.md2` entry.
-    [[nodiscard]] bool has_models() const noexcept { return !models().empty(); }
+    [[nodiscard]] bool hasModels() const noexcept { return !models().empty(); }
 
 private:
     [[nodiscard]] bool init();
-    [[nodiscard]] bool init_from_file();
-    void init_from_directory();
+    [[nodiscard]] bool initFromFile();
+    void initFromDirectory();
     std::unordered_map<std::string, Node> const& entries() const {
         return entries_;
     }

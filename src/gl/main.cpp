@@ -15,7 +15,7 @@ int main(int argc, char const* argv[]) {
             return EXIT_FAILURE;
         }
 
-        engine.run_game();
+        engine.runGame();
     } catch (std::exception const& excp) {
         spdlog::error("exception caught in main: {}", excp.what());
         return EXIT_FAILURE;

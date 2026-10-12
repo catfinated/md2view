@@ -44,34 +44,34 @@ class MD2 {
 public:
     /// @name File format constants
     /// @{
-    static int32_t const ident = 844121161; ///< Magic number ("IDP2").
-    static int32_t const version = 8;
-    static int32_t const max_tris = 4096;
-    static int32_t const max_vertices = 2048;
-    static int32_t const max_texcoords = 2048;
-    static int32_t const max_frames = 512;
-    static int32_t const max_skins = 32;
+    static int32_t const kIdent = 844121161; ///< Magic number ("IDP2").
+    static int32_t const kVersion = 8;
+    static int32_t const kMaxTris = 4096;
+    static int32_t const kMaxVertices = 2048;
+    static int32_t const kMaxTexcoords = 2048;
+    static int32_t const kMaxFrames = 512;
+    static int32_t const kMaxSkins = 32;
     /// @}
 
     /// On-disk file header (17 × int32, no padding).
     struct Header {
-        int32_t ident;      ///< Must equal MD2::ident.
-        int32_t version;    ///< Must equal MD2::version.
-        int32_t skinwidth;  ///< Skin texture width in pixels.
-        int32_t skinheight; ///< Skin texture height in pixels.
-        int32_t framesize;  ///< Size of one frame in bytes.
-        int32_t num_skins;  ///< Number of skin entries.
-        int32_t num_xyz;    ///< Number of vertices per frame.
-        int32_t num_st;     ///< Number of texture coordinate pairs.
-        int32_t num_tris;   ///< Number of triangles.
-        int32_t num_glcmds; ///< Number of GL commands (unused by this loader).
-        int32_t num_frames; ///< Total number of keyframes.
-        int32_t offset_skins;  ///< File offset to the skin section.
-        int32_t offset_st;     ///< File offset to the texcoord section.
-        int32_t offset_tris;   ///< File offset to the triangle section.
-        int32_t offset_frames; ///< File offset to the frame section.
-        int32_t offset_glcmds; ///< File offset to GL commands.
-        int32_t offset_end;    ///< File size.
+        int32_t ident;       ///< Must equal MD2::ident.
+        int32_t version;     ///< Must equal MD2::version.
+        int32_t skinwidth;   ///< Skin texture width in pixels.
+        int32_t skinheight;  ///< Skin texture height in pixels.
+        int32_t framesize;   ///< Size of one frame in bytes.
+        int32_t numSkins;    ///< Number of skin entries.
+        int32_t numXyz;      ///< Number of vertices per frame.
+        int32_t numSt;       ///< Number of texture coordinate pairs.
+        int32_t numTris;     ///< Number of triangles.
+        int32_t numGlcmds;   ///< Number of GL commands (unused by this loader).
+        int32_t numFrames;   ///< Total number of keyframes.
+        int32_t offsetSkins; ///< File offset to the skin section.
+        int32_t offsetSt;    ///< File offset to the texcoord section.
+        int32_t offsetTris;  ///< File offset to the triangle section.
+        int32_t offsetFrames; ///< File offset to the frame section.
+        int32_t offsetGlcmds; ///< File offset to GL commands.
+        int32_t offsetEnd;    ///< File size.
     };
 
     /// A skin name entry (64-byte null-padded string).
@@ -97,7 +97,7 @@ public:
     /// scale/translate vectors, plus a pre-computed normal index.
     struct Vertex {
         std::array<uint8_t, 3> v;
-        uint8_t normal_index;
+        uint8_t normalIndex;
     };
 
     /// One keyframe: per-frame scale/translate, a name, and the raw vertices.
@@ -114,19 +114,19 @@ public:
     /// names (e.g. `"stand0"`, `"stand1"` → animation `"stand"`).
     struct Animation {
         std::string name;
-        int start_frame; ///< Index of the first frame (inclusive).
-        int end_frame;   ///< Index of the last frame (inclusive).
-        bool loop;       ///< If false, animation stops at end_frame.
+        int startFrame; ///< Index of the first frame (inclusive).
+        int endFrame;   ///< Index of the last frame (inclusive).
+        bool loop;      ///< If false, animation stops at end_frame.
 
         Animation()
-            : start_frame(-1)
-            , end_frame(-1)
+            : startFrame(-1)
+            , endFrame(-1)
             , loop(true) {}
 
         explicit Animation(std::string id)
             : name(std::move(id))
-            , start_frame(-1)
-            , end_frame(-1)
+            , startFrame(-1)
+            , endFrame(-1)
             , loop(true) {}
     };
 
@@ -159,26 +159,26 @@ public:
     Header const& header() const { return hdr_; }
     std::vector<SkinData> const& skins() const { return skins_; }
     std::vector<Animation> const& animations() const { return animations_; }
-    size_t animation_index() const { return current_animation_index_; }
-    size_t skin_index() const { return current_skin_index_; }
-    float frames_per_second() const { return frames_per_second_; }
+    size_t animationIndex() const { return currentAnimationIndex_; }
+    size_t skinIndex() const { return currentSkinIndex_; }
+    float framesPerSecond() const { return framesPerSecond_; }
 
-    SkinData const& current_skin() const {
-        return gsl_lite::at(skins_, current_skin_index_);
+    SkinData const& currentSkin() const {
+        return gsl_lite::at(skins_, currentSkinIndex_);
     }
 
     /// World-space vertex positions for the current interpolated frame.
     /// Size is `num_tris × 3` (one entry per triangle corner).
     /// This is the data that should be uploaded to the GPU via
     /// `GL::Mesh::sync()`.
-    std::vector<glm::vec3> const& interpolated_vertices() const {
-        return interpolated_vertices_;
+    std::vector<glm::vec3> const& interpolatedVertices() const {
+        return interpolatedVertices_;
     }
 
     /// Normalised texture coordinates, parallel to `interpolated_vertices()`.
     /// Static after construction — does not change between frames.
-    std::vector<glm::vec2> const& scaled_texcoords() const {
-        return scaled_texcoords_;
+    std::vector<glm::vec2> const& scaledTexcoords() const {
+        return scaledTexcoords_;
     }
     /// @}
 
@@ -190,29 +190,29 @@ public:
     void update(float dt);
 
     /// Switch to the animation with the given name. No-op if not found.
-    void set_animation(std::string const& id);
+    void setAnimation(std::string const& id);
 
     /// Switch to the animation at @p index.
     /// @throws gsl_lite::fail_fast if @p index is out of range.
-    void set_animation(size_t index);
+    void setAnimation(size_t index);
 
     /// @throws gsl_lite::fail_fast if @p index is out of range.
-    void set_skin_index(size_t index);
+    void setSkinIndex(size_t index);
 
     /// @param f Frames per second, clamped to [0, 60]. Pass 0 to pause.
-    void set_frames_per_second(float f) {
-        frames_per_second_ = boost::algorithm::clamp(f, 0.0f, 60.0f);
+    void setFramesPerSecond(float f) {
+        framesPerSecond_ = boost::algorithm::clamp(f, 0.0f, 60.0f);
     }
 
 private:
     [[nodiscard]] bool load(PAK const& pf, std::string_view filename);
     [[nodiscard]] bool load(std::ifstream& infile);
-    [[nodiscard]] bool load_skins(std::ifstream& infile, size_t offset);
-    [[nodiscard]] bool load_triangles(std::ifstream& infile, size_t offset);
-    [[nodiscard]] bool load_texcoords(std::ifstream& infile, size_t offset);
-    [[nodiscard]] bool load_frames(std::ifstream& infile, size_t offset);
-    void load_skins_from_directory(std::filesystem::path const& dpath,
-                                   std::filesystem::path const& root);
+    [[nodiscard]] bool loadSkins(std::ifstream& infile, size_t offset);
+    [[nodiscard]] bool loadTriangles(std::ifstream& infile, size_t offset);
+    [[nodiscard]] bool loadTexcoords(std::ifstream& infile, size_t offset);
+    [[nodiscard]] bool loadFrames(std::ifstream& infile, size_t offset);
+    void loadSkinsFromDirectory(std::filesystem::path const& dpath,
+                                std::filesystem::path const& root);
 
     /// Pre-scaled, triangle-unpacked vertex positions for one keyframe.
     struct KeyFrame {
@@ -224,26 +224,26 @@ private:
     ///
     /// @throws std::runtime_error if a triangle references a vertex the frame
     /// does not have.
-    [[nodiscard]] KeyFrame unpack_frame(Frame const& frame) const;
+    [[nodiscard]] KeyFrame unpackFrame(Frame const& frame) const;
 
     Header hdr_{};
     std::vector<Triangle> triangles_;
     std::vector<TexCoord> texcoords_;
     std::vector<Frame> frames_;
-    std::vector<KeyFrame> key_frames_;
-    std::vector<glm::vec2> scaled_texcoords_;
+    std::vector<KeyFrame> keyFrames_;
+    std::vector<glm::vec2> scaledTexcoords_;
     std::vector<SkinData> skins_;
     std::vector<Animation> animations_;
-    std::unordered_map<std::string, size_t> animation_index_map_;
-    std::vector<glm::vec3> interpolated_vertices_;
+    std::unordered_map<std::string, size_t> animationIndexMap_;
+    std::vector<glm::vec3> interpolatedVertices_;
 
-    int next_frame_{};
-    int current_frame_{};
+    int nextFrame_{};
+    int currentFrame_{};
     float interpolation_{};
-    float frames_per_second_ = 8.0f;
+    float framesPerSecond_ = 8.0f;
 
-    std::size_t current_animation_index_{};
-    std::size_t current_skin_index_{};
+    std::size_t currentAnimationIndex_{};
+    std::size_t currentSkinIndex_{};
 };
 
 std::ostream& operator<<(std::ostream& os, MD2::Header const& hdr);

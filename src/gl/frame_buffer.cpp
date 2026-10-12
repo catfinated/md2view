@@ -10,59 +10,59 @@ namespace GL {
 
 FrameBuffer::FrameBuffer(GLuint width,
                          GLuint height,
-                         size_t num_color_buffers,
-                         bool enable_render_buffer)
-    : color_buffers_(num_color_buffers) {
-    if (!init(width, height, enable_render_buffer)) {
+                         size_t numColorBuffers,
+                         bool enableRenderBuffer)
+    : colorBuffers_(numColorBuffers) {
+    if (!init(width, height, enableRenderBuffer)) {
         throw std::runtime_error("failed to initalize framebuffer");
     }
 }
 
-bool FrameBuffer::init(GLuint width, GLuint height, bool enable_render_buffer) {
+bool FrameBuffer::init(GLuint width, GLuint height, bool enableRenderBuffer) {
     glCheckError();
-    glGenFramebuffers(1, &frame_buffer_);
+    glGenFramebuffers(1, &frameBuffer_);
     glCheckError();
-    glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_);
-    glCheckError();
-
-    create_texture_attachment(width, height);
+    glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer_);
     glCheckError();
 
-    if (enable_render_buffer) {
-        create_render_buffer_attachement(width, height);
+    createTextureAttachment(width, height);
+    glCheckError();
+
+    if (enableRenderBuffer) {
+        createRenderBufferAttachement(width, height);
     }
 
     glCheckError();
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
         cleanup();
-        bind_default();
+        bindDefault();
         return false;
     }
 
-    bind_default();
+    bindDefault();
     return true;
 }
 
 FrameBuffer::~FrameBuffer() { cleanup(); }
 
 void FrameBuffer::cleanup() {
-    if (render_buffer_) {
-        GLuint rb = *render_buffer_;
+    if (renderBuffer_) {
+        GLuint rb = *renderBuffer_;
         glDeleteRenderbuffers(1, &rb);
     }
 
-    auto const count = gsl_lite::narrow_cast<GLsizei>(color_buffers_.size());
-    glDeleteTextures(count, color_buffers_.data());
-    glDeleteFramebuffers(1, &frame_buffer_);
+    auto const count = gsl_lite::narrow_cast<GLsizei>(colorBuffers_.size());
+    glDeleteTextures(count, colorBuffers_.data());
+    glDeleteFramebuffers(1, &frameBuffer_);
 }
 
-void FrameBuffer::create_texture_attachment(GLuint width, GLuint height) {
-    auto const count = gsl_lite::narrow_cast<GLsizei>(color_buffers_.size());
-    glGenTextures(count, color_buffers_.data());
+void FrameBuffer::createTextureAttachment(GLuint width, GLuint height) {
+    auto const count = gsl_lite::narrow_cast<GLsizei>(colorBuffers_.size());
+    glGenTextures(count, colorBuffers_.data());
 
-    for (auto i = 0u; i < color_buffers_.size(); ++i) {
-        glBindTexture(GL_TEXTURE_2D, color_buffers_[i]);
+    for (auto i = 0u; i < colorBuffers_.size(); ++i) {
+        glBindTexture(GL_TEXTURE_2D, colorBuffers_[i]);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
                      gsl_lite::narrow_cast<GLsizei>(width),
                      gsl_lite::narrow_cast<GLsizei>(height), 0, GL_RGB,
@@ -73,14 +73,13 @@ void FrameBuffer::create_texture_attachment(GLuint width, GLuint height) {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glBindTexture(GL_TEXTURE_2D, 0);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i,
-                               GL_TEXTURE_2D, color_buffers_[i], 0);
+                               GL_TEXTURE_2D, colorBuffers_[i], 0);
     }
 
     glCheckError();
 }
 
-void FrameBuffer::create_render_buffer_attachement(GLuint width,
-                                                   GLuint height) {
+void FrameBuffer::createRenderBufferAttachement(GLuint width, GLuint height) {
     GLuint rb;
     glGenRenderbuffers(1, &rb);
     glBindRenderbuffer(GL_RENDERBUFFER, rb);
@@ -90,7 +89,7 @@ void FrameBuffer::create_render_buffer_attachement(GLuint width,
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
                               GL_RENDERBUFFER, rb);
-    render_buffer_ = rb;
+    renderBuffer_ = rb;
     glCheckError();
 }
 

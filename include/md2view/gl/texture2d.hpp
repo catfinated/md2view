@@ -14,12 +14,12 @@ class Texture2D {
 public:
     /// Sampling and wrap parameters applied at upload time.
     struct Attributes {
-        GLuint image_format = GL_RGBA;    ///< Source pixel format.
-        GLint internal_format = GL_RGBA8; ///< GPU internal storage format.
-        GLuint wrap_s = GL_REPEAT;        ///< Horizontal wrap mode.
-        GLuint wrap_t = GL_REPEAT;        ///< Vertical wrap mode.
-        GLint filter_min = GL_LINEAR;     ///< Minification filter.
-        GLint filter_max = GL_LINEAR;     ///< Magnification filter.
+        GLuint imageFormat = GL_RGBA;    ///< Source pixel format.
+        GLint internalFormat = GL_RGBA8; ///< GPU internal storage format.
+        GLuint wrapS = GL_REPEAT;        ///< Horizontal wrap mode.
+        GLuint wrapT = GL_REPEAT;        ///< Vertical wrap mode.
+        GLint filterMin = GL_LINEAR;     ///< Minification filter.
+        GLint filterMax = GL_LINEAR;     ///< Magnification filter.
     };
 
     /// Upload pixel data to the GPU.

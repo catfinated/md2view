@@ -51,83 +51,79 @@ public:
     void use() const { glUseProgram(program()); }
 
     /// Bind a named uniform block to a binding point.
-    void set_uniform_block_binding(gsl_lite::not_null<char const*> block,
-                                   GLuint binding_point) const;
+    void setUniformBlockBinding(gsl_lite::not_null<char const*> block,
+                                GLuint bindingPoint) const;
 
     /// @name Uniform location lookup
     /// @{
     [[nodiscard]] GLint
-    uniform_location(gsl_lite::not_null<GLchar const*> name) const;
-    [[nodiscard]] GLint uniform_location(GLchar const* name) const {
-        return uniform_location(gsl_lite::not_null<GLchar const*>(name));
+    uniformLocation(gsl_lite::not_null<GLchar const*> name) const;
+    [[nodiscard]] GLint uniformLocation(GLchar const* name) const {
+        return uniformLocation(gsl_lite::not_null<GLchar const*>(name));
     }
-    [[nodiscard]] GLint uniform_location(std::string const& name) const {
-        return uniform_location(
-            gsl_lite::not_null<GLchar const*>(name.c_str()));
+    [[nodiscard]] GLint uniformLocation(std::string const& name) const {
+        return uniformLocation(gsl_lite::not_null<GLchar const*>(name.c_str()));
     }
     /// @}
 
     /// @name Standard MVP uniform locations
     /// @{
-    [[nodiscard]] GLint model_location() const {
-        return uniform_location("model");
+    [[nodiscard]] GLint modelLocation() const {
+        return uniformLocation("model");
     }
-    [[nodiscard]] GLint view_location() const {
-        return uniform_location("view");
+    [[nodiscard]] GLint viewLocation() const { return uniformLocation("view"); }
+    [[nodiscard]] GLint projectionLocation() const {
+        return uniformLocation("projection");
     }
-    [[nodiscard]] GLint projection_location() const {
-        return uniform_location("projection");
-    }
-    [[nodiscard]] GLint camera_position_location() const {
-        return uniform_location("cameraPos");
+    [[nodiscard]] GLint cameraPositionLocation() const {
+        return uniformLocation("cameraPos");
     }
     /// @}
 
     /// @name Typed uniform setters (static — call after `use()`)
     /// @{
-    static void set_uniform(GLint location, glm::vec2 const& v);
-    static void set_uniform(GLint location, glm::vec3 const& v);
-    static void set_uniform(GLint location, glm::vec4 const& v);
-    static void set_uniform(GLint location, glm::mat4 const& m);
-    static void set_uniform(GLint location, GLboolean b);
-    static void set_uniform(GLint location, GLint i);
-    static void set_uniform(GLint location, GLuint i);
-    static void set_uniform(GLint location, GLfloat f);
+    static void setUniform(GLint location, glm::vec2 const& v);
+    static void setUniform(GLint location, glm::vec3 const& v);
+    static void setUniform(GLint location, glm::vec4 const& v);
+    static void setUniform(GLint location, glm::mat4 const& m);
+    static void setUniform(GLint location, GLboolean b);
+    static void setUniform(GLint location, GLint i);
+    static void setUniform(GLint location, GLuint i);
+    static void setUniform(GLint location, GLfloat f);
     /// @}
 
     template <typename T>
-    void set_uniform(gsl_lite::not_null<GLchar const*> name, T const& t) {
-        set_uniform(uniform_location(name), t);
+    void setUniform(gsl_lite::not_null<GLchar const*> name, T const& t) {
+        set_uniform(uniformLocation(name), t);
     }
 
-    template <typename T>
-    void set_uniform(std::string const& name, T const& t) {
-        set_uniform(uniform_location(name), t);
+    template <typename T> void setUniform(std::string const& name, T const& t) {
+        set_uniform(uniformLocation(name), t);
     }
 
     template <std::size_t N>
-    void set_uniform(GLint location, std::array<GLint, N> const& a) {
+    void setUniform(GLint location, std::array<GLint, N> const& a) {
         glUniform1iv(location, N, a.data());
     }
 
     template <std::size_t N>
-    void set_uniform(GLint location, std::array<GLfloat, N> const& a) {
+    void setUniform(GLint location, std::array<GLfloat, N> const& a) {
         glUniform1fv(location, N, a.data());
     }
 
     template <std::size_t N>
-    void set_uniform(GLint location, std::array<glm::vec2, N> const& a) {
+    void setUniform(GLint location, std::array<glm::vec2, N> const& a) {
         glUniform2fv(location, N, &a[0][0]);
     }
 
     template <std::size_t N>
-    void set_uniform(GLint location, std::array<glm::vec3, N> const& a) {
+    void setUniform(GLint location, std::array<glm::vec3, N> const& a) {
         glUniform3fv(location, N, &a[0][0]);
     }
 
     template <std::size_t N>
-    void set_uniform(gsl_lite::not_null<GLchar const*> name,
-                     std::array<glm::mat4, N> const& a) {
+    void setUniform(gsl_lite::not_null<GLchar const*> name,
+                    std::array<glm::mat4, N> const& a) {
         for (size_t i = 0; i < a.size(); ++i) {
             std::ostringstream oss;
             oss << name << "[" << std::to_string(i) << "]";
@@ -138,15 +134,13 @@ public:
 
     /// @name MVP convenience setters
     /// @{
-    void set_model(glm::mat4 const& m) const {
-        set_uniform(model_location(), m);
+    void setModel(glm::mat4 const& m) const { setUniform(modelLocation(), m); }
+    void setView(glm::mat4 const& m) const { setUniform(viewLocation(), m); }
+    void setProjection(glm::mat4 const& m) const {
+        setUniform(projectionLocation(), m);
     }
-    void set_view(glm::mat4 const& m) const { set_uniform(view_location(), m); }
-    void set_projection(glm::mat4 const& m) const {
-        set_uniform(projection_location(), m);
-    }
-    void set_view_position(glm::vec3 const& v) const {
-        set_uniform(camera_position_location(), v);
+    void setViewPosition(glm::vec3 const& v) const {
+        setUniform(cameraPositionLocation(), v);
     }
     /// @}
 
@@ -155,10 +149,10 @@ private:
     init(std::filesystem::path const& vertex,
          std::filesystem::path const& fragment,
          std::optional<std::filesystem::path> const& geometry = {});
-    [[nodiscard]] static bool compile_shader(GLenum shader_type,
-                                             std::filesystem::path const& path,
-                                             GLuint& handle);
-    [[nodiscard]] static bool link_program(GLuint program);
+    [[nodiscard]] static bool compileShader(GLenum shaderType,
+                                            std::filesystem::path const& path,
+                                            GLuint& handle);
+    [[nodiscard]] static bool linkProgram(GLuint program);
     void cleanup();
 
     GLuint program_{};

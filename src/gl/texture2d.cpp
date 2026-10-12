@@ -52,23 +52,23 @@ bool Texture2D::init(GLuint width,
 
     width_ = width;
     height_ = height;
-    attr_.filter_min = GL_LINEAR_MIPMAP_LINEAR;
+    attr_.filterMin = GL_LINEAR_MIPMAP_LINEAR;
 
     bind();
 
     spdlog::debug("init 2D texture {}x{}", width_, height_);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, attr_.internal_format,
+    glTexImage2D(GL_TEXTURE_2D, 0, attr_.internalFormat,
                  gsl_lite::narrow_cast<GLsizei>(width_),
-                 gsl_lite::narrow_cast<GLsizei>(height_), 0, attr_.image_format,
+                 gsl_lite::narrow_cast<GLsizei>(height_), 0, attr_.imageFormat,
                  GL_UNSIGNED_BYTE, data.data());
 
     glGenerateMipmap(GL_TEXTURE_2D);
 
     // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, attr_.wrap_s);
     // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, attr_.wrap_t);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, attr_.filter_min);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, attr_.filter_max);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, attr_.filterMin);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, attr_.filterMax);
 
     spdlog::info("initialized 2D texture");
 

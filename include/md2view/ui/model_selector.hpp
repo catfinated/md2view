@@ -21,13 +21,13 @@ public:
     ModelSelector(ModelSelector&&) noexcept = default;
     ModelSelector& operator=(ModelSelector&&) noexcept = default;
 
-    [[nodiscard]] std::string model_path() const;
+    [[nodiscard]] std::string modelPath() const;
 
     /// @brief  Draw the model selection ui
     /// @return True if the selected model changed
-    [[nodiscard]] bool draw_ui();
+    [[nodiscard]] bool drawUi();
 
-    void select_random_model();
+    void selectRandomModel();
 
 private:
     struct Node {
@@ -36,7 +36,7 @@ private:
     };
 
     void init(PAK const& pak);
-    void add_node(std::filesystem::path const& path);
+    void addNode(std::filesystem::path const& path);
 
     std::mt19937 mt_;
     tree<Node> tree_;

@@ -15,15 +15,15 @@
 
 ResourceManager::ResourceManager(
     std::filesystem::path const& rootdir,
-    std::optional<std::filesystem::path> const& pak_path)
-    : AssetLoader(rootdir, pak_path)
-    , shaders_dir_(dataDir() / "shaders") {}
+    std::optional<std::filesystem::path> const& pakPath)
+    : AssetLoader(rootdir, pakPath)
+    , shadersDir_(dataDir() / "shaders") {}
 
 std::shared_ptr<GL::Shader>
-ResourceManager::load_shader(std::string const& name,
-                             std::optional<std::string_view> vertex,
-                             std::optional<std::string_view> fragment,
-                             std::optional<std::string_view> geometry) {
+ResourceManager::loadShader(std::string const& name,
+                            std::optional<std::string_view> vertex,
+                            std::optional<std::string_view> fragment,
+                            std::optional<std::string_view> geometry) {
     gsl_Assert(!shaders_.contains(name));
     auto const vfname =
         vertex ? fmt::format("{}.vert", *vertex) : fmt::format("{}.vert", name);
@@ -31,15 +31,15 @@ ResourceManager::load_shader(std::string const& name,
                                  : fmt::format("{}.frag", name);
     spdlog::info("loading shader {} {} {}", name, vfname, ffname);
 
-    auto vertex_path = shaders_dir() / vfname;
-    auto fragment_path = shaders_dir() / ffname;
-    std::optional<std::filesystem::path> geometry_path;
+    auto vertexPath = shadersDir() / vfname;
+    auto fragmentPath = shadersDir() / ffname;
+    std::optional<std::filesystem::path> geometryPath;
     if (geometry) {
-        geometry_path = shaders_dir() / std::string{*geometry};
+        geometryPath = shadersDir() / std::string{*geometry};
     }
 
     auto shader =
-        std::make_shared<GL::Shader>(vertex_path, fragment_path, geometry_path);
+        std::make_shared<GL::Shader>(vertexPath, fragmentPath, geometryPath);
     auto result = shaders_.emplace(name, shader);
 
     gsl_Assert(result.second);
@@ -48,8 +48,8 @@ ResourceManager::load_shader(std::string const& name,
 }
 
 std::shared_ptr<GL::Texture2D>
-ResourceManager::load_texture2D(std::string const& path,
-                                std::optional<std::string> const& name) {
+ResourceManager::loadTexture2D(std::string const& path,
+                               std::optional<std::string> const& name) {
     auto key = name ? *name : path;
     auto iter = textures2D_.find(key);
 

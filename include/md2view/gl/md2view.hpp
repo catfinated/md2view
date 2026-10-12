@@ -21,37 +21,37 @@ class MD2View {
 public:
     MD2View();
 
-    bool on_engine_initialized(GL::Engine<MD2View>& engine);
-    void process_input(GL::Engine<MD2View>& engine, GLfloat delta_time);
-    void on_mouse_movement(GLfloat xoffset, GLfloat yoffset);
-    void on_mouse_scroll(double xoffset, double yoffset);
+    bool onEngineInitialized(GL::Engine<MD2View>& engine);
+    void processInput(GL::Engine<MD2View>& engine, GLfloat deltaTime);
+    void onMouseMovement(GLfloat xoffset, GLfloat yoffset);
+    void onMouseScroll(double xoffset, double yoffset);
     void onFramebufferResize();
-    void update(GL::Engine<MD2View>& engine, GLfloat delta_time);
+    void update(GL::Engine<MD2View>& engine, GLfloat deltaTime);
     void render(GL::Engine<MD2View>& engine);
     static char const* title() { return "MD2View"; }
 
 private:
-    void reset_camera();
-    void reset_model_matrix();
-    void load_current_texture(GL::Engine<MD2View>& engine);
-    void update_model();
-    void draw_ui(GL::Engine<MD2View>& engine);
-    void load_model(GL::Engine<MD2View>& engine);
+    void resetCamera();
+    void resetModelMatrix();
+    void loadCurrentTexture(GL::Engine<MD2View>& engine);
+    void updateModel();
+    void drawUi(GL::Engine<MD2View>& engine);
+    void loadModel(GL::Engine<MD2View>& engine);
 
     std::shared_ptr<MD2> md2_;
-    std::unique_ptr<GL::Mesh> md2_mesh_;
-    std::unique_ptr<ModelSelector> model_selector_;
+    std::unique_ptr<GL::Mesh> md2Mesh_;
+    std::unique_ptr<ModelSelector> modelSelector_;
     std::shared_ptr<GL::Texture2D> texture_;
     std::shared_ptr<GL::Shader> shader_;
 
     Camera camera_;
-    std::string models_dir_;
+    std::string modelsDir_;
     int scale_ = 64.0f;
     std::array<float, 3> rot_{};
     glm::vec3 pos_{};
     glm::mat4 model_{};
     glm::mat4 view_{};
     glm::mat4 projection_{};
-    glm::vec3 glow_color_{};
-    GLint glow_loc_{};
+    glm::vec3 glowColor_{};
+    GLint glowLoc_{};
 };

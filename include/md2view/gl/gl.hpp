@@ -42,18 +42,18 @@ inline const char* glErrorToString(GLenum error) {
 
 inline GLenum
 glCheckError(std::source_location loc = std::source_location::current()) {
-    GLenum error_code = glGetError();
+    GLenum errorCode = glGetError();
 
-    while (error_code != GL_NO_ERROR) {
+    while (errorCode != GL_NO_ERROR) {
         spdlog::error("[{}:{}] {}", loc.file_name(), loc.line(),
-                      glErrorToString(error_code));
-        error_code = glGetError();
+                      glErrorToString(errorCode));
+        errorCode = glGetError();
     }
 
-    return error_code;
+    return errorCode;
 }
 
-void* GL_BUFFER_OFFSET(std::integral auto offset) {
+void* glBufferOffset(std::integral auto offset) {
     return reinterpret_cast<void*>(offset);
 }
 

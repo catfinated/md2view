@@ -24,10 +24,10 @@ public:
     /// `rootdir/models`.
     explicit ResourceManager(
         std::filesystem::path const& rootdir,
-        std::optional<std::filesystem::path> const& pak_path = std::nullopt);
+        std::optional<std::filesystem::path> const& pakPath = std::nullopt);
 
-    [[nodiscard]] std::filesystem::path const& shaders_dir() const {
-        return shaders_dir_;
+    [[nodiscard]] std::filesystem::path const& shadersDir() const {
+        return shadersDir_;
     }
 
     /// Compile and cache a shader program.
@@ -41,10 +41,10 @@ public:
     /// @p name).
     /// @param geometry Optional geometry shader file name.
     std::shared_ptr<GL::Shader>
-    load_shader(std::string const& name,
-                std::optional<std::string_view> vertex = {},
-                std::optional<std::string_view> fragment = {},
-                std::optional<std::string_view> geometry = {});
+    loadShader(std::string const& name,
+               std::optional<std::string_view> vertex = {},
+               std::optional<std::string_view> fragment = {},
+               std::optional<std::string_view> geometry = {});
 
     /// Return a previously loaded shader by name.
     std::shared_ptr<GL::Shader> shader(std::string const& name) {
@@ -56,15 +56,15 @@ public:
     /// If @p name is provided it is used as the cache key; otherwise @p path
     /// is. Returns the cached instance if already loaded.
     std::shared_ptr<GL::Texture2D>
-    load_texture2D(std::string const& path,
-                   std::optional<std::string> const& name = {});
+    loadTexture2D(std::string const& path,
+                  std::optional<std::string> const& name = {});
 
     std::shared_ptr<GL::Texture2D> texture2D(std::string const& name) {
         return textures2D_.at(name);
     }
 
 private:
-    std::filesystem::path shaders_dir_;
+    std::filesystem::path shadersDir_;
     std::unordered_map<std::string, std::shared_ptr<GL::Shader>> shaders_;
     std::unordered_map<std::string, std::shared_ptr<GL::Texture2D>> textures2D_;
 };

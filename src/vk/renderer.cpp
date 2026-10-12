@@ -25,14 +25,14 @@
 
 namespace VK {
 
-static std::vector<Vertex> const vertices = {
+static std::vector<Vertex> const kVertices = {
     {.pos = {-0.5f, -0.5f}, .color = {1.0f, 0.0f, 0.0f}},
     {.pos = {0.5f, -0.5f}, .color = {0.0f, 1.0f, 0.0f}},
     {.pos = {0.5f, 0.5f}, .color = {0.0f, 0.0f, 1.0f}},
     {.pos = {-0.5f, 0.5f}, .color = {1.0f, 1.0f, 1.0f}},
 };
 
-static std::vector<uint16_t> const indices = {0, 1, 2, 2, 3, 0};
+static std::vector<uint16_t> const kIndices = {0, 1, 2, 2, 3, 0};
 
 Renderer::Renderer(Window& window)
     : window_(window) {
@@ -85,17 +85,17 @@ void Renderer::initVulkan() {
     inflightFences_ = createFences(device_, kMaxFramesInFlight);
 
     // copy vertices to high performance on device gpu memory
-    auto bufSize = sizeof(Vertex) * vertices.size();
+    auto bufSize = sizeof(Vertex) * kVertices.size();
     auto stagingBuffer = createStagingBuffer(device_, physicalDevice_, bufSize);
-    stagingBuffer.memcpy(vertices);
+    stagingBuffer.memcpy(kVertices);
     vertexBuffer_ = createStaticVertexBuffer(device_, physicalDevice_, bufSize);
     copyBuffer(stagingBuffer, vertexBuffer_, device_, commandPool_,
                graphicsQueue_);
 
     // copy indices to high performance on device gpu memory
-    bufSize = sizeof(indices[0]) * indices.size();
+    bufSize = sizeof(kIndices[0]) * kIndices.size();
     stagingBuffer = createStagingBuffer(device_, physicalDevice_, bufSize);
-    stagingBuffer.memcpy(indices);
+    stagingBuffer.memcpy(kIndices);
     indexBuffer_ = createIndexBuffer(device_, physicalDevice_, bufSize);
     copyBuffer(stagingBuffer, indexBuffer_, device_, commandPool_,
                graphicsQueue_);
@@ -370,7 +370,7 @@ void Renderer::recordCommandBuffer(vk::raii::CommandBuffer& commandBuffer,
     commandBuffer.bindDescriptorSets(
         vk::PipelineBindPoint::eGraphics, pipelineLayout_, 0,
         {*descriptorSets_.at(currentFrame_)}, nullptr);
-    commandBuffer.drawIndexed(static_cast<uint32_t>(indices.size()), 1, 0, 0,
+    commandBuffer.drawIndexed(static_cast<uint32_t>(kIndices.size()), 1, 0, 0,
                               0);
 
     // commandBuffer.draw(vertices.size(), 1, 0, 0);

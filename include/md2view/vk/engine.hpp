@@ -22,7 +22,7 @@ public:
     Engine(Engine&&) noexcept = delete;
     Engine& operator=(Engine&&) noexcept = delete;
 
-    void run_game();
+    void runGame();
 
 private:
     void doInit() final;

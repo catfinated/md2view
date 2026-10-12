@@ -15,7 +15,7 @@ int main(int argc, char const* argv[]) {
             return EXIT_FAILURE;
         }
 
-        engine.run_game();
+        engine.runGame();
     } catch (vk::SystemError const& excp) {
         // vk::SystemError carries the VkResult as an error code; log it
         // alongside the message rather than flattening it to a string

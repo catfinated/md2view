@@ -16,11 +16,11 @@ template <typename Game> class Engine : public ::Engine {
 public:
     Engine() = default;
 
-    void run_game();
+    void runGame();
 
-    ResourceManager& resource_manager() {
-        gsl_Expects(resource_manager_);
-        return *resource_manager_;
+    ResourceManager& resourceManager() {
+        gsl_Expects(resourceManager_);
+        return *resourceManager_;
     }
 
     Renderer& renderer() {
@@ -35,17 +35,15 @@ private:
     void onScroll(double xoffset, double yoffset) final;
     void onMouseButton(int button, int action, int mods) final;
     void onChar(unsigned int codepoint) final;
-    [[nodiscard]] bool guiHasInput() const {
-        return gui_ && !input_goes_to_game_;
-    }
-    [[nodiscard]] GLfloat delta_time() const { return delta_time_; }
+    [[nodiscard]] bool guiHasInput() const { return gui_ && !inputGoesToGame_; }
+    [[nodiscard]] GLfloat deltaTime() const { return deltaTime_; }
 
     std::unique_ptr<Renderer> renderer_;
-    std::unique_ptr<ResourceManager> resource_manager_;
+    std::unique_ptr<ResourceManager> resourceManager_;
     std::unique_ptr<GL::Gui> gui_;
     Game game_;
-    GLfloat delta_time_ = 0.0f;
-    GLfloat last_frame_ = 0.0f;
+    GLfloat deltaTime_ = 0.0f;
+    GLfloat lastFrame_ = 0.0f;
 };
 
 } // namespace GL

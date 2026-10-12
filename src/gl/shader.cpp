@@ -65,52 +65,51 @@ bool Shader::init(std::filesystem::path const& vertex,
 
     program_ = glCreateProgram();
 
-    GLuint vertex_id{};
-    GLuint fragment_id{};
-    GLuint geometry_id{};
+    GLuint vertexId{};
+    GLuint fragmentId{};
+    GLuint geometryId{};
 
-    if (!compile_shader(GL_VERTEX_SHADER, vertex, vertex_id)) {
+    if (!compileShader(GL_VERTEX_SHADER, vertex, vertexId)) {
         spdlog::error("ERROR::SHADER::VERTEX::COMPILATION_FAILED");
         return false;
     }
 
-    glAttachShader(program_, vertex_id);
+    glAttachShader(program_, vertexId);
 
-    if (!compile_shader(GL_FRAGMENT_SHADER, fragment, fragment_id)) {
+    if (!compileShader(GL_FRAGMENT_SHADER, fragment, fragmentId)) {
         spdlog::error("ERROR::SHADER::FRAGMENT::COMPILATION_FAILED");
         return false;
     }
 
-    glAttachShader(program_, fragment_id);
+    glAttachShader(program_, fragmentId);
 
     if (geometry) {
-        if (!compile_shader(GL_GEOMETRY_SHADER, geometry.value(),
-                            geometry_id)) {
+        if (!compileShader(GL_GEOMETRY_SHADER, geometry.value(), geometryId)) {
             spdlog::error("ERROR::SHADER::GEOMETRY::COMPILATION_FAILED");
             return false;
         }
 
-        glAttachShader(program_, geometry_id);
+        glAttachShader(program_, geometryId);
     }
 
-    if (!link_program(program_)) {
+    if (!linkProgram(program_)) {
         spdlog::error("ERROR::PROGRAM::LINK_FAILED");
         return false;
     }
 
-    glDeleteShader(vertex_id);
-    glDeleteShader(fragment_id);
+    glDeleteShader(vertexId);
+    glDeleteShader(fragmentId);
 
     if (geometry) {
-        glDeleteShader(geometry_id);
+        glDeleteShader(geometryId);
     }
 
     return true;
 }
 
-bool Shader::compile_shader(GLenum shader_type,
-                            std::filesystem::path const& path,
-                            GLuint& handle) {
+bool Shader::compileShader(GLenum shaderType,
+                           std::filesystem::path const& path,
+                           GLuint& handle) {
     spdlog::info("compiling '{}'", path);
     std::string code;
 
@@ -126,9 +125,9 @@ bool Shader::compile_shader(GLenum shader_type,
         return false;
     }
 
-    GLchar const* shader_code = code.c_str();
-    handle = glCreateShader(shader_type);
-    glShaderSource(handle, 1, &shader_code, nullptr);
+    GLchar const* shaderCode = code.c_str();
+    handle = glCreateShader(shaderType);
+    glShaderSource(handle, 1, &shaderCode, nullptr);
     glCompileShader(handle);
 
     GLint success{};
@@ -145,7 +144,7 @@ bool Shader::compile_shader(GLenum shader_type,
     return true;
 }
 
-bool Shader::link_program(GLuint program) {
+bool Shader::linkProgram(GLuint program) {
     GLint success{};
     glLinkProgram(program);
 
@@ -161,44 +160,40 @@ bool Shader::link_program(GLuint program) {
     return true;
 }
 
-GLint Shader::uniform_location(gsl_lite::not_null<GLchar const*> name) const {
+GLint Shader::uniformLocation(gsl_lite::not_null<GLchar const*> name) const {
     return glGetUniformLocation(program(), name);
 }
 
-void Shader::set_uniform_block_binding(gsl_lite::not_null<char const*> block,
-                                       GLuint binding_point) const {
+void Shader::setUniformBlockBinding(gsl_lite::not_null<char const*> block,
+                                    GLuint bindingPoint) const {
     GLuint index = glGetUniformBlockIndex(program(), block);
-    glUniformBlockBinding(program(), index, binding_point);
+    glUniformBlockBinding(program(), index, bindingPoint);
 }
 
-void Shader::set_uniform(GLint location, glm::vec3 const& v) {
+void Shader::setUniform(GLint location, glm::vec3 const& v) {
     glUniform3fv(location, 1, &v[0]);
 }
 
-void Shader::set_uniform(GLint location, glm::vec2 const& v) {
+void Shader::setUniform(GLint location, glm::vec2 const& v) {
     glUniform2fv(location, 1, &v[0]);
 }
 
-void Shader::set_uniform(GLint location, glm::vec4 const& v) {
+void Shader::setUniform(GLint location, glm::vec4 const& v) {
     glUniform4fv(location, 1, &v[0]);
 }
 
-void Shader::set_uniform(GLint location, GLboolean b) {
+void Shader::setUniform(GLint location, GLboolean b) {
     glUniform1i(location, b);
 }
 
-void Shader::set_uniform(GLint location, glm::mat4 const& m) {
+void Shader::setUniform(GLint location, glm::mat4 const& m) {
     glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(m));
 }
 
-void Shader::set_uniform(GLint location, GLint i) { glUniform1i(location, i); }
+void Shader::setUniform(GLint location, GLint i) { glUniform1i(location, i); }
 
-void Shader::set_uniform(GLint location, GLuint i) {
-    glUniform1ui(location, i);
-}
+void Shader::setUniform(GLint location, GLuint i) { glUniform1ui(location, i); }
 
-void Shader::set_uniform(GLint location, GLfloat f) {
-    glUniform1f(location, f);
-}
+void Shader::setUniform(GLint location, GLfloat f) { glUniform1f(location, f); }
 
 } // namespace GL

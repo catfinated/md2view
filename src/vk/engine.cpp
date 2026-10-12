@@ -20,7 +20,7 @@ void Engine::doInit() {
     renderer_ = std::make_unique<Renderer>(window_);
 }
 
-void Engine::run_game() {
+void Engine::runGame() {
     while (!window_.shouldClose()) {
         beginFrame();
         glfwPollEvents();

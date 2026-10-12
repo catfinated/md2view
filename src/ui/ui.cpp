@@ -25,7 +25,7 @@ void draw(Camera& camera) {
                        ImGuiInputTextFlags_ReadOnly);
     float fov = camera.fov();
     if (ImGui::SliderFloat("fov", &fov, 1.0f, 60.0f)) {
-        camera.set_fov(fov);
+        camera.setFov(fov);
     }
     float pitch = camera.pitch();
     ImGui::InputFloat("Pitch", &pitch, 0.0f, 0.0f, "%.3f",
@@ -36,8 +36,8 @@ void draw(Camera& camera) {
 }
 
 bool draw(MD2& md2) {
-    int index = gsl_lite::narrow_cast<int>(md2.animation_index());
-    constexpr int anim_max_height_in_items = 15;
+    int index = gsl_lite::narrow_cast<int>(md2.animationIndex());
+    constexpr int animMaxHeightInItems = 15;
 
     ImGui::Combo(
         "Animation", &index,
@@ -47,11 +47,11 @@ bool draw(MD2& md2) {
             return m->animations()[idx].name.c_str();
         },
         &md2, gsl_lite::narrow_cast<int>(md2.animations().size()),
-        anim_max_height_in_items);
+        animMaxHeightInItems);
 
-    md2.set_animation(static_cast<size_t>(index));
+    md2.setAnimation(static_cast<size_t>(index));
 
-    int sindex = gsl_lite::narrow_cast<int>(md2.skin_index());
+    int sindex = gsl_lite::narrow_cast<int>(md2.skinIndex());
 
     ImGui::Combo(
         "Skin", &sindex,
@@ -62,15 +62,15 @@ bool draw(MD2& md2) {
         },
         &md2, gsl_lite::narrow_cast<int>(md2.skins().size()));
 
-    float fps = md2.frames_per_second();
+    float fps = md2.framesPerSecond();
     ImGui::InputFloat("Animation FPS", &fps, 1.0f, 5.0f, "%.3f");
-    md2.set_frames_per_second(fps);
+    md2.setFramesPerSecond(fps);
 
-    if (static_cast<size_t>(sindex) == md2.skin_index()) {
+    if (static_cast<size_t>(sindex) == md2.skinIndex()) {
         return false;
     }
 
-    md2.set_skin_index(static_cast<size_t>(sindex));
+    md2.setSkinIndex(static_cast<size_t>(sindex));
     return true;
 }
 

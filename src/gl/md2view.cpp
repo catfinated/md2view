@@ -27,15 +27,15 @@
 #include <array>
 #include <memory>
 
-MD2View::MD2View() { reset_model_matrix(); }
+MD2View::MD2View() { resetModelMatrix(); }
 
-void MD2View::load_model(GL::Engine<MD2View>& engine) {
-    md2_ = engine.resource_manager().loadModel(model_selector_->model_path());
-    md2_mesh_ = std::make_unique<GL::Mesh>(md2_->interpolated_vertices(),
-                                           md2_->scaled_texcoords());
+void MD2View::loadModel(GL::Engine<MD2View>& engine) {
+    md2_ = engine.resourceManager().loadModel(modelSelector_->modelPath());
+    md2Mesh_ = std::make_unique<GL::Mesh>(md2_->interpolatedVertices(),
+                                          md2_->scaledTexcoords());
 }
 
-void MD2View::reset_model_matrix() {
+void MD2View::resetModelMatrix() {
     rot_[0] = 0.0f;
     rot_[1] = glm::radians(-90.0f); // quake used different world matrix
     rot_[2] = 0.0f;
@@ -44,42 +44,42 @@ void MD2View::reset_model_matrix() {
     pos_ = glm::vec3(0.0f, 0.0f, 0.0f);
 }
 
-void MD2View::reset_camera() { camera_.reset(glm::vec3(0.0f, 0.0f, 3.0f)); }
+void MD2View::resetCamera() { camera_.reset(glm::vec3(0.0f, 0.0f, 3.0f)); }
 
-void MD2View::load_current_texture(GL::Engine<MD2View>& engine) {
-    auto const& path = md2_->current_skin().fpath;
-    texture_ = engine.resource_manager().load_texture2D(path);
+void MD2View::loadCurrentTexture(GL::Engine<MD2View>& engine) {
+    auto const& path = md2_->currentSkin().fpath;
+    texture_ = engine.resourceManager().loadTexture2D(path);
 }
 
-bool MD2View::on_engine_initialized(GL::Engine<MD2View>& engine) {
-    if (!engine.resource_manager().pak().has_models()) {
+bool MD2View::onEngineInitialized(GL::Engine<MD2View>& engine) {
+    if (!engine.resourceManager().pak().hasModels()) {
         spdlog::error("PAK '{}' has no MD2 models to view",
-                      engine.resource_manager().pak().fpath());
+                      engine.resourceManager().pak().fpath());
         return false;
     }
     // init objects which needed an opengl context to initialize
-    model_selector_ =
-        std::make_unique<ModelSelector>(engine.resource_manager().pak());
-    load_model(engine);
+    modelSelector_ =
+        std::make_unique<ModelSelector>(engine.resourceManager().pak());
+    loadModel(engine);
 
     spdlog::info("begin load shaders");
-    shader_ = engine.resource_manager().load_shader("md2");
+    shader_ = engine.resourceManager().loadShader("md2");
     shader_->use();
-    update_model();
-    load_current_texture(engine);
-    glow_loc_ = shader_->uniform_location("glow_color");
-    glow_color_ = glm::vec3(0.0f, 1.0f, 0.0f);
-    GL::Shader::set_uniform(glow_loc_, glow_color_);
+    updateModel();
+    loadCurrentTexture(engine);
+    glowLoc_ = shader_->uniformLocation("glow_color");
+    glowColor_ = glm::vec3(0.0f, 1.0f, 0.0f);
+    GL::Shader::setUniform(glowLoc_, glowColor_);
     glCheckError();
-    camera_.set_position(glm::vec3(0.0f, 0.0f, 3.0f));
+    camera_.setPosition(glm::vec3(0.0f, 0.0f, 3.0f));
     spdlog::info("done on engine init");
 
     return true;
 }
 
-void MD2View::onFramebufferResize() { camera_.set_fov_dirty(); }
+void MD2View::onFramebufferResize() { camera_.setFovDirty(); }
 
-void MD2View::update_model() {
+void MD2View::updateModel() {
     // translate, rotate, scale
     model_ = glm::mat4(1.0);
     model_ = glm::translate(model_, pos_);
@@ -91,36 +91,36 @@ void MD2View::update_model() {
     model_ = glm::scale(model_, glm::vec3(s, s, s));
 
     shader_->use();
-    shader_->set_model(model_);
+    shader_->setModel(model_);
 }
 
 void MD2View::render(GL::Engine<MD2View>& engine) {
     shader_->use();
 
-    if (camera_.view_dirty()) {
-        view_ = camera_.view_matrix();
-        shader_->set_view(view_);
-        camera_.set_view_clean();
+    if (camera_.viewDirty()) {
+        view_ = camera_.viewMatrix();
+        shader_->setView(view_);
+        camera_.setViewClean();
     }
 
-    if (camera_.fov_dirty()) {
+    if (camera_.fovDirty()) {
         projection_ =
             glm::perspective(glm::radians(camera_.fov()),
                              engine.renderer().aspectRatio(), 0.1f, 500.0f);
 
-        shader_->set_projection(projection_);
-        camera_.set_fov_clean();
+        shader_->setProjection(projection_);
+        camera_.setFovClean();
     }
 
     // render normal frame
     texture_->bind();
-    md2_mesh_->draw(*shader_);
+    md2Mesh_->draw(*shader_);
     glCheckError();
-    draw_ui(engine);
+    drawUi(engine);
     glCheckError();
 }
 
-void MD2View::draw_ui(GL::Engine<MD2View>& engine) {
+void MD2View::drawUi(GL::Engine<MD2View>& engine) {
     static float const vec4width = 275;
     // draw gui
     ImGui::Begin("MD2View");
@@ -143,20 +143,20 @@ void MD2View::draw_ui(GL::Engine<MD2View>& engine) {
         UI::draw(camera_);
 
         if (ImGui::Button("Reset Camera")) {
-            reset_camera();
+            resetCamera();
         }
 
         ImGui::Text("View");
         ImGui::PushItemWidth(vec4width);
-        static std::array view_ids = {
+        static std::array viewIds = {
             "view##0",
             "view##1",
             "view##2",
             "view##3",
         };
 
-        for (auto i = 0U; i < view_ids.size(); ++i) {
-            ImGui::PushID(gsl_lite::at(view_ids, i));
+        for (auto i = 0U; i < viewIds.size(); ++i) {
+            ImGui::PushID(gsl_lite::at(viewIds, i));
             auto const j = gsl_lite::narrow_cast<glm::length_t>(i);
             ImGui::InputFloat4("", glm::value_ptr(view_[j]), "%.3f",
                                ImGuiInputTextFlags_ReadOnly);
@@ -166,15 +166,15 @@ void MD2View::draw_ui(GL::Engine<MD2View>& engine) {
 
         ImGui::Text("Projection");
         ImGui::PushItemWidth(vec4width);
-        static std::array proj_ids = {
+        static std::array projIds = {
             "proj##0",
             "proj##1",
             "proj##2",
             "proj##3",
         };
 
-        for (auto i = 0U; i < proj_ids.size(); ++i) {
-            ImGui::PushID(gsl_lite::at(proj_ids, i));
+        for (auto i = 0U; i < projIds.size(); ++i) {
+            ImGui::PushID(gsl_lite::at(projIds, i));
             auto const j = gsl_lite::narrow_cast<glm::length_t>(i);
             ImGui::InputFloat4("", glm::value_ptr(projection_[j]), "%.3f",
                                ImGuiInputTextFlags_ReadOnly);
@@ -188,23 +188,23 @@ void MD2View::draw_ui(GL::Engine<MD2View>& engine) {
     if (ImGui::TreeNodeEx("Model", ImGuiTreeNodeFlags_DefaultOpen)) {
 
         ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Model: %s",
-                           model_selector_->model_path().c_str());
+                           modelSelector_->modelPath().c_str());
 
         if (UI::draw(*md2_)) {
-            load_current_texture(engine);
+            loadCurrentTexture(engine);
         }
 
         ImGui::Text("Model");
         ImGui::PushItemWidth(vec4width);
-        static std::array model_ids = {
+        static std::array modelIds = {
             "model##00",
             "model##1",
             "model##2",
             "model##3",
         };
 
-        for (auto i = 0U; i < model_ids.size(); ++i) {
-            ImGui::PushID(gsl_lite::at(model_ids, i));
+        for (auto i = 0U; i < modelIds.size(); ++i) {
+            ImGui::PushID(gsl_lite::at(modelIds, i));
             auto const j = gsl_lite::narrow_cast<glm::length_t>(i);
             ImGui::InputFloat4("", glm::value_ptr(model_[j]), "%.3f",
                                ImGuiInputTextFlags_ReadOnly);
@@ -216,28 +216,25 @@ void MD2View::draw_ui(GL::Engine<MD2View>& engine) {
         if (ImGui::Checkbox("Glow", &glow)) {
             engine.renderer().setGlowOn(glow);
         }
-        if (ImGui::ColorEdit3("Glow color", glm::value_ptr(glow_color_))) {
+        if (ImGui::ColorEdit3("Glow color", glm::value_ptr(glowColor_))) {
             shader_->use();
-            GL::Shader::set_uniform(glow_loc_, glow_color_);
+            GL::Shader::setUniform(glowLoc_, glowColor_);
         }
 
-        bool model_changed = ImGui::SliderInt("Scale Factor", &scale_, 1, 256);
-        model_changed |=
-            ImGui::SliderFloat("X-Position", &pos_[0], -7.0f, 7.0f);
-        model_changed |=
-            ImGui::SliderFloat("Y-Position", &pos_[1], -7.0f, 7.0f);
-        model_changed |=
-            ImGui::SliderFloat("Z-Position", &pos_[2], -7.0f, 7.0f);
-        model_changed |= ImGui::SliderAngle("X-Rotation", rot_.data());
-        model_changed |= ImGui::SliderAngle("Y-Rotation", &rot_[1]);
-        model_changed |= ImGui::SliderAngle("Z-Rotation", &rot_[2]);
+        bool modelChanged = ImGui::SliderInt("Scale Factor", &scale_, 1, 256);
+        modelChanged |= ImGui::SliderFloat("X-Position", &pos_[0], -7.0f, 7.0f);
+        modelChanged |= ImGui::SliderFloat("Y-Position", &pos_[1], -7.0f, 7.0f);
+        modelChanged |= ImGui::SliderFloat("Z-Position", &pos_[2], -7.0f, 7.0f);
+        modelChanged |= ImGui::SliderAngle("X-Rotation", rot_.data());
+        modelChanged |= ImGui::SliderAngle("Y-Rotation", &rot_[1]);
+        modelChanged |= ImGui::SliderAngle("Z-Rotation", &rot_[2]);
 
         if (ImGui::Button("Reset Model")) {
-            reset_model_matrix();
-            model_changed = true;
+            resetModelMatrix();
+            modelChanged = true;
         }
-        if (model_changed) {
-            update_model();
+        if (modelChanged) {
+            updateModel();
         }
 
         ImGui::PushStyleVar(ImGuiStyleVar_ImageBorderSize,
@@ -255,39 +252,39 @@ void MD2View::draw_ui(GL::Engine<MD2View>& engine) {
     }
 
     if (ImGui::TreeNodeEx("Select Model", ImGuiTreeNodeFlags_DefaultOpen)) {
-        if (model_selector_->draw_ui()) {
-            load_model(engine);
-            load_current_texture(engine); // skin may have changed
+        if (modelSelector_->drawUi()) {
+            loadModel(engine);
+            loadCurrentTexture(engine); // skin may have changed
         }
         ImGui::TreePop();
     }
     ImGui::End();
 }
 
-void MD2View::update(GL::Engine<MD2View>& /* engine */, GLfloat delta_time) {
-    md2_->update(delta_time);
-    md2_mesh_->sync(md2_->interpolated_vertices());
+void MD2View::update(GL::Engine<MD2View>& /* engine */, GLfloat deltaTime) {
+    md2_->update(deltaTime);
+    md2Mesh_->sync(md2_->interpolatedVertices());
 }
 
-void MD2View::process_input(GL::Engine<MD2View>& engine, GLfloat delta_time) {
+void MD2View::processInput(GL::Engine<MD2View>& engine, GLfloat deltaTime) {
     if (engine.keyboard().keys()[GLFW_KEY_W]) {
-        camera_.move(Camera::Direction::FORWARD, delta_time);
+        camera_.move(Camera::Direction::FORWARD, deltaTime);
     }
     if (engine.keyboard().keys()[GLFW_KEY_S]) {
-        camera_.move(Camera::Direction::BACKWARD, delta_time);
+        camera_.move(Camera::Direction::BACKWARD, deltaTime);
     }
     if (engine.keyboard().keys()[GLFW_KEY_A]) {
-        camera_.move(Camera::Direction::LEFT, delta_time);
+        camera_.move(Camera::Direction::LEFT, deltaTime);
     }
     if (engine.keyboard().keys()[GLFW_KEY_D]) {
-        camera_.move(Camera::Direction::RIGHT, delta_time);
+        camera_.move(Camera::Direction::RIGHT, deltaTime);
     }
 }
 
-void MD2View::on_mouse_movement(GLfloat xoffset, GLfloat yoffset) {
-    camera_.on_mouse_movement(xoffset, yoffset);
+void MD2View::onMouseMovement(GLfloat xoffset, GLfloat yoffset) {
+    camera_.onMouseMovement(xoffset, yoffset);
 }
 
-void MD2View::on_mouse_scroll(double xoffset, double yoffset) {
-    camera_.on_mouse_scroll(xoffset, yoffset);
+void MD2View::onMouseScroll(double xoffset, double yoffset) {
+    camera_.onMouseScroll(xoffset, yoffset);
 }

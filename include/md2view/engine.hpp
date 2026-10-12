@@ -49,18 +49,18 @@ public:
 
     [[nodiscard]] bool init(std::span<char const*> args);
 
-    boost::program_options::options_description& options_desc() {
-        return opt_desc_;
+    boost::program_options::options_description& optionsDesc() {
+        return optDesc_;
     }
-    boost::program_options::variables_map const& variables_map() {
-        return variables_map_;
+    boost::program_options::variables_map const& variablesMap() {
+        return variablesMap_;
     }
 
     [[nodiscard]] Keyboard const& keyboard() const { return keyboard_; }
     [[nodiscard]] Mouse const& mouse() const { return mouse_; }
 
 protected:
-    bool parse_args(std::span<char const*> args);
+    bool parseArgs(std::span<char const*> args);
     virtual void doInit() = 0;
 
     /// Reset per-frame input state. Call once per frame before polling
@@ -78,9 +78,9 @@ protected:
     int height_{};
     Keyboard keyboard_;
     Mouse mouse_;
-    bool input_goes_to_game_{false};
+    bool inputGoesToGame_{false};
 
-    boost::program_options::options_description opt_desc_;
-    boost::program_options::variables_map variables_map_;
-    std::string pak_path_;
+    boost::program_options::options_description optDesc_;
+    boost::program_options::variables_map variablesMap_;
+    std::string pakPath_;
 };

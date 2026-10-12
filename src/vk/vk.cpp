@@ -32,18 +32,18 @@
 
 namespace VK {
 
-static constexpr std::array<char const*, 1> validationLayers = {
+static constexpr std::array<char const*, 1> kValidationLayers = {
     "VK_LAYER_KHRONOS_validation",
 };
 
 #ifdef __APPLE__
 // MoltenVK is a portability-subset implementation
-static constexpr std::array<char const*, 2> deviceExtensions = {
+static constexpr std::array<char const*, 2> kDeviceExtensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
     "VK_KHR_portability_subset",
 };
 #else
-static constexpr std::array<char const*, 1> deviceExtensions = {
+static constexpr std::array<char const*, 1> kDeviceExtensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 };
 #endif
@@ -141,8 +141,8 @@ QueueFamilyIndices findQueueFamilies(vk::PhysicalDevice device,
 bool checkDeviceExtensionSupport(vk::PhysicalDevice device) {
     auto const availableExtensions =
         device.enumerateDeviceExtensionProperties();
-    std::set<std::string> requiredExtensions(deviceExtensions.begin(),
-                                             deviceExtensions.end());
+    std::set<std::string> requiredExtensions(kDeviceExtensions.begin(),
+                                             kDeviceExtensions.end());
 
     for (const auto& extension : availableExtensions) {
         requiredExtensions.erase(extension.extensionName);
@@ -165,7 +165,7 @@ vk::raii::Instance createInstance(vk::raii::Context& context) {
 
     auto availableLayers = context.enumerateInstanceLayerProperties();
 
-    for (auto const* layerName : validationLayers) {
+    for (auto const* layerName : kValidationLayers) {
         std::string_view sv{layerName};
         auto iter =
             std::ranges::find_if(availableLayers, [sv](auto const& layer) {
@@ -203,8 +203,8 @@ vk::raii::Instance createInstance(vk::raii::Context& context) {
     createInfo.enabledExtensionCount = extensions.size();
     createInfo.ppEnabledExtensionNames = extensions.data();
     createInfo.enabledLayerCount =
-        static_cast<uint32_t>(validationLayers.size());
-    createInfo.ppEnabledLayerNames = validationLayers.data();
+        static_cast<uint32_t>(kValidationLayers.size());
+    createInfo.ppEnabledLayerNames = kValidationLayers.data();
     createInfo.pNext = std::addressof(debugCreateInfo);
 
     return vk::raii::Instance{context, createInfo};
@@ -239,7 +239,8 @@ vk::raii::Device createDevice(vk::raii::PhysicalDevice const& physicalDevice,
 
     // NB: device layers are deprecated and ignored; the instance layers
     // already cover the device
-    vk::DeviceCreateInfo createInfo{{}, queueCreateInfos, {}, deviceExtensions};
+    vk::DeviceCreateInfo createInfo{
+        {}, queueCreateInfos, {}, kDeviceExtensions};
     return vk::raii::Device{physicalDevice, createInfo};
 }
 

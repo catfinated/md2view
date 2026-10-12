@@ -15,7 +15,7 @@
 #include <utility>
 #include <vector>
 
-void ModelSelector::add_node(std::filesystem::path const& path) {
+void ModelSelector::addNode(std::filesystem::path const& path) {
     auto parent = tree_.begin();
     spdlog::debug("add node for {}", path);
     gsl_Assert(path.extension() == ".md2");
@@ -53,21 +53,21 @@ void ModelSelector::init(PAK const& pak) {
     node.name = node.path;
     tree_.insert(tree_.begin(), std::move(node));
 
-    for (auto const& pak_entry : pak.models()) {
-        add_node(pak_entry.path);
+    for (auto const& pakEntry : pak.models()) {
+        addNode(pakEntry.path);
     }
 
-    select_random_model();
+    selectRandomModel();
 }
 
-std::string ModelSelector::model_path() const {
+std::string ModelSelector::modelPath() const {
     if (selected_ == tree_.end()) {
         return {};
     }
     return selected_->path;
 }
 
-void ModelSelector::select_random_model() {
+void ModelSelector::selectRandomModel() {
     spdlog::info("selecting random model");
 
     std::vector<tree<Node>::iterator> iters;
@@ -89,10 +89,10 @@ void ModelSelector::select_random_model() {
     selected_ = iter;
 }
 
-bool ModelSelector::draw_ui() {
+bool ModelSelector::drawUi() {
     bool ret = false;
     if (ImGui::Button("Random Model")) {
-        select_random_model();
+        selectRandomModel();
         ret = true;
     }
 
@@ -119,9 +119,9 @@ bool ModelSelector::draw_ui() {
 
         // if curr has no children it is selectable leafat
         ImGuiTreeNodeFlags flags{0};
-        auto const is_leaf = TreeT::number_of_children(curr) == 0U;
+        auto const isLeaf = TreeT::number_of_children(curr) == 0U;
 
-        if (is_leaf) {
+        if (isLeaf) {
             flags =
                 ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
             if (curr == selected_) {
@@ -134,7 +134,7 @@ bool ModelSelector::draw_ui() {
         }
 
         if (ImGui::TreeNodeEx(curr->name.c_str(), flags)) {
-            if (!is_leaf) {
+            if (!isLeaf) {
                 for (auto iter = TreeT::begin(curr); iter != TreeT::end(curr);
                      ++iter) {
                     stack.emplace(iter);
