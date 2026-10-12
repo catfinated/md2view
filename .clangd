@@ -55,6 +55,7 @@ Hover:
   ShowAKA: Yes
 
 # Tests configuration
+---
 If:
   PathMatch: tests/.*
 Diagnostics:
