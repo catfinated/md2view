@@ -15,22 +15,8 @@ Completion:
 
 # Diagnostics configuration
 Diagnostics:
-  # Enable clang-tidy checks
-  ClangTidy:
-    Add: 
-      - performance-*
-      - modernize-*
-      - readability-*
-      - bugprone-*
-      - cppcoreguidelines-*
-    Remove:
-      - modernize-use-trailing-return-type
-      - readability-magic-numbers
-      - cppcoreguidelines-avoid-magic-numbers
-      - readability-identifier-length
-      - cppcoreguidelines-pro-type-union-access
-      - cppcoreguidelines-pro-bounds-avoid-unchecked-container-access
-
+  # clang-tidy checks come from .clang-tidy (and tests/.clang-tidy). Don't
+  # list them here: ClangTidy.Add globs re-enable checks .clang-tidy removes.
   UnusedIncludes: Strict
   MissingIncludes: Strict
   # Keep in sync with misc-include-cleaner.IgnoreHeaders in .clang-tidy
@@ -54,15 +40,3 @@ Index:
 Hover:
   ShowAKA: Yes
 
-# Tests configuration
----
-If:
-  PathMatch: tests/.*
-Diagnostics:
-  ClangTidy:
-    Remove:
-      - cppcoreguidelines-pro-bounds-array-to-pointer-decay
-      - cppcoreguidelines-pro-bounds-pointer-arithmetic
-      - cppcoreguidelines-avoid-c-arrays
-      - modernize-avoid-c-arrays
-      - readability-function-cognitive-complexity
