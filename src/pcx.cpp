@@ -1,25 +1,57 @@
 #include "md2view/pcx.hpp"
 
+#include <fmt/format.h>
 #include <gsl-lite/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 
 #include <array>
-#include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <iomanip>
 #include <iostream>
 #include <memory>
+#include <stdexcept>
 #include <vector>
+
+namespace {
+constexpr std::size_t kPaletteSize{256}; /// 256-color palette
+constexpr uint8_t kPaletteMarker{0x0C};  ///< 256-color palette marker
+constexpr uint8_t kEncodingRle{1};       ///< RLE encoding marker
+} // namespace
 
 PCX::PCX(std::istream& is) {
     Header header{};
     is.read(reinterpret_cast<char*>(std::addressof(header)), sizeof(header));
     gsl_Assert(is.gcount() == sizeof(header));
 
+    if (header.encoding != kEncodingRle) {
+        throw std::runtime_error(fmt::format(
+            "unsupported PCX: encoding {}, only RLE (1) is supported",
+            header.encoding));
+    }
+    if (header.bits_per_pixel != 8 || header.num_bit_planes != 1) {
+        throw std::runtime_error(fmt::format(
+            "unsupported PCX: {} colour plane(s) of {} bits per pixel, only "
+            "8-bit paletted images (1 plane) are supported",
+            header.num_bit_planes, header.bits_per_pixel));
+    }
+
     auto width = header.xend - header.xstart + 1;
     auto length = header.yend - header.ystart + 1;
     auto scan_line_length = header.num_bit_planes * header.bytes_per_line;
+
+    if (width <= 0 || length <= 0) {
+        throw std::runtime_error(fmt::format(
+            "malformed PCX: invalid image size {}x{}", width, length));
+    }
+
+    if (scan_line_length < width) {
+        throw std::runtime_error(
+            fmt::format("malformed PCX: scan lines are {} bytes, shorter than "
+                        "the image width {}",
+                        scan_line_length, width));
+    }
 
     std::vector<ScanLine> scan_lines;
     scan_lines.reserve(length);
@@ -27,11 +59,12 @@ PCX::PCX(std::istream& is) {
     for (auto i = 0; i < length; ++i) {
         scan_lines.emplace_back(read_scan_line(is, scan_line_length));
     }
+    if (!is) {
+        throw std::runtime_error("malformed PCX: image data is truncated");
+    }
     spdlog::info("done reading scan lines {}", scan_lines.size());
 
     colors_ = read_palette(is);
-    spdlog::info("num colors in palette: {}", colors_.size());
-
     width_ = width;
     height_ = length;
     constexpr auto numChannels{4};
@@ -40,7 +73,6 @@ PCX::PCX(std::istream& is) {
     for (auto i = 0; i < length; ++i) {
         for (auto j = 0; j < width; ++j) {
             auto index = scan_lines[i][j];
-            assert(index < colors_.size());
             auto loc = (j + (i * width)) * numChannels;
             auto& color = colors_[index];
             image_[loc + 0] = color.r;
@@ -84,22 +116,26 @@ PCX::ScanLine PCX::read_scan_line(std::istream& ds, int32_t length) {
 }
 
 std::vector<PCX::Color> PCX::read_palette(std::istream& is) {
+    char marker{};
+    if (!is.read(std::addressof(marker), 1) ||
+        static_cast<uint8_t>(marker) != kPaletteMarker) {
+        throw std::runtime_error("malformed PCX: missing 256-colour palette");
+    }
+
+    std::array<char, kPaletteSize * 3> rgb{};
+    if (!is.read(rgb.data(), rgb.size())) {
+        throw std::runtime_error(
+            fmt::format("malformed PCX: palette has {} colors, expected {}",
+                        is.gcount() / 3, kPaletteSize));
+    }
+
     std::vector<PCX::Color> colors;
-
-    if (is.eof()) {
-        return colors;
+    colors.reserve(kPaletteSize);
+    for (std::size_t i = 0; i < rgb.size(); i += 3) {
+        colors.emplace_back(static_cast<uint8_t>(rgb.at(i)),
+                            static_cast<uint8_t>(rgb.at(i + 1)),
+                            static_cast<uint8_t>(rgb.at(i + 2)));
     }
-
-    char byte{}; // marker byte
-    is.read(std::addressof(byte), 1);
-
-    std::array<char, 3> rgb{};
-    while (is.read(rgb.data(), rgb.size())) {
-        colors.emplace_back(static_cast<uint8_t>(rgb[0]),
-                            static_cast<uint8_t>(rgb[1]),
-                            static_cast<uint8_t>(rgb[2]));
-    }
-
     return colors;
 }
 

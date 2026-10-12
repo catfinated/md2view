@@ -1,12 +1,53 @@
 #include "fixtures.hpp"
+#include "md2view/pak.hpp"
 #include "md2view/pcx.hpp"
 
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers.hpp>
+#include <catch2/matchers/catch_matchers_exception.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
 #include <gsl-lite/gsl-lite.hpp>
 
+#include <cstddef>
+#include <cstdint>
 #include <fstream>
 #include <ios>
+#include <iterator>
 #include <sstream>
+#include <stdexcept>
+#include <string>
+
+namespace {
+
+std::string minimal_pcx_bytes() {
+    std::ifstream f(test_fixtures_dir() / "minimal.pcx", std::ios::binary);
+    return {std::istreambuf_iterator<char>(f),
+            std::istreambuf_iterator<char>()};
+}
+
+void set_u16(std::string& bytes, std::size_t offset, uint16_t value) {
+    bytes.at(offset) = static_cast<char>(value & 0xFF);
+    bytes.at(offset + 1) = static_cast<char>(value >> 8);
+}
+
+// header field offsets, see PCX::Header
+constexpr std::size_t kEncodingOffset = 2;
+constexpr std::size_t kBitsPerPixelOffset = 3;
+constexpr std::size_t kXStartOffset = 4;
+constexpr std::size_t kNumBitPlanesOffset = 65;
+constexpr std::size_t kBytesPerLineOffset = 66;
+constexpr std::size_t kHeaderSize = 128;
+// minimal.pcx: header, 4 bytes of image data, then the palette marker
+constexpr std::size_t kPaletteMarkerOffset = kHeaderSize + 4;
+
+void require_malformed(std::string const& bytes, std::string const& message) {
+    std::istringstream is{bytes};
+    REQUIRE_THROWS_MATCHES(PCX{is}, std::runtime_error,
+                           Catch::Matchers::MessageMatches(
+                               Catch::Matchers::ContainsSubstring(message)));
+}
+
+} // namespace
 
 TEST_CASE("pcx default ctor", "[pcx]") {
     PCX pcx;
@@ -84,4 +125,61 @@ TEST_CASE("pcx valid 2x2 pixels", "[pcx]") {
     REQUIRE(img[13] == 0);
     REQUIRE(img[14] == 0);
     REQUIRE(img[15] == 255);
+}
+
+TEST_CASE("pcx invalid image size throws", "[pcx]") {
+    auto bytes = minimal_pcx_bytes();
+    set_u16(bytes, kXStartOffset, 5); // xstart > xend
+    require_malformed(bytes, "invalid image size");
+}
+
+TEST_CASE("pcx scan line narrower than image throws", "[pcx]") {
+    auto bytes = minimal_pcx_bytes();
+    set_u16(bytes, kBytesPerLineOffset, 1); // image is 2 pixels wide
+    require_malformed(bytes, "shorter than the image width");
+}
+
+TEST_CASE("pcx truncated image data throws", "[pcx]") {
+    auto const bytes = minimal_pcx_bytes().substr(0, kHeaderSize + 1);
+    require_malformed(bytes, "image data is truncated");
+}
+
+TEST_CASE("pcx short palette throws", "[pcx]") {
+    auto bytes = minimal_pcx_bytes();
+    bytes.resize(bytes.size() - 3); // drop the last palette entry
+    require_malformed(bytes, "palette has 255 colors");
+}
+
+TEST_CASE("pcx bad palette marker throws", "[pcx]") {
+    auto bytes = minimal_pcx_bytes();
+    bytes.at(kPaletteMarkerOffset) = 0x00; // must be 0x0C
+    require_malformed(bytes, "missing 256-colour palette");
+}
+
+TEST_CASE("pcx in a pak archive reads exactly 256 palette colors", "[pcx]") {
+    PAK const pak{test_fixtures_dir() / "skin.pak"};
+    auto in = pak.open_ifstream("models/test/skin.pcx");
+    PCX const pcx{in};
+
+    REQUIRE(pcx.colors().size() == 256);
+    REQUIRE(pcx.colors()[0].r == 255); // index 0 = red
+    REQUIRE(pcx.colors()[1].b == 255); // index 1 = blue
+}
+
+TEST_CASE("pcx 24-bit three plane image is unsupported", "[pcx]") {
+    auto bytes = minimal_pcx_bytes();
+    bytes.at(kNumBitPlanesOffset) = 3;
+    require_malformed(bytes, "unsupported PCX: 3 colour plane(s)");
+}
+
+TEST_CASE("pcx non 8-bit image is unsupported", "[pcx]") {
+    auto bytes = minimal_pcx_bytes();
+    bytes.at(kBitsPerPixelOffset) = 4;
+    require_malformed(bytes, "of 4 bits per pixel");
+}
+
+TEST_CASE("pcx uncompressed image is unsupported", "[pcx]") {
+    auto bytes = minimal_pcx_bytes();
+    bytes.at(kEncodingOffset) = 0;
+    require_malformed(bytes, "unsupported PCX: encoding 0");
 }

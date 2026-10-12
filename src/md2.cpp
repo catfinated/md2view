@@ -182,7 +182,12 @@ bool MD2::load_texcoords(std::ifstream& infile, size_t offset) {
     for (auto const& triangle : triangles_) {
         for (size_t i = 0; i < 3; ++i) {
             auto st_index = gsl_lite::at(triangle.st, i);
-            assert(st_index < texcoords_.size());
+            if (st_index >= texcoords_.size()) {
+                throw std::runtime_error(fmt::format(
+                    "malformed MD2: texture coordinate index {} out of range "
+                    "({} texture coordinates)",
+                    st_index, texcoords_.size()));
+            }
             auto const& st = texcoords_[st_index];
             auto const s =
                 static_cast<float>(st.s) / static_cast<float>(hdr_.skinwidth);
@@ -252,7 +257,12 @@ bool MD2::load_frames(std::ifstream& infile, size_t offset) {
         for (auto const& triangle : triangles_) {
             for (size_t i = 0; i < 3; ++i) {
                 auto vertex_index = gsl_lite::at(triangle.vertex, i);
-                assert(vertex_index < frame.vertices.size());
+                if (vertex_index >= frame.vertices.size()) {
+                    throw std::runtime_error(fmt::format(
+                        "malformed MD2: vertex index {} out of range ({} "
+                        "vertices)",
+                        vertex_index, frame.vertices.size()));
+                }
                 auto const& vertex = frame.vertices[vertex_index];
                 auto const x = (frame.scale[0] *
                                 gsl_lite::narrow_cast<float>(vertex.v[0])) +

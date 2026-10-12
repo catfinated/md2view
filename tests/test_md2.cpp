@@ -5,10 +5,21 @@
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers.hpp>
+#include <catch2/matchers/catch_matchers_exception.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
 #include <gsl-lite/gsl-lite.hpp>
 
 #include <cstddef>
+#include <cstdint>
 #include <filesystem>
+#include <fstream>
+#include <ios>
+#include <iterator>
+#include <stdexcept>
+#include <string>
+
+namespace {
 
 // Load an md2 fixture by filename via a directory-mode PAK.
 // The file is copied into a per-fixture static TmpDir as "tris.md2".
@@ -38,6 +49,37 @@ static MD2 load_two_anim() {
     static TmpDir tmp;
     return load_md2_fixture("two_anim.md2", tmp.path());
 }
+
+// minimal.md2's single triangle: three uint16 vertex indices followed by
+// three uint16 texture coordinate indices (68-byte header + 3 texcoords * 4)
+constexpr std::size_t kTriangleOffset = 80;
+constexpr std::size_t kTriangleStOffset = kTriangleOffset + 6;
+
+// Write minimal.md2 with one uint16 overwritten and try to load it.
+void require_malformed_md2(std::size_t offset,
+                           uint16_t value,
+                           std::string const& message) {
+    std::ifstream in(test_fixtures_dir() / "minimal.md2", std::ios::binary);
+    std::string bytes{std::istreambuf_iterator<char>(in),
+                      std::istreambuf_iterator<char>()};
+    bytes.at(offset) = static_cast<char>(value & 0xFF);
+    bytes.at(offset + 1) = static_cast<char>(value >> 8);
+
+    TmpDir tmp;
+    auto const model_dir = tmp.path() / "models" / "player";
+    std::filesystem::create_directories(model_dir);
+    {
+        std::ofstream out(model_dir / "tris.md2", std::ios::binary);
+        out << bytes;
+    }
+    PAK const pak{tmp.path()};
+    REQUIRE_THROWS_MATCHES(MD2("models/player/tris.md2", pak),
+                           std::runtime_error,
+                           Catch::Matchers::MessageMatches(
+                               Catch::Matchers::ContainsSubstring(message)));
+}
+
+} // namespace
 
 TEST_CASE("md2 non-existent", "[md2]") {
     TmpDir tmp_dir;
@@ -240,4 +282,13 @@ TEST_CASE("md2 set animation by index", "[md2]") {
     REQUIRE(md2.animation_index() == 1);
     md2.set_animation(size_t{0});
     REQUIRE(md2.animation_index() == 0);
+}
+
+TEST_CASE("md2 vertex index out of range throws", "[md2]") {
+    require_malformed_md2(kTriangleOffset, 7, "vertex index 7 out of range");
+}
+
+TEST_CASE("md2 texture coordinate index out of range throws", "[md2]") {
+    require_malformed_md2(kTriangleStOffset, 9,
+                          "texture coordinate index 9 out of range");
 }

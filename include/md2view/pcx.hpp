@@ -60,7 +60,8 @@ public:
     ///
     /// @param is An open, readable stream positioned at the start of PCX data.
     /// @throws gsl_lite::fail_fast if the stream is not in a good state.
-    PCX(std::istream& is);
+    /// @throws std::runtime_error if format unsupported or data is malformed.
+    explicit PCX(std::istream& is);
 
     /// Decoded pixel data as packed RGBA8, row-major.
     /// Size is width * height * 4 bytes

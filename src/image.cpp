@@ -14,6 +14,7 @@
 #include <cstddef>
 #include <filesystem>
 #include <memory>
+#include <span>
 #include <stdexcept>
 #include <string_view>
 #include <utility>
@@ -29,7 +30,7 @@ Image::Image(std::filesystem::path const& fpath) {
     int n{};
     constexpr int desiredChannels{4};
 
-    auto data =
+    auto* data =
         stbi_load(fpath.string().c_str(), &width, &height, &n, desiredChannels);
     std::unique_ptr<stbi_uc, decltype(&stbi_image_free)> ptr{data,
                                                              &stbi_image_free};
@@ -42,7 +43,8 @@ Image::Image(std::filesystem::path const& fpath) {
     width_ = gsl_lite::narrow_failfast<unsigned int>(width);
     height_ = gsl_lite::narrow_failfast<unsigned int>(height);
     auto const size = std::size_t{width_} * height_ * desiredChannels;
-    storage_.assign(ptr.get(), ptr.get() + size);
+    std::span const pixels{ptr.get(), size};
+    storage_.assign(pixels.begin(), pixels.end());
 }
 
 Image Image::loadFromPak(PAK const& pak, std::string_view path) {
