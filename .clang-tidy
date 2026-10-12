@@ -15,8 +15,11 @@ Checks: >
   -readability-uppercase-literal-suffix,
   -readability-magic-numbers,
   -readability-identifier-length,
+  misc-include-cleaner,
 WarningsAsErrors: true
 HeaderFilterRegex: md2view
 CheckOptions:
   - key: cppcoreguidelines-pro-type-member-init.IgnoreArrays
     value: true
+  - key: misc-include-cleaner.IgnoreHeaders
+    value: 'glm/.*;vulkan/vulkan_.*\.hpp;vulkan/vulkan_core\.h;vulkan/vk_platform\.h;fmt/.*;boost/.*'

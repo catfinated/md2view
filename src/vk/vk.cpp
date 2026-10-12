@@ -4,19 +4,29 @@
 
 #include <GLFW/glfw3.h>
 #include <fmt/core.h>
-#include <glm/glm.hpp>
+#include <fmt/format.h>
 #include <gsl-lite/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
+#include <vulkan/vulkan.hpp>
+#include <vulkan/vulkan_raii.hpp>
 
 #include <algorithm>
 #include <array>
+#include <cstddef>
+#include <cstdint>
+#include <filesystem>
 #include <fstream>
+#include <ios>
 #include <iterator>
 #include <limits>
+#include <memory>
 #include <ranges>
 #include <set>
+#include <span>
 #include <stdexcept>
+#include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace VK {
@@ -249,8 +259,8 @@ pickPhysicalDevice(vk::raii::Instance& instance,
 #ifdef __APPLE__
         // Apple GPUs are reported as integrated.
         auto const isSuitable =
-            isDiscrete ||
-            deviceProperties.deviceType == vk::PhysicalDeviceType::eIntegratedGpu;
+            isDiscrete || deviceProperties.deviceType ==
+                              vk::PhysicalDeviceType::eIntegratedGpu;
 #else
         auto const isSuitable = isDiscrete;
 #endif

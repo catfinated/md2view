@@ -1,6 +1,7 @@
 #pragma once
 
 #include "md2view/camera.hpp"
+#include "md2view/gl/gl.hpp"
 #include "md2view/gl/mesh.hpp"
 #include "md2view/gl/texture2d.hpp"
 #include "md2view/md2.hpp"
@@ -8,6 +9,7 @@
 
 #include <glm/glm.hpp>
 
+#include <array>
 #include <memory>
 #include <string>
 

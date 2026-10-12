@@ -9,6 +9,18 @@ if(CMAKE_EXPORT_COMPILE_COMMANDS)
     )
 endif()
 
+find_package(Git QUIET)
+if(GIT_FOUND AND EXISTS "${CMAKE_SOURCE_DIR}/.git")
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} config core.hooksPath scripts/hooks
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        RESULT_VARIABLE GIT_HOOKS_RESULT
+    )
+    if(NOT GIT_HOOKS_RESULT EQUAL 0)
+        message(WARNING "failed to set git core.hooksPath to scripts/hooks")
+    endif()
+endif()
+
 add_subdirectory(src)
 enable_testing()
 add_subdirectory(tests)

@@ -1,10 +1,20 @@
 #include "md2view/gl/engine.hpp"
 
+#include "md2view/engine.hpp"
+#include "md2view/gl/gl.hpp"
+#include "md2view/gl/gui.hpp"
+#include "md2view/gl/renderer.hpp"
+#include "md2view/gl/resource_manager.hpp"
+#include "md2view/window.hpp"
+
+#include <GLFW/glfw3.h>
 #include <gsl-lite/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 
-#include <array>
-#include <utility>
+#include <filesystem>
+#include <memory>
+#include <optional>
+#include <stdexcept>
 
 template <typename Game> void GL::Engine<Game>::doInit() {
     std::optional<std::filesystem::path> pak;

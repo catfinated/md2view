@@ -1,9 +1,14 @@
 #pragma once
 
 #include "md2view/engine.hpp"
+#include "md2view/gl/gl.hpp"
 #include "md2view/gl/gui.hpp"
 #include "md2view/gl/renderer.hpp"
 #include "md2view/gl/resource_manager.hpp"
+
+#include <gsl-lite/gsl-lite.hpp>
+
+#include <memory>
 
 namespace GL {
 

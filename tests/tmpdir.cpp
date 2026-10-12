@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <random>
+#include <string>
 
 namespace fs = std::filesystem;
 

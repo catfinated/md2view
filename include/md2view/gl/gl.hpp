@@ -1,12 +1,12 @@
 #pragma once
 
 #ifdef __APPLE__
-#include <GL/glew.h>
-#include <OpenGL/gl.h>
+#include <GL/glew.h>   // IWYU pragma: export
+#include <OpenGL/gl.h> // IWYU pragma: export
 #else
 // clang-format off
-#include <GL/glew.h>
-#include <GL/gl.h>
+#include <GL/glew.h> // IWYU pragma: export
+#include <GL/gl.h>   // IWYU pragma: export
 // clang-format on
 #endif
 

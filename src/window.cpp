@@ -2,10 +2,12 @@
 
 #include <GLFW/glfw3.h>
 #include <fmt/core.h>
+#include <fmt/format.h>
 #include <gsl-lite/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 
 #include <memory>
+#include <span>
 #include <stdexcept>
 #include <string>
 #include <utility>

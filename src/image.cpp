@@ -4,12 +4,18 @@
 #include "md2view/pcx.hpp"
 
 #include <fmt/core.h>
+#include <fmt/format.h>
 #include <gsl-lite/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#include <cstddef>
+#include <filesystem>
 #include <memory>
+#include <stdexcept>
+#include <string_view>
+#include <utility>
 
 Image::Image(PCX&& pcx)
     : width_(gsl_lite::narrow_failfast<unsigned int>(pcx.width()))

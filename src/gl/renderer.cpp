@@ -1,10 +1,20 @@
 #include "md2view/gl/renderer.hpp"
+#include "md2view/gl/frame_buffer.hpp"
+#include "md2view/gl/gl.hpp"
+#include "md2view/gl/resource_manager.hpp"
+#include "md2view/gl/screen_quad.hpp"
+#include "md2view/gl/shader.hpp"
+#include "md2view/window.hpp"
 
+#include <GLFW/glfw3.h>
 #include <fmt/core.h>
+#include <fmt/format.h>
 #include <spdlog/spdlog.h>
 
+#include <array>
 #include <memory>
 #include <stdexcept>
+#include <string_view>
 
 namespace GL {
 

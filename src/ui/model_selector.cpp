@@ -4,9 +4,15 @@
 #include <gsl-lite/gsl-lite.hpp>
 #include <imgui.h>
 #include <spdlog/spdlog.h>
+#include <treehh/tree.hh>
 
 #include <algorithm>
+#include <filesystem>
+#include <random>
 #include <stack>
+#include <string>
+#include <utility>
+#include <vector>
 
 void ModelSelector::add_node(std::filesystem::path const& path) {
     auto parent = tree_.begin();

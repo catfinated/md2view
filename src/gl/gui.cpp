@@ -1,10 +1,18 @@
 #include "md2view/gl/gui.hpp"
 #include "md2view/engine.hpp"
+#include "md2view/gl/gl.hpp"
 #include "md2view/gl/resource_manager.hpp"
 
+#include <GLFW/glfw3.h>
+#include <glm/ext/matrix_float4x4.hpp>
 #include <gsl-lite/gsl-lite.hpp>
+#include <imgui.h>
+#include <spdlog/spdlog.h>
 
 #include <array>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
 #include <utility>
 
 namespace GL {

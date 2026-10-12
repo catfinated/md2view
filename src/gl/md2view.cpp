@@ -1,15 +1,31 @@
 #include "md2view/gl/md2view.hpp"
 #include "md2view/gl/engine.hpp"
+#include "md2view/gl/gl.hpp"
+#include "md2view/gl/mesh.hpp"
+#include "md2view/gl/shader.hpp"
+#include "md2view/ui/model_selector.hpp"
 #include "md2view/ui/ui.hpp"
 
 #include <GLFW/glfw3.h>
+#include <glm/ext/matrix_clip_space.hpp>
+#include <glm/ext/matrix_float4x4.hpp>
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/ext/quaternion_trigonometric.hpp>
+#include <glm/ext/vector_float3.hpp>
+#include <glm/fwd.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/string_cast.hpp>
+#include <glm/trigonometric.hpp>
+#include <gsl-lite/gsl-lite.hpp>
 #include <imgui.h>
 #include <spdlog/spdlog.h>
 
 #include <algorithm>
 #include <array>
 #include <cstdint>
+#include <memory>
 
 MD2View::MD2View() { reset_model_matrix(); }
 

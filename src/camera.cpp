@@ -1,8 +1,13 @@
 #include "md2view/camera.hpp"
 
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include <glm/ext/matrix_float4x4.hpp>
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/ext/vector_float3.hpp>
+#include <glm/geometric.hpp>
+#include <glm/trigonometric.hpp>
 #include <gsl-lite/gsl-lite.hpp>
+
+#include <algorithm>
 
 Camera::Camera(glm::vec3 const& position,
                glm::vec3 const& up,

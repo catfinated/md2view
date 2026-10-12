@@ -6,6 +6,8 @@
 #include <gsl-lite/gsl-lite.hpp>
 #include <imgui.h>
 
+#include <cstddef>
+
 namespace UI {
 
 void draw(Camera& camera) {

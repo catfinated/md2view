@@ -7,6 +7,7 @@
 #include <vulkan/vulkan.hpp>
 
 #include <array>
+#include <cstddef>
 
 namespace VK {
 

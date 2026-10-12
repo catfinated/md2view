@@ -5,9 +5,12 @@
 
 #include <array>
 #include <cassert>
+#include <cstdint>
 #include <cstring>
 #include <iomanip>
 #include <iostream>
+#include <memory>
+#include <vector>
 
 PCX::PCX(std::istream& is) {
     Header header{};

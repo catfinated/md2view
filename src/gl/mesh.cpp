@@ -1,8 +1,13 @@
 #include "md2view/gl/mesh.hpp"
+#include "md2view/gl/gl.hpp"
 #include "md2view/gl/shader.hpp"
 
+#include <glm/ext/vector_float2.hpp>
+#include <glm/ext/vector_float3.hpp>
 #include <gsl-lite/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
+
+#include <span>
 
 namespace GL {
 

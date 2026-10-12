@@ -2,6 +2,7 @@
 
 #include "md2view/gl/gl.hpp"
 
+#include <cstddef>
 #include <optional>
 #include <vector>
 

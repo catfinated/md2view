@@ -8,6 +8,8 @@
 #include "md2view/engine.hpp"
 #include "md2view/vk/renderer.hpp"
 
+#include <memory>
+
 namespace VK {
 
 class Engine : public ::Engine {

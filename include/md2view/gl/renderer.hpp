@@ -11,6 +11,7 @@
 #include <GLFW/glfw3.h>
 
 #include <array>
+#include <memory>
 
 namespace GL {
 

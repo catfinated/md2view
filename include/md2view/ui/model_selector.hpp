@@ -4,6 +4,7 @@
 
 #include <filesystem>
 #include <random>
+#include <string>
 
 class PAK;
 

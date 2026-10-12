@@ -9,8 +9,11 @@
 #include "md2view/window.hpp"
 
 #include <GLFW/glfw3.h>
+#include <vulkan/vulkan.hpp>
 
 #include <array>
+#include <cstdint>
+#include <vector>
 
 namespace VK {
 

@@ -1,5 +1,6 @@
 #include "md2view/vk/engine.hpp"
 
+#include "md2view/vk/renderer.hpp"
 #include "md2view/window.hpp"
 
 #include <GLFW/glfw3.h>

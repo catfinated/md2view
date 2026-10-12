@@ -12,7 +12,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <optional>
-#include <stdexcept>
+#include <utility>
 #include <vector>
 
 class Window;

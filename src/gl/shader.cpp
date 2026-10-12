@@ -1,8 +1,21 @@
 #include "md2view/gl/shader.hpp"
+#include "md2view/gl/gl.hpp"
+
+#include <glm/ext/matrix_float4x4.hpp>
+#include <glm/ext/vector_float2.hpp>
+#include <glm/ext/vector_float3.hpp>
+#include <glm/ext/vector_float4.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <gsl-lite/gsl-lite.hpp>
+#include <spdlog/spdlog.h>
 
 #include <array>
+#include <filesystem>
 #include <fstream>
+#include <optional>
+#include <sstream>
 #include <stdexcept>
+#include <string>
 #include <utility>
 
 namespace GL {

@@ -1,16 +1,27 @@
 #include "md2view/vk/renderer.hpp"
+#include "md2view/vk/buffer.hpp"
 #include "md2view/vk/ubo.hpp"
+#include "md2view/vk/vertex.hpp"
+#include "md2view/vk/vk.hpp"
+#include "md2view/window.hpp"
 
 #include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#include <glm/ext/matrix_clip_space.hpp>
+#include <glm/ext/matrix_float4x4.hpp>
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/ext/vector_float3.hpp>
+#include <glm/trigonometric.hpp>
 #include <gsl-lite/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
+#include <vulkan/vulkan.hpp>
+#include <vulkan/vulkan_raii.hpp>
 
 #include <array>
 #include <cstdint>
 #include <ranges>
 #include <stdexcept>
+#include <tuple>
+#include <vector>
 
 namespace VK {
 

@@ -1,7 +1,9 @@
 #include "md2view/gl/frame_buffer.hpp"
+#include "md2view/gl/gl.hpp"
 
 #include <gsl-lite/gsl-lite.hpp>
 
+#include <cstddef>
 #include <stdexcept>
 
 namespace GL {

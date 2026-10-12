@@ -1,4 +1,12 @@
 #include "md2view/asset_loader.hpp"
+#include "md2view/image.hpp"
+#include "md2view/md2.hpp"
+
+#include <filesystem>
+#include <memory>
+#include <optional>
+#include <string>
+#include <string_view>
 
 AssetLoader::AssetLoader(std::filesystem::path const& dataDir,
                          std::optional<std::filesystem::path> const& pakPath)

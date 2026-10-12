@@ -32,6 +32,16 @@ Diagnostics:
       - cppcoreguidelines-avoid-magic-numbers
 
   UnusedIncludes: Strict
+  MissingIncludes: Strict
+  # Keep in sync with misc-include-cleaner.IgnoreHeaders in .clang-tidy
+  Includes:
+    IgnoreHeader:
+      - glm/.*
+      - vulkan/vulkan_.*\.hpp
+      - vulkan/vulkan_core\.h
+      - vulkan/vk_platform\.h
+      - fmt/.*
+      - boost/.*
   # Suppress unwanted warnings
   Suppress: pragma-pack  
 

@@ -1,12 +1,12 @@
 #pragma once
 
-#include "md2view/gl/gl.hpp"
+#include "md2view/gl/gl.hpp" // IWYU pragma: keep
 
 #include <GLFW/glfw3.h>
 #include <gsl-lite/gsl-lite.hpp>
-#include <imgui.h>
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 
 class Engine;

@@ -3,7 +3,6 @@
 #include "md2view/asset_loader.hpp"
 #include "md2view/gl/shader.hpp"
 #include "md2view/gl/texture2d.hpp"
-#include "md2view/md2.hpp"
 
 #include <filesystem>
 #include <memory>

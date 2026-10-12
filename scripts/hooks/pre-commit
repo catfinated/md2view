@@ -1,0 +1,12 @@
+#!/bin/sh
+# Run clang-format on staged C++ files.
+failed=""
+for f in $(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(cpp|hpp|ipp)$'); do
+    if ! git show ":$f" | clang-format --assume-filename="$f" --dry-run --Werror >/dev/null 2>&1; then
+        failed="$failed $f"
+    fi
+done
+if [ -n "$failed" ]; then
+    echo "clang-format check failed. Run: clang-format -i$failed"
+    exit 1
+fi

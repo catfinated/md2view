@@ -1,9 +1,17 @@
 #include "md2view/gl/resource_manager.hpp"
+#include "md2view/asset_loader.hpp"
+#include "md2view/gl/shader.hpp"
+#include "md2view/gl/texture2d.hpp"
 
+#include <fmt/format.h>
 #include <gsl-lite/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 
 #include <filesystem>
+#include <memory>
+#include <optional>
+#include <string>
+#include <string_view>
 
 ResourceManager::ResourceManager(
     std::filesystem::path const& rootdir,

@@ -5,6 +5,7 @@
 #include <gsl-lite/gsl-lite.hpp>
 
 #include <fstream>
+#include <ios>
 #include <sstream>
 
 TEST_CASE("pcx default ctor", "[pcx]") {

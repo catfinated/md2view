@@ -1,15 +1,26 @@
 #include "md2view/md2.hpp"
 #include "md2view/pak.hpp"
 
+#include <fmt/base.h>
 #include <fmt/core.h>
+#include <fmt/format.h>
 #include <fmt/ostream.h>
+#include <glm/ext/vector_float3.hpp>
 #include <glm/gtx/compatibility.hpp>
 #include <gsl-lite/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 
+#include <array>
+#include <cassert>
 #include <cctype>
+#include <cstddef>
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <ios>
+#include <ostream>
+#include <stdexcept>
+#include <string>
 #include <string_view>
 #include <utility>
 #include <vector>

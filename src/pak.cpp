@@ -1,12 +1,18 @@
 #include "md2view/pak.hpp"
 
-#include <boost/algorithm/string/classification.hpp>
-#include <boost/algorithm/string/split.hpp>
 #include <gsl-lite/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 
 #include <algorithm>
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <filesystem>
 #include <fstream>
+#include <ios>
+#include <stdexcept>
+#include <string>
+#include <utility>
 
 #pragma pack(push, 1)
 struct Header {

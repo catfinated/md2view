@@ -1,11 +1,18 @@
 #include "md2view/engine.hpp"
 
 #include <GLFW/glfw3.h>
+#include <boost/program_options/options_description.hpp>
+#include <boost/program_options/parsers.hpp>
+#include <boost/program_options/value_semantic.hpp>
+#include <boost/program_options/variables_map.hpp>
 #include <gsl-lite/gsl-lite.hpp>
+#include <spdlog/common.h>
 #include <spdlog/spdlog.h>
 
 #include <iostream>
 #include <map>
+#include <span>
+#include <string>
 #include <utility>
 
 bool Engine::Keyboard::keyWasJustPressed(unsigned int key) const {

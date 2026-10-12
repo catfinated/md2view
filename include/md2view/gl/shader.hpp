@@ -5,10 +5,10 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <gsl-lite/gsl-lite.hpp>
-#include <spdlog/spdlog.h>
 
 #include <array>
 #include <cassert>
+#include <cstddef>
 #include <filesystem>
 #include <optional>
 #include <sstream>

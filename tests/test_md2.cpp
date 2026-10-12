@@ -7,9 +7,8 @@
 #include <catch2/catch_test_macros.hpp>
 #include <gsl-lite/gsl-lite.hpp>
 
+#include <cstddef>
 #include <filesystem>
-#include <fstream>
-#include <stdexcept>
 
 // Load an md2 fixture by filename via a directory-mode PAK.
 // The file is copied into a per-fixture static TmpDir as "tris.md2".

@@ -2,9 +2,7 @@
 
 #include "md2view/gl/gl.hpp"
 
-#include <memory>
 #include <span>
-#include <string>
 
 class PAK;
 class Image;
