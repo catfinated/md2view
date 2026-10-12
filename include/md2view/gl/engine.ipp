@@ -32,7 +32,8 @@ template <typename Game> void GL::Engine<Game>::doInit() {
         spdlog::debug("framebuffer resize x={} y={}", width, height);
         if (width > 0 && height > 0) {
             game_.onFramebufferResize();
-            renderer_->onFramebufferResize(Window::Extent{width, height});
+            renderer_->onFramebufferResize(
+                Window::Extent{.width = width, .height = height});
         }
     });
 

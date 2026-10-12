@@ -18,10 +18,11 @@ namespace GL {
 class Renderer {
 public:
     static constexpr std::array kWindowHints{
-        WindowHint{GLFW_CONTEXT_VERSION_MAJOR, 4},
-        WindowHint{GLFW_CONTEXT_VERSION_MINOR, 1},
-        WindowHint{GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE},
-        WindowHint{GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE},
+        WindowHint{.hint = GLFW_CONTEXT_VERSION_MAJOR, .value = 4},
+        WindowHint{.hint = GLFW_CONTEXT_VERSION_MINOR, .value = 1},
+        WindowHint{.hint = GLFW_OPENGL_PROFILE,
+                   .value = GLFW_OPENGL_CORE_PROFILE},
+        WindowHint{.hint = GLFW_OPENGL_FORWARD_COMPAT, .value = GLFW_TRUE},
     };
 
     Renderer(Window& window, ResourceManager& resourceManager);
