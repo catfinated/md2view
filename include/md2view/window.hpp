@@ -55,6 +55,7 @@ public:
     virtual void onMouseButton(int /*button*/, int /*action*/, int /*mods*/) {}
     virtual void onCursorPos(double /*xpos*/, double /*ypos*/) {}
     virtual void onScroll(double /*xoffset*/, double /*yoffset*/) {}
+    virtual void onChar(unsigned int /*codepoint*/) {}
 };
 
 /**

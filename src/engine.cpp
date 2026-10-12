@@ -111,6 +111,17 @@ void Engine::onKey(int key, int /*scancode*/, int action, int /*mods*/) {
     } else if (key == GLFW_KEY_F1) {
         input_goes_to_game_ = !input_goes_to_game_;
         spdlog::info("got F1. game input: {}", input_goes_to_game_);
+        if (input_goes_to_game_) {
+            // NB: ImGui sets a custom cursor and GLFW 3.4 on
+            // Wayland keeps animating even when the cursor is
+            // disabled so we need to clear it here. ImGui
+            // will reset the cursor on the first from after
+            // after it is set back to normal
+            glfwSetCursor(window_.get(), nullptr);
+        }
+        glfwSetInputMode(window_.get(), GLFW_CURSOR,
+                         input_goes_to_game_ ? GLFW_CURSOR_DISABLED
+                                             : GLFW_CURSOR_NORMAL);
     }
 }
 

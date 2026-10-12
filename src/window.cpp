@@ -109,6 +109,12 @@ void Window::installCallbacks() noexcept {
                 input->onScroll(xoffset, yoffset);
             }
         });
+    glfwSetCharCallback(
+        window_, [](GLFWwindow* window, unsigned int codepoint) {
+            if (auto* input = fromGlfw(window).input_; input != nullptr) {
+                input->onChar(codepoint);
+            }
+        });
     glfwSetFramebufferSizeCallback(
         window_, [](GLFWwindow* window, int width, int height) {
             if (auto& handler = fromGlfw(window).onFramebufferResize_) {

@@ -30,9 +30,14 @@ public:
 
 private:
     void doInit() final;
+    void onKey(int key, int scancode, int action, int mods) final;
     void onCursorPos(double xpos, double ypos) final;
     void onScroll(double xoffset, double yoffset) final;
-    void onMouseButton(int button, int action, int /*mods*/) final;
+    void onMouseButton(int button, int action, int mods) final;
+    void onChar(unsigned int codepoint) final;
+    [[nodiscard]] bool guiHasInput() const {
+        return gui_ && !input_goes_to_game_;
+    }
     [[nodiscard]] GLfloat delta_time() const { return delta_time_; }
 
     std::unique_ptr<Renderer> renderer_;
