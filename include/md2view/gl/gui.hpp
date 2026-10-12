@@ -6,21 +6,19 @@
 #include <gsl-lite/gsl-lite.hpp>
 
 #include <array>
-#include <cstddef>
-#include <cstdint>
 
 class Engine;
-class ResourceManager;
 
 namespace GL {
 
-/// OpenGL ImGui renderer: manages VAO/VBO, GL texture lifecycle, and GL state
-/// save/restore around each ImGui render pass.
+/// ImGui integration for the OpenGL renderer
 class Gui {
 public:
-    Gui(::Engine& engine,
-        ResourceManager& rm,
-        gsl_lite::not_null<GLFWwindow*> window);
+    /// Create context and initialize backend.
+    /// Requires a current OpenGL context.
+    ///
+    /// @throws std::runtime_error on failure to initialize
+    Gui(::Engine& engine, gsl_lite::not_null<GLFWwindow*> window);
     ~Gui();
 
     Gui(Gui const&) = delete;
@@ -36,23 +34,10 @@ public:
     void render();
 
 private:
-    enum class Buffer : std::int8_t { vertex = 0, element, num_buffers };
-
-    void init();
-
     ::Engine& engine_;
-    ResourceManager& rm_;
     gsl_lite::not_null<GLFWwindow*> window_;
     double time_ = 0.0;
     std::array<bool, 3> mouse_pressed_{false, false, false};
-    int attrib_location_tex_ = 0;
-    int attrib_location_projection_ = 0;
-    int attrib_location_position_ = 0;
-    int attrib_location_uv_ = 0;
-    int attrib_location_color_ = 0;
-    unsigned int vao_ = 0;
-    std::array<unsigned int, static_cast<size_t>(Buffer::num_buffers)>
-        glbuffers_{};
 };
 
 } // namespace GL

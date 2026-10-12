@@ -29,7 +29,12 @@
     "boost-filesystem",
     "boost-program-options",
     "opengl",
-    "imgui",
+    {
+      "name": "imgui",
+      "features": [
+        "opengl3-binding"
+      ]
+    },
     "spdlog",
     "stb",
     "treehh",

@@ -41,8 +41,7 @@ template <typename Game> void GL::Engine<Game>::doInit() {
     mouse_.xpos = wSize.width / 2.0;
     mouse_.ypos = wSize.height / 2.0;
 
-    gui_ = std::make_unique<GL::Gui>(*this, *resource_manager_,
-                                     gsl_lite::not_null{window_.get()});
+    gui_ = std::make_unique<GL::Gui>(*this, gsl_lite::not_null{window_.get()});
     glCheckError();
     if (!game_.on_engine_initialized(*this)) {
         throw std::runtime_error("failed to initialize game");
