@@ -1,5 +1,6 @@
 #include "md2view/pak.hpp"
 
+#include <fmt/std.h>
 #include <gsl-lite/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 
@@ -40,7 +41,7 @@ PAK::PAK(std::filesystem::path fpath)
 
 bool PAK::init() {
     if (!std::filesystem::exists(fpath_)) {
-        spdlog::error("'{}' does not exist!", fpath_.string());
+        spdlog::error("'{}' does not exist!", fpath_);
         return false;
     }
 
@@ -72,7 +73,7 @@ bool PAK::init_from_file() {
     std::ifstream inf(fpath_, std::ios_base::in | std::ios_base::binary);
 
     if (!inf) {
-        spdlog::info("failed to open pak file: {}", fpath_.string());
+        spdlog::info("failed to open pak file: {}", fpath_);
         return false;
     }
 
@@ -91,8 +92,8 @@ bool PAK::init_from_file() {
     // TODO: ensure dirofs/dirlen converted from little endian to host
     auto num_entries = static_cast<size_t>(hdr.dirlen) / sizeof(Entry);
 
-    spdlog::info("loaded pak file: {} {} {} {}", fpath_.string(), hdr.dirofs,
-                 hdr.dirlen, num_entries);
+    spdlog::info("loaded pak file: {} {} {} {}", fpath_, hdr.dirofs, hdr.dirlen,
+                 num_entries);
 
     inf.seekg(hdr.dirofs);
 
@@ -128,6 +129,6 @@ std::ifstream PAK::open_ifstream(std::filesystem::path const& fpath) const {
     }
 
     auto const p = fpath_ / fpath;
-    spdlog::info("open file {}", p.string());
+    spdlog::info("open file {}", p);
     return std::ifstream(p, flags);
 }

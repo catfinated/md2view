@@ -5,6 +5,7 @@
 #include <GLFW/glfw3.h>
 #include <fmt/core.h>
 #include <fmt/format.h>
+#include <fmt/std.h>
 #include <gsl-lite/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 #include <vulkan/vulkan.hpp>
@@ -388,14 +389,14 @@ createImageViews(vk::raii::Device const& device,
 
 vk::raii::ShaderModule createShaderModule(std::filesystem::path const& path,
                                           vk::raii::Device const& device) {
-    spdlog::info("creating shader module for {}", path.string());
+    spdlog::info("creating shader module for {}", path);
     std::vector<char> buffer;
     {
         std::ifstream inf(path, std::ios::ate | std::ios::binary);
 
         if (!inf.is_open()) {
             throw std::runtime_error(
-                fmt::format("failed to open file '{}'!", path.string()));
+                fmt::format("failed to open file '{}'!", path));
         }
 
         auto const fileSize = static_cast<size_t>(inf.tellg());

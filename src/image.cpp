@@ -5,6 +5,7 @@
 
 #include <fmt/core.h>
 #include <fmt/format.h>
+#include <fmt/std.h>
 #include <gsl-lite/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 #define STB_IMAGE_IMPLEMENTATION
@@ -35,8 +36,7 @@ Image::Image(std::filesystem::path const& fpath) {
 
     if (!ptr) {
         throw std::runtime_error(fmt::format("failed to load image '{}': {}",
-                                             fpath.string(),
-                                             stbi_failure_reason()));
+                                             fpath, stbi_failure_reason()));
     }
 
     width_ = gsl_lite::narrow_failfast<unsigned int>(width);
@@ -47,7 +47,7 @@ Image::Image(std::filesystem::path const& fpath) {
 
 Image Image::loadFromPak(PAK const& pak, std::string_view path) {
 
-    spdlog::info("load image {} from {}", path, pak.fpath().string());
+    spdlog::info("load image {} from {}", path, pak.fpath());
     auto const isPcx = std::filesystem::path(path).extension() == ".pcx";
 
     if (isPcx) {

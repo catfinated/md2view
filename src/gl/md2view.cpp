@@ -7,6 +7,7 @@
 #include "md2view/ui/ui.hpp"
 
 #include <GLFW/glfw3.h>
+#include <fmt/std.h>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_float4x4.hpp>
 #include <glm/ext/matrix_transform.hpp>
@@ -53,11 +54,8 @@ void MD2View::load_current_texture(GL::Engine<MD2View>& engine) {
 
 bool MD2View::on_engine_initialized(GL::Engine<MD2View>& engine) {
     if (!engine.resource_manager().pak().has_models()) {
-        // NB: converting filesystem path to string in format arg
-        // to work-around clang-tidy issue from libfmt:
-        // https://github.com/fmtlib/fmt/issues/4552
         spdlog::error("PAK '{}' has no MD2 models to view",
-                      engine.resource_manager().pak().fpath().string());
+                      engine.resource_manager().pak().fpath());
         return false;
     }
     // init objects which needed an opengl context to initialize

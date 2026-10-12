@@ -5,6 +5,7 @@
 #include <fmt/core.h>
 #include <fmt/format.h>
 #include <fmt/ostream.h>
+#include <fmt/std.h>
 #include <glm/ext/vector_float3.hpp>
 #include <glm/gtx/compatibility.hpp>
 #include <gsl-lite/gsl-lite.hpp>
@@ -50,7 +51,7 @@ MD2::MD2(std::string_view filename, PAK const& pak) {
 }
 
 bool MD2::load(PAK const& pf, std::string_view filename) {
-    spdlog::info("loading model {} from pak {}", filename, pf.fpath().string());
+    spdlog::info("loading model {} from pak {}", filename, pf.fpath());
     gsl_Expects(!filename.empty());
     auto ispak = !pf.is_directory();
 
@@ -73,7 +74,7 @@ void MD2::load_skins_from_directory(std::filesystem::path const& dpath,
                                     std::filesystem::path const& root) {
     static constexpr std::array extensions = {".pcx", ".png", ".jpg"};
 
-    spdlog::info("load skins from {}", dpath.string());
+    spdlog::info("load skins from {}", dpath);
     std::vector<SkinData> found_skins;
     for (auto const& skin : skins_) {
         auto path = dpath / skin.name;

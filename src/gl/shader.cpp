@@ -1,6 +1,7 @@
 #include "md2view/gl/shader.hpp"
 #include "md2view/gl/gl.hpp"
 
+#include <fmt/std.h>
 #include <glm/ext/matrix_float4x4.hpp>
 #include <glm/ext/vector_float2.hpp>
 #include <glm/ext/vector_float3.hpp>
@@ -110,7 +111,7 @@ bool Shader::init(std::filesystem::path const& vertex,
 bool Shader::compile_shader(GLenum shader_type,
                             std::filesystem::path const& path,
                             GLuint& handle) {
-    spdlog::info("compiling '{}'", path.string());
+    spdlog::info("compiling '{}'", path);
     std::string code;
 
     try {
@@ -121,8 +122,7 @@ bool Shader::compile_shader(GLenum shader_type,
         istream << infile.rdbuf();
         code = istream.str();
     } catch (std::ifstream::failure const& e) {
-        spdlog::error("failed to read shader file '{}': {}", path.string(),
-                      e.what());
+        spdlog::error("failed to read shader file '{}': {}", path, e.what());
         return false;
     }
 
@@ -137,8 +137,8 @@ bool Shader::compile_shader(GLenum shader_type,
     if (success == GL_FALSE) {
         std::array<GLchar, 512> log{};
         glGetShaderInfoLog(handle, log.size(), nullptr, log.data());
-        spdlog::error("ERROR::SHADER::COMPILATION_FAILED: ('{}') - \n{}",
-                      path.string(), log.data());
+        spdlog::error("ERROR::SHADER::COMPILATION_FAILED: ('{}') - \n{}", path,
+                      log.data());
         return false;
     }
 
