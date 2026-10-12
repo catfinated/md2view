@@ -26,6 +26,18 @@ Gui::Gui(::Engine& engine,
     init();
 }
 
+Gui::~Gui() {
+    for (ImTextureData* tex : ImGui::GetPlatformIO().Textures) {
+        auto gl_tex = (GLuint)(intptr_t)tex->GetTexID();
+        if (gl_tex != 0) {
+            glDeleteTextures(1, &gl_tex);
+            tex->SetTexID(ImTextureID_Invalid);
+            tex->SetStatus(ImTextureStatus_Destroyed);
+        }
+    }
+    ImGui::DestroyContext();
+}
+
 void Gui::init() {
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
@@ -366,18 +378,6 @@ void Gui::render() {
                (GLsizei)last_viewport[3]);
     glScissor(last_scissor_box[0], last_scissor_box[1],
               (GLsizei)last_scissor_box[2], (GLsizei)last_scissor_box[3]);
-}
-
-void Gui::shutdown() {
-    for (ImTextureData* tex : ImGui::GetPlatformIO().Textures) {
-        auto gl_tex = (GLuint)(intptr_t)tex->GetTexID();
-        if (gl_tex != 0) {
-            glDeleteTextures(1, &gl_tex);
-            tex->SetTexID(ImTextureID_Invalid);
-            tex->SetStatus(ImTextureStatus_Destroyed);
-        }
-    }
-    ImGui::DestroyContext();
 }
 
 } // namespace GL

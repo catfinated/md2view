@@ -21,7 +21,7 @@ public:
     Gui(::Engine& engine,
         ResourceManager& rm,
         gsl_lite::not_null<GLFWwindow*> window);
-    ~Gui() = default;
+    ~Gui();
 
     Gui(Gui const&) = delete;
     Gui& operator=(Gui const&) = delete;
@@ -34,7 +34,6 @@ public:
     /// Record a press so a click shorter than a frame still registers
     void onMouseButton(int button, int action);
     void render();
-    void shutdown();
 
 private:
     enum class Buffer : std::int8_t { vertex = 0, element, num_buffers };

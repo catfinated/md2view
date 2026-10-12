@@ -23,8 +23,8 @@ namespace {
 
 // Load an md2 fixture by filename via a directory-mode PAK.
 // The file is copied into a per-fixture static TmpDir as "tris.md2".
-static MD2 load_md2_fixture(char const* fixture_name,
-                            std::filesystem::path const& tmp_root) {
+MD2 load_md2_fixture(char const* fixture_name,
+                     std::filesystem::path const& tmp_root) {
     auto model_dir = tmp_root / "models" / "player";
     std::filesystem::create_directories(model_dir);
     auto dest = model_dir / "tris.md2";
@@ -35,17 +35,17 @@ static MD2 load_md2_fixture(char const* fixture_name,
     return MD2{"models/player/tris.md2", pak};
 }
 
-static MD2 load_fixture() {
+MD2 load_fixture() {
     static TmpDir tmp;
     return load_md2_fixture("minimal.md2", tmp.path());
 }
 
-static MD2 load_two_frame() {
+MD2 load_two_frame() {
     static TmpDir tmp;
     return load_md2_fixture("two_frame.md2", tmp.path());
 }
 
-static MD2 load_two_anim() {
+MD2 load_two_anim() {
     static TmpDir tmp;
     return load_md2_fixture("two_anim.md2", tmp.path());
 }

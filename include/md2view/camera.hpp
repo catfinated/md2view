@@ -26,10 +26,10 @@ public:
     /// @param up       World up vector.
     /// @param yaw      Initial yaw in degrees.
     /// @param pitch    Initial pitch in degrees.
-    Camera(glm::vec3 const& position = glm::vec3(0.0f, 0.0f, 0.0f),
-           glm::vec3 const& up = glm::vec3(0.0f, 1.0f, 0.0f),
-           float yaw = YAW,
-           float pitch = PITCH);
+    explicit Camera(glm::vec3 const& position = glm::vec3(0.0f, 0.0f, 0.0f),
+                    glm::vec3 const& up = glm::vec3(0.0f, 1.0f, 0.0f),
+                    float yaw = YAW,
+                    float pitch = PITCH);
 
     /// Compute the view matrix from the current position and orientation.
     [[nodiscard]] glm::mat4 view_matrix() const;

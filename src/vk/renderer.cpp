@@ -459,7 +459,8 @@ void Renderer::drawFrame(float time) {
 
 void Renderer::updateUniformBuffer(uint32_t currentImage, float time) {
     UniformBufferObject ubo{};
-    auto const width = swapChainSupportDetails_.extent.width;
+    auto const width =
+        static_cast<float>(swapChainSupportDetails_.extent.width);
     auto const height =
         static_cast<float>(swapChainSupportDetails_.extent.height);
     ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f),

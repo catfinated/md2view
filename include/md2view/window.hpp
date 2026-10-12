@@ -22,6 +22,8 @@ struct GlfwContext {
     ~GlfwContext();
     GlfwContext(GlfwContext const&) = delete;
     GlfwContext& operator=(GlfwContext const&) = delete;
+    GlfwContext(GlfwContext&&) = delete;
+    GlfwContext& operator=(GlfwContext&&) = delete;
 };
 
 /**

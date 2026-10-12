@@ -10,7 +10,7 @@ class PAK;
 
 class ModelSelector {
 public:
-    ModelSelector(PAK const& pak)
+    explicit ModelSelector(PAK const& pak)
         : mt_(std::random_device{}()) {
         init(pak);
     }

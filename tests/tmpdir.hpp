@@ -5,7 +5,7 @@
 
 class TmpDir {
 public:
-    TmpDir(std::string const& prefix = "test");
+    explicit TmpDir(std::string const& prefix = "test");
     ~TmpDir();
 
     TmpDir(TmpDir const&) = delete;

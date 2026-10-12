@@ -15,7 +15,7 @@ namespace VK {
 class Engine : public ::Engine {
 public:
     Engine() = default;
-    ~Engine() = default;
+    ~Engine() override = default;
 
     Engine(Engine const&) = delete;
     Engine& operator=(Engine const&) = delete;

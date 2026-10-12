@@ -147,6 +147,7 @@ public:
     /// @param pak      The archive or directory to load from.
     /// @throws std::runtime_error if the file cannot be opened or parsed.
     explicit MD2(std::string_view filename, PAK const& pak);
+    ~MD2() = default;
 
     MD2(MD2 const&) = delete;
     MD2& operator=(MD2 const&) = delete;

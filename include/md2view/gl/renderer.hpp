@@ -24,6 +24,7 @@ public:
         WindowHint{GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE}};
 
     Renderer(Window& window, ResourceManager& resourceManager);
+    ~Renderer() = default;
 
     Renderer(Renderer const&) = delete;
     Renderer& operator=(Renderer const&) = delete;
@@ -36,7 +37,7 @@ public:
     [[nodiscard]] bool glowOn() const noexcept { return glowOn_; }
     void setGlowOn(bool flag) { glowOn_ = flag; }
 
-    std::array<float, 4> const& clearColor() const noexcept {
+    [[nodiscard]] std::array<float, 4> const& clearColor() const noexcept {
         return clearColor_;
     }
     void setClearColor(std::array<float, 4> const& color);

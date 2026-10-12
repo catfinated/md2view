@@ -23,3 +23,5 @@ CheckOptions:
     value: true
   - key: misc-include-cleaner.IgnoreHeaders
     value: 'glm/.*;vulkan/vulkan_.*\.hpp;vulkan/vulkan_core\.h;vulkan/vk_platform\.h;fmt/.*;boost/.*'
+  - key: performance-unnecessary-value-param.AllowedTypes
+    value: 'gsl_lite::not_null'
