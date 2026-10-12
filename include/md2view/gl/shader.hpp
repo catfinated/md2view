@@ -19,8 +19,8 @@ namespace GL {
 /// OpenGL shader program (vertex + optional geometry + fragment stages).
 ///
 /// Loads GLSL source from files, compiles each stage, and links the program.
-/// Provides typed `set_uniform()` overloads for common GLM types and a set of
-/// named convenience helpers (`set_model()`, `set_view()`, etc.) for the
+/// Provides typed `setUniform()` overloads for common GLM types and a set of
+/// named convenience helpers (`setModel()`, `setView()`, etc.) for the
 /// standard MVP uniforms.
 class Shader {
 public:
@@ -94,11 +94,11 @@ public:
 
     template <typename T>
     void setUniform(gsl_lite::not_null<GLchar const*> name, T const& t) {
-        set_uniform(uniformLocation(name), t);
+        setUniform(uniformLocation(name), t);
     }
 
     template <typename T> void setUniform(std::string const& name, T const& t) {
-        set_uniform(uniformLocation(name), t);
+        setUniform(uniformLocation(name), t);
     }
 
     template <std::size_t N>
@@ -128,7 +128,7 @@ public:
             std::ostringstream oss;
             oss << name << "[" << std::to_string(i) << "]";
             std::string s = oss.str();
-            set_uniform(s.c_str(), a[i]);
+            setUniform(s.c_str(), a[i]);
         }
     }
 
