@@ -28,7 +28,7 @@ public:
         return dataDir_;
     }
 
-    PAK const& pak() const { return pak_; }
+    [[nodiscard]] PAK const& pak() const { return pak_; }
 
     /// Load an image from the active PAK (no cache)
     Image loadImage(std::string_view path);

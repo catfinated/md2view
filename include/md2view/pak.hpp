@@ -39,7 +39,9 @@ public:
     explicit PAK(std::filesystem::path fpath);
 
     /// Path that was used to construct this PAK.
-    std::filesystem::path const& fpath() const noexcept { return fpath_; }
+    [[nodiscard]] std::filesystem::path const& fpath() const noexcept {
+        return fpath_;
+    }
 
     /// Returns true if this PAK wraps a directory rather than a `.pak` file.
     [[nodiscard]] bool isDirectory() const noexcept {
@@ -54,10 +56,11 @@ public:
     /// @param fpath Archive-relative path of the entry (e.g.
     /// `"models/player/tris.md2"`).
     /// @return An open `std::ifstream` positioned at the start of the entry.
-    std::ifstream openIfstream(std::filesystem::path const& fpath) const;
+    [[nodiscard]] std::ifstream
+    openIfstream(std::filesystem::path const& fpath) const;
 
     /// Lazy range of all `.md2` model entries in the archive.
-    auto models() const {
+    [[nodiscard]] auto models() const {
         return entries() | std::ranges::views::values |
                std::ranges::views::filter([](auto const& n) {
                    return boost::algorithm::ends_with(n.path, ".md2");
@@ -71,7 +74,7 @@ private:
     [[nodiscard]] bool init();
     [[nodiscard]] bool initFromFile();
     void initFromDirectory();
-    std::unordered_map<std::string, Node> const& entries() const {
+    [[nodiscard]] std::unordered_map<std::string, Node> const& entries() const {
         return entries_;
     }
 

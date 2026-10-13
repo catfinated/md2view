@@ -156,14 +156,18 @@ public:
 
     /// @name Accessors
     /// @{
-    Header const& header() const { return hdr_; }
-    std::vector<SkinData> const& skins() const { return skins_; }
-    std::vector<Animation> const& animations() const { return animations_; }
-    size_t animationIndex() const { return currentAnimationIndex_; }
-    size_t skinIndex() const { return currentSkinIndex_; }
-    float framesPerSecond() const { return framesPerSecond_; }
+    [[nodiscard]] Header const& header() const { return hdr_; }
+    [[nodiscard]] std::vector<SkinData> const& skins() const { return skins_; }
+    [[nodiscard]] std::vector<Animation> const& animations() const {
+        return animations_;
+    }
+    [[nodiscard]] size_t animationIndex() const {
+        return currentAnimationIndex_;
+    }
+    [[nodiscard]] size_t skinIndex() const { return currentSkinIndex_; }
+    [[nodiscard]] float framesPerSecond() const { return framesPerSecond_; }
 
-    SkinData const& currentSkin() const {
+    [[nodiscard]] SkinData const& currentSkin() const {
         return gsl_lite::at(skins_, currentSkinIndex_);
     }
 
@@ -171,13 +175,13 @@ public:
     /// Size is `numTris × 3` (one entry per triangle corner).
     /// This is the data that should be uploaded to the GPU via
     /// `GL::Mesh::sync()`.
-    std::vector<glm::vec3> const& interpolatedVertices() const {
+    [[nodiscard]] std::vector<glm::vec3> const& interpolatedVertices() const {
         return interpolatedVertices_;
     }
 
     /// Normalised texture coordinates, parallel to `interpolatedVertices()`.
     /// Static after construction — does not change between frames.
-    std::vector<glm::vec2> const& scaledTexcoords() const {
+    [[nodiscard]] std::vector<glm::vec2> const& scaledTexcoords() const {
         return scaledTexcoords_;
     }
     /// @}
