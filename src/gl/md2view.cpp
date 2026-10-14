@@ -260,12 +260,12 @@ void MD2View::drawUi(GL::Engine& engine) {
     ImGui::End();
 }
 
-void MD2View::update(GL::Engine& /* engine */, GLfloat deltaTime) {
+void MD2View::update(GL::Engine& /* engine */, float deltaTime) {
     md2_->update(deltaTime);
     md2Mesh_->sync(md2_->interpolatedVertices());
 }
 
-void MD2View::processInput(GL::Engine& engine, GLfloat deltaTime) {
+void MD2View::processInput(GL::Engine& engine, float deltaTime) {
     if (engine.keyboard().keys()[GLFW_KEY_W]) {
         camera_.move(Camera::Direction::FORWARD, deltaTime);
     }
@@ -280,7 +280,7 @@ void MD2View::processInput(GL::Engine& engine, GLfloat deltaTime) {
     }
 }
 
-void MD2View::onMouseMovement(GLfloat xoffset, GLfloat yoffset) {
+void MD2View::onMouseMovement(float xoffset, float yoffset) {
     camera_.onMouseMovement(xoffset, yoffset);
 }
 

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "md2view/gl/gl.hpp"
-
 namespace GL {
 
 class Engine;
@@ -25,12 +23,12 @@ public:
     [[nodiscard]] virtual bool onEngineInitialized(Engine& engine) = 0;
 
     /// Called each frame while input goes to the game
-    virtual void processInput(Engine& engine, GLfloat deltaTime) = 0;
-    virtual void onMouseMovement(GLfloat xoffset, GLfloat yoffset) = 0;
+    virtual void processInput(Engine& engine, float deltaTime) = 0;
+    virtual void onMouseMovement(float xoffset, float yoffset) = 0;
     virtual void onMouseScroll(double xoffset, double yoffset) = 0;
     virtual void onFramebufferResize() = 0;
 
-    virtual void update(Engine& engine, GLfloat deltaTime) = 0;
+    virtual void update(Engine& engine, float deltaTime) = 0;
     virtual void render(Engine& engine) = 0;
 };
 

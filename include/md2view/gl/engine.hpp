@@ -48,15 +48,12 @@ private:
     void onMouseButton(int button, int action, int mods) final;
     void onChar(unsigned int codepoint) final;
     [[nodiscard]] bool guiHasInput() const { return gui_ && !inputGoesToGame_; }
-    [[nodiscard]] GLfloat deltaTime() const { return deltaTime_; }
 
     std::unique_ptr<Renderer> renderer_;
     std::unique_ptr<ResourceManager> resourceManager_;
     std::unique_ptr<GL::Gui> gui_;
     // NB: declared after renderer_ so the game releases its GL objects first
     std::unique_ptr<Game> game_;
-    GLfloat deltaTime_ = 0.0f;
-    GLfloat lastFrame_ = 0.0f;
 };
 
 } // namespace GL

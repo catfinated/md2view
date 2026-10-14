@@ -20,11 +20,11 @@ public:
 
     [[nodiscard]] char const* title() const override { return "MD2View"; }
     [[nodiscard]] bool onEngineInitialized(GL::Engine& engine) override;
-    void processInput(GL::Engine& engine, GLfloat deltaTime) override;
-    void onMouseMovement(GLfloat xoffset, GLfloat yoffset) override;
+    void processInput(GL::Engine& engine, float deltaTime) override;
+    void onMouseMovement(float xoffset, float yoffset) override;
     void onMouseScroll(double xoffset, double yoffset) override;
     void onFramebufferResize() override;
-    void update(GL::Engine& engine, GLfloat deltaTime) override;
+    void update(GL::Engine& engine, float deltaTime) override;
     void render(GL::Engine& engine) override;
 
 private:

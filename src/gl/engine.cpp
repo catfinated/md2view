@@ -54,23 +54,24 @@ GL::Engine::Engine(CliArgs const& args, std::unique_ptr<Game> game)
 GL::Engine::~Engine() = default;
 
 void GL::Engine::runGame() {
-    lastFrame_ = gsl_lite::narrow_cast<GLfloat>(glfwGetTime());
+    auto lastFrame = glfwGetTime();
 
     while (!window_.shouldClose()) {
-        auto const currentFrame = gsl_lite::narrow_cast<GLfloat>(glfwGetTime());
-        deltaTime_ = currentFrame - lastFrame_;
-        lastFrame_ = currentFrame;
+        auto const currentFrame = glfwGetTime();
+        auto const deltaTime =
+            gsl_lite::narrow_cast<float>(currentFrame - lastFrame);
+        lastFrame = currentFrame;
 
         beginFrame();
         glfwPollEvents();
 
         if (inputGoesToGame_) {
-            game_->processInput(*this, deltaTime_);
+            game_->processInput(*this, deltaTime);
         }
 
         gui_->update();
         glCheckError();
-        game_->update(*this, deltaTime_);
+        game_->update(*this, deltaTime);
         glCheckError();
         renderer_->beginFrame();
         game_->render(*this);
