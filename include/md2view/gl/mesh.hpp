@@ -8,7 +8,6 @@
 #include <span>
 
 namespace GL {
-class Shader;
 
 /// Model-agnostic GPU mesh owning a VAO and two VBOs.
 ///
@@ -24,7 +23,7 @@ class Shader;
 /// @code
 /// model.update(dt);                          // advance animation
 /// mesh.sync(model.interpolatedVertices());  // upload to GPU
-/// mesh.draw(shader);                         // draw
+/// mesh.draw();                               // draw
 /// @endcode
 class Mesh {
 public:
@@ -53,7 +52,7 @@ public:
     void sync(std::span<glm::vec3 const> vertices);
 
     /// Bind the VAO and issue `glDrawArrays`.
-    void draw(Shader& shader) const;
+    void draw() const;
 
 private:
     GLuint vao_{};

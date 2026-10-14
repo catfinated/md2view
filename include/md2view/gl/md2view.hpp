@@ -2,9 +2,9 @@
 
 #include "md2view/camera.hpp"
 #include "md2view/gl/game.hpp"
-#include "md2view/gl/mesh.hpp"
 #include "md2view/gl/texture2d.hpp"
 #include "md2view/md2.hpp"
+#include "md2view/renderer.hpp"
 #include "md2view/ui/model_selector.hpp"
 
 #include <glm/glm.hpp>
@@ -35,7 +35,7 @@ private:
     void loadModel(GL::Engine& engine);
 
     std::shared_ptr<MD2> md2_;
-    std::unique_ptr<GL::Mesh> md2Mesh_;
+    MeshHandle md2Mesh_;
     std::unique_ptr<ModelSelector> modelSelector_;
     std::shared_ptr<GL::Texture2D> texture_;
 

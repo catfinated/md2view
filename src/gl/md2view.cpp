@@ -1,6 +1,6 @@
 #include "md2view/gl/md2view.hpp"
 #include "md2view/gl/engine.hpp"
-#include "md2view/gl/mesh.hpp"
+#include "md2view/renderer.hpp"
 #include "md2view/ui/model_selector.hpp"
 #include "md2view/ui/ui.hpp"
 
@@ -29,8 +29,12 @@ MD2View::MD2View() { resetModelMatrix(); }
 
 void MD2View::loadModel(GL::Engine& engine) {
     md2_ = engine.assets().loadModel(modelSelector_->modelPath());
-    md2Mesh_ = std::make_unique<GL::Mesh>(md2_->interpolatedVertices(),
-                                          md2_->scaledTexcoords());
+    auto& renderer = engine.renderer();
+    if (md2Mesh_ != MeshHandle{}) {
+        renderer.destroyMesh(md2Mesh_);
+    }
+    md2Mesh_ = renderer.createMesh(md2_->interpolatedVertices(),
+                                   md2_->scaledTexcoords());
 }
 
 void MD2View::resetModelMatrix() {
@@ -94,7 +98,7 @@ void MD2View::render(GL::Engine& engine) {
     }
 
     engine.renderer().setCamera(view_, projection_);
-    engine.renderer().drawModel(*md2Mesh_, *texture_, model_, glowColor_);
+    engine.renderer().drawModel(md2Mesh_, *texture_, model_, glowColor_);
     drawUi(engine);
 }
 
@@ -236,9 +240,9 @@ void MD2View::drawUi(GL::Engine& engine) {
     ImGui::End();
 }
 
-void MD2View::update(GL::Engine& /* engine */, float deltaTime) {
+void MD2View::update(GL::Engine& engine, float deltaTime) {
     md2_->update(deltaTime);
-    md2Mesh_->sync(md2_->interpolatedVertices());
+    engine.renderer().updateMesh(md2Mesh_, md2_->interpolatedVertices());
 }
 
 void MD2View::processInput(GL::Engine& engine, float deltaTime) {

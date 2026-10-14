@@ -14,8 +14,11 @@
 #include <glm/glm.hpp>
 
 #include <array>
+#include <cstdint>
 #include <filesystem>
 #include <memory>
+#include <span>
+#include <unordered_map>
 
 namespace GL {
 
@@ -59,10 +62,17 @@ public:
     /// Set the camera for the current frame
     void setCamera(glm::mat4 const& view, glm::mat4 const& projection) override;
 
+    [[nodiscard]] MeshHandle
+    createMesh(std::span<glm::vec3 const> vertices,
+               std::span<glm::vec2 const> texcoords) override;
+    void updateMesh(MeshHandle mesh,
+                    std::span<glm::vec3 const> vertices) override;
+    void destroyMesh(MeshHandle mesh) override;
+
     /// Draw a textured model into the current frame
     ///
     /// @param glowColor Color written to the glow buffer, used when glow is on
-    void drawModel(Mesh const& mesh,
+    void drawModel(MeshHandle mesh,
                    Texture2D const& skin,
                    glm::mat4 const& model,
                    glm::vec3 const& glowColor);
@@ -85,6 +95,9 @@ private:
     GL::Shader blurShader_;
     GL::Shader glowShader_;
     GL::Shader modelShader_;
+
+    std::unordered_map<std::uint32_t, std::unique_ptr<Mesh>> meshes_;
+    std::uint32_t nextMeshId_{1};
 };
 
 } // namespace GL

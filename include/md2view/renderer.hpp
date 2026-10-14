@@ -4,6 +4,7 @@
 
 #include <array>
 #include <cstdint>
+#include <span>
 
 /// Mesh identifier, 0 is invalid
 struct MeshHandle {
@@ -45,6 +46,24 @@ public:
     /// Set the camera for the current frame
     virtual void setCamera(glm::mat4 const& view,
                            glm::mat4 const& projection) = 0;
+
+    /// Create a mesh from vertices and texture coordinates
+    ///
+    /// @param vertices  Flat array of vertex positions (3 per triangle)
+    /// @param texcoords Texture coordinates, parallel to @p vertices
+    [[nodiscard]] virtual MeshHandle
+    createMesh(std::span<glm::vec3 const> vertices,
+               std::span<glm::vec2 const> texcoords) = 0;
+
+    /// Update a mesh's vertices
+    /// @param mesh The handle to the mesh being updated
+    /// @param vertices New vertices for mesh, must be the same size as when the
+    /// mesh was created.
+    virtual void updateMesh(MeshHandle mesh,
+                            std::span<glm::vec3 const> vertices) = 0;
+
+    /// Destroy a mesh
+    virtual void destroyMesh(MeshHandle mesh) = 0;
 
 protected:
     Renderer() = default;

@@ -1,6 +1,5 @@
 #include "md2view/gl/mesh.hpp"
 #include "md2view/gl/gl.hpp"
-#include "md2view/gl/shader.hpp"
 
 #include <glm/ext/vector_float2.hpp>
 #include <glm/ext/vector_float3.hpp>
@@ -59,7 +58,7 @@ void Mesh::sync(std::span<glm::vec3 const> vertices) {
         vertices.data());
 }
 
-void Mesh::draw(Shader& /* shader */) const {
+void Mesh::draw() const {
     glBindVertexArray(vao_);
     glDrawArrays(GL_TRIANGLES, 0, vertexCount_);
     glCheckError();

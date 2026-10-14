@@ -5,17 +5,20 @@
 #include "md2view/gl/screen_quad.hpp"
 #include "md2view/gl/shader.hpp"
 #include "md2view/gl/texture2d.hpp"
+#include "md2view/renderer.hpp"
 #include "md2view/window.hpp"
 
 #include <GLFW/glfw3.h>
 #include <fmt/core.h>
 #include <fmt/format.h>
 #include <glm/glm.hpp>
+#include <gsl-lite/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 
 #include <array>
 #include <filesystem>
 #include <memory>
+#include <span>
 #include <stdexcept>
 #include <string_view>
 
@@ -172,7 +175,26 @@ void Renderer::setCamera(glm::mat4 const& view, glm::mat4 const& projection) {
     modelShader_.setProjection(projection);
 }
 
-void Renderer::drawModel(Mesh const& mesh,
+MeshHandle Renderer::createMesh(std::span<glm::vec3 const> vertices,
+                                std::span<glm::vec2 const> texcoords) {
+    auto const id = nextMeshId_++;
+    meshes_.emplace(id, std::make_unique<Mesh>(vertices, texcoords));
+    return MeshHandle{id};
+}
+
+void Renderer::updateMesh(MeshHandle mesh,
+                          std::span<glm::vec3 const> vertices) {
+    auto const it = meshes_.find(mesh.id);
+    gsl_Expects(it != meshes_.end());
+    it->second->sync(vertices);
+}
+
+void Renderer::destroyMesh(MeshHandle mesh) {
+    auto const erased = meshes_.erase(mesh.id);
+    gsl_Expects(erased == 1);
+}
+
+void Renderer::drawModel(MeshHandle mesh,
                          Texture2D const& skin,
                          glm::mat4 const& model,
                          glm::vec3 const& glowColor) {
@@ -181,7 +203,9 @@ void Renderer::drawModel(Mesh const& mesh,
     GL::Shader::setUniform(glowColorLoc_, glowColor);
     glActiveTexture(GL_TEXTURE0);
     skin.bind();
-    mesh.draw(modelShader_);
+    auto const it = meshes_.find(mesh.id);
+    gsl_Expects(it != meshes_.end());
+    it->second->draw();
     glCheckError();
 }
 
