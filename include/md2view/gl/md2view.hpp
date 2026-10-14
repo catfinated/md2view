@@ -2,7 +2,6 @@
 
 #include "md2view/camera.hpp"
 #include "md2view/gl/game.hpp"
-#include "md2view/gl/gl.hpp"
 #include "md2view/gl/mesh.hpp"
 #include "md2view/gl/texture2d.hpp"
 #include "md2view/md2.hpp"
@@ -39,7 +38,6 @@ private:
     std::unique_ptr<GL::Mesh> md2Mesh_;
     std::unique_ptr<ModelSelector> modelSelector_;
     std::shared_ptr<GL::Texture2D> texture_;
-    std::shared_ptr<GL::Shader> shader_;
 
     Camera camera_;
     std::string modelsDir_;
@@ -49,6 +47,5 @@ private:
     glm::mat4 model_{};
     glm::mat4 view_{};
     glm::mat4 projection_{};
-    glm::vec3 glowColor_{};
-    GLint glowLoc_{};
+    glm::vec3 glowColor_{0.0f, 1.0f, 0.0f};
 };

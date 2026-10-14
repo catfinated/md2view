@@ -1,14 +1,17 @@
 #include "md2view/gl/renderer.hpp"
 #include "md2view/gl/frame_buffer.hpp"
 #include "md2view/gl/gl.hpp"
+#include "md2view/gl/mesh.hpp"
 #include "md2view/gl/resource_manager.hpp"
 #include "md2view/gl/screen_quad.hpp"
 #include "md2view/gl/shader.hpp"
+#include "md2view/gl/texture2d.hpp"
 #include "md2view/window.hpp"
 
 #include <GLFW/glfw3.h>
 #include <fmt/core.h>
 #include <fmt/format.h>
+#include <glm/glm.hpp>
 #include <spdlog/spdlog.h>
 
 #include <array>
@@ -66,6 +69,9 @@ Renderer::Renderer(Window& window, ResourceManager& resourceManager)
     GL::Shader::setUniform(loc, 1);
     loc = glowShader_->uniformLocation("blurredTexture");
     GL::Shader::setUniform(loc, 2);
+
+    modelShader_ = resourceManager.loadShader("md2");
+    glowColorLoc_ = modelShader_->uniformLocation("glow_color");
 
     mainFb_->bind();
     glEnable(GL_DEPTH_TEST);
@@ -147,6 +153,25 @@ void Renderer::postProcessFrame() {
 }
 
 void Renderer::endFrame() { glfwSwapBuffers(window_.get()); }
+
+void Renderer::setCamera(glm::mat4 const& view, glm::mat4 const& projection) {
+    modelShader_->use();
+    modelShader_->setView(view);
+    modelShader_->setProjection(projection);
+}
+
+void Renderer::drawModel(Mesh const& mesh,
+                         Texture2D const& skin,
+                         glm::mat4 const& model,
+                         glm::vec3 const& glowColor) {
+    modelShader_->use();
+    modelShader_->setModel(model);
+    GL::Shader::setUniform(glowColorLoc_, glowColor);
+    glActiveTexture(GL_TEXTURE0);
+    skin.bind();
+    mesh.draw(*modelShader_);
+    glCheckError();
+}
 
 void Renderer::onFramebufferResize(Window::Extent extent) {
     fbSize_ = extent;

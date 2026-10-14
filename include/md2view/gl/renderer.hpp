@@ -3,12 +3,15 @@
 #include "md2view/gl/gl.hpp"
 
 #include "md2view/gl/frame_buffer.hpp"
+#include "md2view/gl/mesh.hpp"
 #include "md2view/gl/resource_manager.hpp"
 #include "md2view/gl/screen_quad.hpp"
 #include "md2view/gl/shader.hpp"
+#include "md2view/gl/texture2d.hpp"
 #include "md2view/window.hpp"
 
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 
 #include <array>
 #include <memory>
@@ -50,6 +53,17 @@ public:
     void postProcessFrame();
     void endFrame();
 
+    /// Set the camera for the current frame
+    void setCamera(glm::mat4 const& view, glm::mat4 const& projection);
+
+    /// Draw a textured model into the current frame
+    ///
+    /// @param glowColor Color written to the glow buffer, used when glow is on
+    void drawModel(Mesh const& mesh,
+                   Texture2D const& skin,
+                   glm::mat4 const& model,
+                   glm::vec3 const& glowColor);
+
     void onFramebufferResize(Window::Extent extent);
     [[nodiscard]] float aspectRatio() const;
 
@@ -58,6 +72,7 @@ private:
     Window::Extent fbSize_{};
     std::array<float, 4> clearColor_{0.2f, 0.2f, 0.2f, 1.0f};
     GLint disableBlurLoc_{};
+    GLint glowColorLoc_{};
     bool vsyncOn_{false};
     bool glowOn_{false};
 
@@ -66,6 +81,7 @@ private:
     std::unique_ptr<GL::FrameBuffer> mainFb_;
     std::shared_ptr<GL::Shader> blurShader_;
     std::shared_ptr<GL::Shader> glowShader_;
+    std::shared_ptr<GL::Shader> modelShader_;
 };
 
 } // namespace GL

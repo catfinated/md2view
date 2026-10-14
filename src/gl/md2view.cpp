@@ -1,8 +1,6 @@
 #include "md2view/gl/md2view.hpp"
 #include "md2view/gl/engine.hpp"
-#include "md2view/gl/gl.hpp"
 #include "md2view/gl/mesh.hpp"
-#include "md2view/gl/shader.hpp"
 #include "md2view/ui/model_selector.hpp"
 #include "md2view/ui/ui.hpp"
 
@@ -60,16 +58,8 @@ bool MD2View::onEngineInitialized(GL::Engine& engine) {
     // init objects which needed an opengl context to initialize
     modelSelector_ = std::make_unique<ModelSelector>(engine.assets().pak());
     loadModel(engine);
-
-    spdlog::info("begin load shaders");
-    shader_ = engine.resourceManager().loadShader("md2");
-    shader_->use();
     updateModel();
     loadCurrentTexture(engine);
-    glowLoc_ = shader_->uniformLocation("glow_color");
-    glowColor_ = glm::vec3(0.0f, 1.0f, 0.0f);
-    GL::Shader::setUniform(glowLoc_, glowColor_);
-    glCheckError();
     camera_.setPosition(glm::vec3(0.0f, 0.0f, 3.0f));
     spdlog::info("done on engine init");
 
@@ -88,17 +78,11 @@ void MD2View::updateModel() {
     model_ *= glm::mat4_cast(roty * rotz * rotx);
     auto s = 1.0f / static_cast<float>(scale_); // uniform scale factor
     model_ = glm::scale(model_, glm::vec3(s, s, s));
-
-    shader_->use();
-    shader_->setModel(model_);
 }
 
 void MD2View::render(GL::Engine& engine) {
-    shader_->use();
-
     if (camera_.viewDirty()) {
         view_ = camera_.viewMatrix();
-        shader_->setView(view_);
         camera_.setViewClean();
     }
 
@@ -106,17 +90,12 @@ void MD2View::render(GL::Engine& engine) {
         projection_ =
             glm::perspective(glm::radians(camera_.fov()),
                              engine.renderer().aspectRatio(), 0.1f, 500.0f);
-
-        shader_->setProjection(projection_);
         camera_.setFovClean();
     }
 
-    // render normal frame
-    texture_->bind();
-    md2Mesh_->draw(*shader_);
-    glCheckError();
+    engine.renderer().setCamera(view_, projection_);
+    engine.renderer().drawModel(*md2Mesh_, *texture_, model_, glowColor_);
     drawUi(engine);
-    glCheckError();
 }
 
 void MD2View::drawUi(GL::Engine& engine) {
@@ -215,10 +194,7 @@ void MD2View::drawUi(GL::Engine& engine) {
         if (ImGui::Checkbox("Glow", &glow)) {
             engine.renderer().setGlowOn(glow);
         }
-        if (ImGui::ColorEdit3("Glow color", glm::value_ptr(glowColor_))) {
-            shader_->use();
-            GL::Shader::setUniform(glowLoc_, glowColor_);
-        }
+        ImGui::ColorEdit3("Glow color", glm::value_ptr(glowColor_));
 
         bool modelChanged = ImGui::SliderInt("Scale Factor", &scale_, 1, 256);
         modelChanged |= ImGui::SliderFloat("X-Position", &pos_[0], -7.0f, 7.0f);
