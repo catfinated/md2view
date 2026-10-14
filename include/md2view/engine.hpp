@@ -1,17 +1,12 @@
 #pragma once
 
 #include "md2view/asset_loader.hpp"
+#include "md2view/cli.hpp"
 #include "md2view/window.hpp"
-
-#include <boost/program_options.hpp>
-#include <gsl-lite/gsl-lite.hpp>
 
 #include <bitset>
 #include <cstddef>
-#include <memory>
 #include <optional>
-#include <span>
-#include <string>
 
 class Engine : protected InputListener {
 public:
@@ -48,29 +43,15 @@ public:
         std::bitset<kMaxKeys> justPressed_;
     };
 
-    Engine() = default;
-
-    [[nodiscard]] bool init(std::span<char const*> args);
-
-    boost::program_options::options_description& optionsDesc() {
-        return optDesc_;
-    }
-    boost::program_options::variables_map const& variablesMap() {
-        return variablesMap_;
-    }
-
-    /// CPU assets: PAK, models, and images. Valid after init().
-    [[nodiscard]] AssetLoader& assets() {
-        gsl_Expects(assets_);
-        return *assets_;
-    }
+    [[nodiscard]] AssetLoader& assets() { return assets_; }
 
     [[nodiscard]] Keyboard const& keyboard() const { return keyboard_; }
     [[nodiscard]] Mouse const& mouse() const { return mouse_; }
 
 protected:
-    bool parseArgs(std::span<char const*> args);
-    virtual void doInit() = 0;
+    /// Load PAK archive
+    /// @throws std::runtime_error on any error loading the PAK
+    explicit Engine(CliArgs const& args);
 
     /// Reset per-frame input state. Call once per frame before polling
     /// events.
@@ -89,9 +70,5 @@ protected:
     Mouse mouse_;
     bool inputGoesToGame_{false};
 
-    std::unique_ptr<AssetLoader> assets_;
-
-    boost::program_options::options_description optDesc_;
-    boost::program_options::variables_map variablesMap_;
-    std::string pakPath_;
+    AssetLoader assets_;
 };

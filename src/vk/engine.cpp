@@ -1,5 +1,7 @@
 #include "md2view/vk/engine.hpp"
 
+#include "md2view/cli.hpp"
+#include "md2view/engine.hpp"
 #include "md2view/vk/renderer.hpp"
 #include "md2view/window.hpp"
 
@@ -11,13 +13,15 @@
 
 namespace VK {
 
-void Engine::doInit() {
+Engine::Engine(CliArgs const& args)
+    : ::Engine{args} {
     spdlog::info("GLFW version: {}", glfwGetVersionString());
     spdlog::info("Vulkan supported: {}",
                  glfwVulkanSupported() != 0 ? "yes" : "no");
 
     window_ = Window::create(width_, height_, "vkmd2v", Renderer::kWindowHints);
     renderer_ = std::make_unique<Renderer>(window_);
+    window_.setInputListener(this);
 }
 
 void Engine::runGame() {

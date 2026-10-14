@@ -1,3 +1,4 @@
+#include "md2view/cli.hpp"
 #include "md2view/gl/engine.hpp"
 #include "md2view/gl/md2view.hpp"
 
@@ -10,11 +11,13 @@
 
 int main(int argc, char const* argv[]) {
     try {
-        GL::Engine engine{std::make_unique<MD2View>()};
-
-        if (!engine.init(std::span{argv, static_cast<size_t>(argc)})) {
+        auto const args = parseCli(std::span{argv, static_cast<size_t>(argc)});
+        if (!args) {
             return EXIT_FAILURE;
         }
+        spdlog::set_level(args->logLevel);
+
+        GL::Engine engine{*args, std::make_unique<MD2View>()};
 
         engine.runGame();
     } catch (std::exception const& excp) {

@@ -1,5 +1,6 @@
 #include "md2view/gl/engine.hpp"
 
+#include "md2view/cli.hpp"
 #include "md2view/engine.hpp"
 #include "md2view/gl/game.hpp"
 #include "md2view/gl/gl.hpp"
@@ -17,14 +18,11 @@
 #include <stdexcept>
 #include <utility>
 
-GL::Engine::Engine(std::unique_ptr<Game> game)
-    : game_{std::move(game)} {
+GL::Engine::Engine(CliArgs const& args, std::unique_ptr<Game> game)
+    : ::Engine{args}
+    , game_{std::move(game)} {
     gsl_Expects(game_);
-}
 
-GL::Engine::~Engine() = default;
-
-void GL::Engine::doInit() {
     resourceManager_ = std::make_unique<ResourceManager>(assets());
     window_ =
         Window::create(width_, height_, game_->title(), Renderer::kWindowHints);
@@ -49,7 +47,11 @@ void GL::Engine::doInit() {
         throw std::runtime_error("failed to initialize game");
     }
     glCheckError();
+
+    window_.setInputListener(this);
 }
+
+GL::Engine::~Engine() = default;
 
 void GL::Engine::runGame() {
     lastFrame_ = gsl_lite::narrow_cast<GLfloat>(glfwGetTime());

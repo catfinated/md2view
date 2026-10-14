@@ -5,6 +5,7 @@
  */
 #pragma once
 
+#include "md2view/cli.hpp"
 #include "md2view/engine.hpp"
 #include "md2view/vk/renderer.hpp"
 
@@ -14,7 +15,8 @@ namespace VK {
 
 class Engine : public ::Engine {
 public:
-    Engine() = default;
+    /// Creates window and renderer
+    explicit Engine(CliArgs const& args);
     ~Engine() override = default;
 
     Engine(Engine const&) = delete;
@@ -25,8 +27,6 @@ public:
     void runGame();
 
 private:
-    void doInit() final;
-
     std::unique_ptr<Renderer> renderer_;
 };
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "md2view/cli.hpp"
 #include "md2view/engine.hpp"
 #include "md2view/gl/gl.hpp"
 #include "md2view/gl/gui.hpp"
@@ -16,7 +17,10 @@ class Game;
 
 class Engine : public ::Engine {
 public:
-    explicit Engine(std::unique_ptr<Game> game);
+    /// Creates window, renderer, and GUI, then initializes @p game.
+    ///
+    /// @throws std::runtime_error if game fails to initialize
+    Engine(CliArgs const& args, std::unique_ptr<Game> game);
     ~Engine() override;
 
     Engine(Engine const&) = delete;
@@ -38,7 +42,6 @@ public:
     }
 
 private:
-    void doInit() final;
     void onKey(int key, int scancode, int action, int mods) final;
     void onCursorPos(double xpos, double ypos) final;
     void onScroll(double xoffset, double yoffset) final;

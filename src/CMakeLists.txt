@@ -20,7 +20,8 @@ add_library(md2v
   pak.cpp
   image.cpp
   asset_loader.cpp
-  camera.cpp)
+  camera.cpp
+  cli.cpp)
 
 target_link_libraries(md2v PUBLIC
    Boost::system

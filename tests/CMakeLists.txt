@@ -33,6 +33,7 @@ configure_file(fixtures.hpp.in fixtures.hpp @ONLY)
 
 add_executable(test_md2v
     test_camera.cpp
+    test_cli.cpp
     test_image.cpp
     test_md2.cpp
     test_pak.cpp
