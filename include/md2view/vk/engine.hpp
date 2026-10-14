@@ -26,6 +26,11 @@ public:
 
     void runGame();
 
+    /// Not implemented until VK::Renderer implements ::Renderer
+    ///
+    /// @throws std::logic_error always
+    [[nodiscard]] ::Renderer& renderer() override;
+
 private:
     std::unique_ptr<Renderer> renderer_;
 };

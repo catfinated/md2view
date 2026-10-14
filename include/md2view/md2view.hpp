@@ -1,7 +1,7 @@
 #pragma once
 
 #include "md2view/camera.hpp"
-#include "md2view/gl/game.hpp"
+#include "md2view/game.hpp"
 #include "md2view/md2.hpp"
 #include "md2view/renderer.hpp"
 #include "md2view/ui/model_selector.hpp"
@@ -16,26 +16,26 @@
 #include <string>
 #include <unordered_map>
 
-class MD2View : public GL::Game {
+class MD2View : public Game {
 public:
     MD2View();
 
     [[nodiscard]] char const* title() const override { return "MD2View"; }
-    [[nodiscard]] bool onEngineInitialized(GL::Engine& engine) override;
-    void processInput(GL::Engine& engine, float deltaTime) override;
+    [[nodiscard]] bool onEngineInitialized(Engine& engine) override;
+    void processInput(Engine& engine, float deltaTime) override;
     void onMouseMovement(float xoffset, float yoffset) override;
     void onMouseScroll(double xoffset, double yoffset) override;
     void onFramebufferResize() override;
-    void update(GL::Engine& engine, float deltaTime) override;
-    void render(GL::Engine& engine) override;
+    void update(Engine& engine, float deltaTime) override;
+    void render(Engine& engine) override;
 
 private:
     void resetCamera();
     void resetModelMatrix();
-    void loadCurrentTexture(GL::Engine& engine);
+    void loadCurrentTexture(Engine& engine);
     void updateModel();
-    void drawUi(GL::Engine& engine);
-    void loadModel(GL::Engine& engine);
+    void drawUi(Engine& engine);
+    void loadModel(Engine& engine);
 
     std::shared_ptr<MD2> md2_;
     std::unique_ptr<ModelSelector> modelSelector_;

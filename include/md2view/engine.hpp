@@ -2,6 +2,7 @@
 
 #include "md2view/asset_loader.hpp"
 #include "md2view/cli.hpp"
+#include "md2view/renderer.hpp"
 #include "md2view/window.hpp"
 
 #include <bitset>
@@ -44,6 +45,8 @@ public:
     };
 
     [[nodiscard]] AssetLoader& assets() { return assets_; }
+
+    [[nodiscard]] virtual Renderer& renderer() = 0;
 
     [[nodiscard]] Keyboard const& keyboard() const { return keyboard_; }
     [[nodiscard]] Mouse const& mouse() const { return mouse_; }

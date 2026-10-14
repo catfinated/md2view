@@ -2,6 +2,7 @@
 
 #include "md2view/cli.hpp"
 #include "md2view/engine.hpp"
+#include "md2view/game.hpp"
 #include "md2view/gl/gl.hpp"
 #include "md2view/gl/gui.hpp"
 #include "md2view/gl/renderer.hpp"
@@ -11,8 +12,6 @@
 #include <memory>
 
 namespace GL {
-
-class Game;
 
 class Engine : public ::Engine {
 public:
@@ -30,7 +29,7 @@ public:
 
     void runGame();
 
-    Renderer& renderer() {
+    [[nodiscard]] Renderer& renderer() override {
         gsl_Expects(renderer_);
         return *renderer_;
     }

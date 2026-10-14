@@ -2,7 +2,7 @@
 
 #include "md2view/cli.hpp"
 #include "md2view/engine.hpp"
-#include "md2view/gl/game.hpp"
+#include "md2view/game.hpp"
 #include "md2view/gl/gl.hpp"
 #include "md2view/gl/gui.hpp"
 #include "md2view/gl/renderer.hpp"

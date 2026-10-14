@@ -1,6 +1,6 @@
 #include "md2view/cli.hpp"
 #include "md2view/gl/engine.hpp"
-#include "md2view/gl/md2view.hpp"
+#include "md2view/md2view.hpp"
 
 #include <spdlog/spdlog.h>
 

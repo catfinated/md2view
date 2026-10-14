@@ -1,7 +1,5 @@
 #pragma once
 
-namespace GL {
-
 class Engine;
 
 /// Game interface
@@ -31,5 +29,3 @@ public:
     virtual void update(Engine& engine, float deltaTime) = 0;
     virtual void render(Engine& engine) = 0;
 };
-
-} // namespace GL

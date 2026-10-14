@@ -1,5 +1,5 @@
-#include "md2view/gl/md2view.hpp"
-#include "md2view/gl/engine.hpp"
+#include "md2view/md2view.hpp"
+#include "md2view/engine.hpp"
 #include "md2view/renderer.hpp"
 #include "md2view/ui/model_selector.hpp"
 #include "md2view/ui/ui.hpp"
@@ -27,7 +27,7 @@
 
 MD2View::MD2View() { resetModelMatrix(); }
 
-void MD2View::loadModel(GL::Engine& engine) {
+void MD2View::loadModel(Engine& engine) {
     md2_ = engine.assets().loadModel(modelSelector_->modelPath());
     auto& renderer = engine.renderer();
     if (md2Mesh_ != MeshHandle{}) {
@@ -48,7 +48,7 @@ void MD2View::resetModelMatrix() {
 
 void MD2View::resetCamera() { camera_.reset(glm::vec3(0.0f, 0.0f, 3.0f)); }
 
-void MD2View::loadCurrentTexture(GL::Engine& engine) {
+void MD2View::loadCurrentTexture(Engine& engine) {
     auto const& path = md2_->currentSkin().fpath;
     auto const it = textures_.find(path);
     if (it != textures_.end()) {
@@ -60,7 +60,7 @@ void MD2View::loadCurrentTexture(GL::Engine& engine) {
     textures_.emplace(path, texture_);
 }
 
-bool MD2View::onEngineInitialized(GL::Engine& engine) {
+bool MD2View::onEngineInitialized(Engine& engine) {
     if (!engine.assets().pak().hasModels()) {
         spdlog::error("PAK '{}' has no MD2 models to view",
                       engine.assets().pak().fpath());
@@ -91,7 +91,7 @@ void MD2View::updateModel() {
     model_ = glm::scale(model_, glm::vec3(s, s, s));
 }
 
-void MD2View::render(GL::Engine& engine) {
+void MD2View::render(Engine& engine) {
     if (camera_.viewDirty()) {
         view_ = camera_.viewMatrix();
         camera_.setViewClean();
@@ -109,7 +109,7 @@ void MD2View::render(GL::Engine& engine) {
     drawUi(engine);
 }
 
-void MD2View::drawUi(GL::Engine& engine) {
+void MD2View::drawUi(Engine& engine) {
     static float const vec4width = 275;
     // draw gui
     ImGui::Begin("MD2View");
@@ -248,12 +248,12 @@ void MD2View::drawUi(GL::Engine& engine) {
     ImGui::End();
 }
 
-void MD2View::update(GL::Engine& engine, float deltaTime) {
+void MD2View::update(Engine& engine, float deltaTime) {
     md2_->update(deltaTime);
     engine.renderer().updateMesh(md2Mesh_, md2_->interpolatedVertices());
 }
 
-void MD2View::processInput(GL::Engine& engine, float deltaTime) {
+void MD2View::processInput(Engine& engine, float deltaTime) {
     if (engine.keyboard().keys()[GLFW_KEY_W]) {
         camera_.move(Camera::Direction::FORWARD, deltaTime);
     }

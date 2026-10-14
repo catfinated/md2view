@@ -59,9 +59,15 @@ target_include_directories(md2vui PUBLIC ${TREEHH_INCLUDE_DIRS})
 
 target_compile_definitions(md2vui PUBLIC IMGUI_DISABLE_OBSOLETE_FUNCTIONS)
 
+add_library(md2vgame
+  md2view.cpp)
+
+target_link_libraries(md2vgame PUBLIC
+   md2vui
+   md2vw)
+
 add_library(md2vgl
   gl/engine.cpp
-  gl/md2view.cpp
   gl/gui.cpp
   gl/mesh.cpp
   gl/screen_quad.cpp
@@ -99,7 +105,7 @@ target_link_libraries(md2vvk PUBLIC
 target_compile_definitions(md2vvk PUBLIC GLFW_INCLUDE_VULKAN)
 
 add_executable(glmd2v gl/main.cpp)
-target_link_libraries(glmd2v PRIVATE md2vgl)
+target_link_libraries(glmd2v PRIVATE md2vgl md2vgame)
 
 add_executable(vkmd2v vk/main.cpp)
 target_link_libraries(vkmd2v PRIVATE md2vvk)
