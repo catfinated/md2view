@@ -7,6 +7,7 @@
 #include "md2view/gl/screen_quad.hpp"
 #include "md2view/gl/shader.hpp"
 #include "md2view/gl/texture2d.hpp"
+#include "md2view/renderer.hpp"
 #include "md2view/window.hpp"
 
 #include <GLFW/glfw3.h>
@@ -18,7 +19,7 @@
 
 namespace GL {
 
-class Renderer {
+class Renderer final : public ::Renderer {
 public:
     static constexpr std::array kWindowHints{
         WindowHint{.hint = GLFW_CONTEXT_VERSION_MAJOR, .value = 4},
@@ -32,30 +33,31 @@ public:
 
     /// @param shadersDir Directory containing GLSL shader sources
     Renderer(Window& window, std::filesystem::path const& shadersDir);
-    ~Renderer() = default;
+    ~Renderer() override = default;
 
     Renderer(Renderer const&) = delete;
     Renderer& operator=(Renderer const&) = delete;
     Renderer(Renderer&&) noexcept = delete;
     Renderer& operator=(Renderer&&) noexcept = delete;
 
-    [[nodiscard]] bool vsyncOn() const noexcept { return vsyncOn_; }
-    void setVsyncOn(bool flag);
+    [[nodiscard]] bool vsyncOn() const noexcept override { return vsyncOn_; }
+    void setVsyncOn(bool flag) override;
 
-    [[nodiscard]] bool glowOn() const noexcept { return glowOn_; }
-    void setGlowOn(bool flag) { glowOn_ = flag; }
+    [[nodiscard]] bool glowOn() const noexcept override { return glowOn_; }
+    void setGlowOn(bool flag) override { glowOn_ = flag; }
 
-    [[nodiscard]] std::array<float, 4> const& clearColor() const noexcept {
+    [[nodiscard]] std::array<float, 4> const&
+    clearColor() const noexcept override {
         return clearColor_;
     }
-    void setClearColor(std::array<float, 4> const& color);
+    void setClearColor(std::array<float, 4> const& color) override;
 
     void beginFrame();
     void postProcessFrame();
     void endFrame();
 
     /// Set the camera for the current frame
-    void setCamera(glm::mat4 const& view, glm::mat4 const& projection);
+    void setCamera(glm::mat4 const& view, glm::mat4 const& projection) override;
 
     /// Draw a textured model into the current frame
     ///
@@ -66,7 +68,7 @@ public:
                    glm::vec3 const& glowColor);
 
     void onFramebufferResize(Window::Extent extent);
-    [[nodiscard]] float aspectRatio() const;
+    [[nodiscard]] float aspectRatio() const override;
 
 private:
     Window& window_;
