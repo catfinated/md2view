@@ -19,11 +19,11 @@ You can control the camera by pressing F1. The camera controls are:
     * W - Forward
     * S - Backward
     * A - Left
-    * D- Right
+    * D - Right
     * Mouse - Pitch / Yaw
     * Scroll wheel - Field of View
 
-The FOV can also be adjusted with the GUI. The curret view and projection matrices
+The FOV can also be adjusted with the GUI. The current view and projection matrices
 will be displayed in the GUI when you manipulate the camera.
 
 You can use the GUI to enable an optional post-processing "glow" effect around the
@@ -38,16 +38,16 @@ The Vulkan renderer (incomplete) is compiled into the `vkmd2v` binary target.
 
 md2view is currently being tested on the following systems:
 
-    * CachyOS 6.17.6-2 (64-bit) - NVIDIA GeForce RTX 3080 Ti
+    * CachyOS 7.2.9-2 (64-bit) - NVIDIA GeForce RTX 3080 Ti
 
-md2view has previously been tested the following systems but may no longer work:
+md2view has previously been tested on the following systems but may no longer work:
 
     * Mac OS X Mojave (10.14.6) - AMD Radeon R9 M370X
     * Ubuntu 18.04.3 LTS - NVIDIA GeForce GTX 1050 Ti
     * Windows 10 (VS 2019) - NVIDIA GeForce RTX 3080 Ti
-    * Windows 11 (VS 2019) - NVIDIA Geforce RTX 4060 Laptop GPU
+    * Windows 11 (VS 2019) - NVIDIA GeForce RTX 4060 Laptop GPU
 
-The screenshots above come from the Macbook which partly explains the low FPS.
+The screenshots above come from the MacBook which partly explains the low FPS.
 
 ## Building
 
@@ -97,24 +97,24 @@ On Linux, each executable supports both Wayland and X11. Set XDG_SESSION_TYPE in
 > export XDG_SESSION_TYPE=x11 # or export XDG_SESSION_TYPE=wayland
 ```
 
-To run the main OpenGL renderer execuatable:
+To run the main OpenGL renderer executable:
 
 ```cmd 
 > build/debug/src/glmd2v
 ```
 
-To run the in progress Vuilkan based executable:
+To run the in progress Vulkan based executable:
 
 ```cmd
 > VK_LAYER_PATH=build/debug/vcpkg_installed/x64-linux/share/vulkan/explicit_layer.d build/debug/src/vkmd2v
 ```
 
-On MacOS you also need to set the `VK_ICD_FILENAMES` environment variable:
+On macOS you also need to set the `VK_ICD_FILENAMES` environment variable:
 
 ```cmd
 > export VK_ICD_FILENAMES=/opt/homebrew/etc/vulkan/icd.d/MoltenVK_icd.json
 > export VK_LAYER_PATH=$PWD/build/debug/vcpkg_installed/arm64-osx/share/vulkan/explicit_layer.d
-> build/debug/src/vkmd2
+> build/debug/src/vkmd2v
 ```
 
 To run the ASan build, use the `build/asan` binaries. LeakSanitizer will report
@@ -161,7 +161,7 @@ While I have used many resources for learning OpenGL the one I personally like b
 [learnopengl.com](https://www.learnopengl.com)
 
 Which is authored by [Joey de Vries](https://twitter.com/JoeyDeVriez).
-The code for those tutorials is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by-nc/4.0/legalcode).
+The code for those tutorials is licensed under [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/legalcode).
 Code for the camera and the blur shader is derived from those tutorials with modifications/customizations.
 
 For learning Vulkan I am using this [Vulkan Tutorial](https://vulkan-tutorial.com/)
