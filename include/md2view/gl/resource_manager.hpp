@@ -1,25 +1,21 @@
 #pragma once
 
 #include "md2view/asset_loader.hpp"
-#include "md2view/gl/shader.hpp"
 #include "md2view/gl/texture2d.hpp"
 
-#include <filesystem>
 #include <memory>
 #include <optional>
 #include <string>
-#include <string_view>
 #include <unordered_map>
 
-/// Cache and factory for GPU resources.
+/// Cache and factory for GPU textures.
 ///
-/// Caches loaded shaders and textures by
+/// Caches loaded textures by
 /// their path strings. Repeated calls for the same path return the cached
 /// instance without re-reading from disk or re-uploading to the GPU.
 class ResourceManager {
 public:
     /// @param assets Source of texture images. Must outlive this object.
-    /// Shaders are expected at `assets.dataDir()/shaders/`.
     explicit ResourceManager(AssetLoader& assets);
     ~ResourceManager() = default;
 
@@ -28,31 +24,6 @@ public:
 
     ResourceManager(ResourceManager&&) noexcept = delete;
     ResourceManager& operator=(ResourceManager&&) noexcept = delete;
-
-    [[nodiscard]] std::filesystem::path const& shadersDir() const {
-        return shadersDir_;
-    }
-
-    /// Compile and cache a shader program.
-    ///
-    /// Each name must be unique; calling this twice with the same name asserts.
-    ///
-    /// @param name     Cache key and default base name for the shader files.
-    /// @param vertex   Override for the vertex shader file stem (defaults to @p
-    /// name).
-    /// @param fragment Override for the fragment shader file stem (defaults to
-    /// @p name).
-    /// @param geometry Optional geometry shader file name.
-    std::shared_ptr<GL::Shader>
-    loadShader(std::string const& name,
-               std::optional<std::string_view> vertex = {},
-               std::optional<std::string_view> fragment = {},
-               std::optional<std::string_view> geometry = {});
-
-    /// Return a previously loaded shader by name.
-    std::shared_ptr<GL::Shader> shader(std::string const& name) {
-        return shaders_.at(name);
-    }
 
     /// Load and cache a texture from the active PAK.
     ///
@@ -68,7 +39,5 @@ public:
 
 private:
     AssetLoader& assets_;
-    std::filesystem::path shadersDir_;
-    std::unordered_map<std::string, std::shared_ptr<GL::Shader>> shaders_;
     std::unordered_map<std::string, std::shared_ptr<GL::Texture2D>> textures2D_;
 };

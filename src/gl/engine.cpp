@@ -26,7 +26,8 @@ GL::Engine::Engine(CliArgs const& args, std::unique_ptr<Game> game)
     resourceManager_ = std::make_unique<ResourceManager>(assets());
     window_ =
         Window::create(width_, height_, game_->title(), Renderer::kWindowHints);
-    renderer_ = std::make_unique<Renderer>(window_, *resourceManager_);
+    renderer_ =
+        std::make_unique<Renderer>(window_, assets().dataDir() / "shaders");
 
     window_.setFramebufferResizeHandler([this](int width, int height) {
         spdlog::debug("framebuffer resize x={} y={}", width, height);

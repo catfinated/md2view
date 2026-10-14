@@ -4,7 +4,6 @@
 
 #include "md2view/gl/frame_buffer.hpp"
 #include "md2view/gl/mesh.hpp"
-#include "md2view/gl/resource_manager.hpp"
 #include "md2view/gl/screen_quad.hpp"
 #include "md2view/gl/shader.hpp"
 #include "md2view/gl/texture2d.hpp"
@@ -14,6 +13,7 @@
 #include <glm/glm.hpp>
 
 #include <array>
+#include <filesystem>
 #include <memory>
 
 namespace GL {
@@ -30,7 +30,8 @@ public:
         WindowHint{.hint = GLFW_OPENGL_FORWARD_COMPAT, .value = GLFW_TRUE},
     };
 
-    Renderer(Window& window, ResourceManager& resourceManager);
+    /// @param shadersDir Directory containing GLSL shader sources
+    Renderer(Window& window, std::filesystem::path const& shadersDir);
     ~Renderer() = default;
 
     Renderer(Renderer const&) = delete;
@@ -79,9 +80,9 @@ private:
     std::unique_ptr<GL::ScreenQuad> screenQuad_;
     std::unique_ptr<GL::FrameBuffer> blurFb_;
     std::unique_ptr<GL::FrameBuffer> mainFb_;
-    std::shared_ptr<GL::Shader> blurShader_;
-    std::shared_ptr<GL::Shader> glowShader_;
-    std::shared_ptr<GL::Shader> modelShader_;
+    GL::Shader blurShader_;
+    GL::Shader glowShader_;
+    GL::Shader modelShader_;
 };
 
 } // namespace GL

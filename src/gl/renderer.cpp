@@ -2,7 +2,6 @@
 #include "md2view/gl/frame_buffer.hpp"
 #include "md2view/gl/gl.hpp"
 #include "md2view/gl/mesh.hpp"
-#include "md2view/gl/resource_manager.hpp"
 #include "md2view/gl/screen_quad.hpp"
 #include "md2view/gl/shader.hpp"
 #include "md2view/gl/texture2d.hpp"
@@ -15,13 +14,26 @@
 #include <spdlog/spdlog.h>
 
 #include <array>
+#include <filesystem>
 #include <memory>
 #include <stdexcept>
 #include <string_view>
 
 namespace GL {
 
-Renderer::Renderer(Window& window, ResourceManager& resourceManager)
+namespace {
+
+/// Load `vertex.vert` and `fragment.frag` from @p dir
+Shader loadShader(std::filesystem::path const& dir,
+                  std::string_view vertex,
+                  std::string_view fragment) {
+    return Shader{dir / fmt::format("{}.vert", vertex),
+                  dir / fmt::format("{}.frag", fragment)};
+}
+
+} // namespace
+
+Renderer::Renderer(Window& window, std::filesystem::path const& shadersDir)
     : window_(window) {
 
     glfwMakeContextCurrent(window_.get());
@@ -55,23 +67,23 @@ Renderer::Renderer(Window& window, ResourceManager& resourceManager)
                                                 2, true);
     screenQuad_ = std::make_unique<GL::ScreenQuad>();
 
-    blurShader_ = resourceManager.loadShader("blur", "screen");
-    blurShader_->use();
-    disableBlurLoc_ = blurShader_->uniformLocation("disable_blur");
+    blurShader_ = loadShader(shadersDir, "screen", "blur");
+    blurShader_.use();
+    disableBlurLoc_ = blurShader_.uniformLocation("disable_blur");
     GL::Shader::setUniform(disableBlurLoc_, 1);
 
-    glowShader_ = resourceManager.loadShader("glow", "screen");
-    glowShader_->use();
+    glowShader_ = loadShader(shadersDir, "screen", "glow");
+    glowShader_.use();
 
-    auto loc = glowShader_->uniformLocation("screenTexture");
+    auto loc = glowShader_.uniformLocation("screenTexture");
     GL::Shader::setUniform(loc, 0);
-    loc = glowShader_->uniformLocation("prepassTexture");
+    loc = glowShader_.uniformLocation("prepassTexture");
     GL::Shader::setUniform(loc, 1);
-    loc = glowShader_->uniformLocation("blurredTexture");
+    loc = glowShader_.uniformLocation("blurredTexture");
     GL::Shader::setUniform(loc, 2);
 
-    modelShader_ = resourceManager.loadShader("md2");
-    glowColorLoc_ = modelShader_->uniformLocation("glow_color");
+    modelShader_ = loadShader(shadersDir, "md2", "md2");
+    glowColorLoc_ = modelShader_.uniformLocation("glow_color");
 
     mainFb_->bind();
     glEnable(GL_DEPTH_TEST);
@@ -121,15 +133,15 @@ void Renderer::postProcessFrame() {
     if (glowOn_) {
         // blur solid image
         blurFb_->bind();
-        blurShader_->use();
+        blurShader_.use();
         GL::Shader::setUniform(disableBlurLoc_, 0);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, mainFb_->colorBuffer(1));
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        screenQuad_->draw(*glowShader_);
+        screenQuad_->draw(glowShader_);
 
         GL::FrameBuffer::bindDefault();
-        glowShader_->use();
+        glowShader_.use();
         glClear(GL_COLOR_BUFFER_BIT);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, mainFb_->colorBuffer(0));
@@ -138,15 +150,15 @@ void Renderer::postProcessFrame() {
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, blurFb_->colorBuffer(0));
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        screenQuad_->draw(*glowShader_);
+        screenQuad_->draw(glowShader_);
     } else {
         GL::FrameBuffer::bindDefault();
-        blurShader_->use();
+        blurShader_.use();
         GL::Shader::setUniform(disableBlurLoc_, 1);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, mainFb_->colorBuffer(0));
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        screenQuad_->draw(*blurShader_);
+        screenQuad_->draw(blurShader_);
     }
 
     glCheckError();
@@ -155,21 +167,21 @@ void Renderer::postProcessFrame() {
 void Renderer::endFrame() { glfwSwapBuffers(window_.get()); }
 
 void Renderer::setCamera(glm::mat4 const& view, glm::mat4 const& projection) {
-    modelShader_->use();
-    modelShader_->setView(view);
-    modelShader_->setProjection(projection);
+    modelShader_.use();
+    modelShader_.setView(view);
+    modelShader_.setProjection(projection);
 }
 
 void Renderer::drawModel(Mesh const& mesh,
                          Texture2D const& skin,
                          glm::mat4 const& model,
                          glm::vec3 const& glowColor) {
-    modelShader_->use();
-    modelShader_->setModel(model);
+    modelShader_.use();
+    modelShader_.setModel(model);
     GL::Shader::setUniform(glowColorLoc_, glowColor);
     glActiveTexture(GL_TEXTURE0);
     skin.bind();
-    mesh.draw(*modelShader_);
+    mesh.draw(modelShader_);
     glCheckError();
 }
 
