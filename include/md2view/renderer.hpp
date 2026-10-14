@@ -6,6 +6,8 @@
 #include <cstdint>
 #include <span>
 
+class Image;
+
 /// Mesh identifier, 0 is invalid
 struct MeshHandle {
     std::uint32_t id{};
@@ -13,7 +15,7 @@ struct MeshHandle {
     bool operator==(MeshHandle const&) const = default;
 };
 
-/// Texture identififer, 0 is invalid
+/// Texture identifier, 0 is invalid
 struct TextureHandle {
     std::uint32_t id{};
 
@@ -64,6 +66,28 @@ public:
 
     /// Destroy a mesh
     virtual void destroyMesh(MeshHandle mesh) = 0;
+
+    /// Create a texture from an image
+    [[nodiscard]] virtual TextureHandle createTexture(Image const& image) = 0;
+
+    /// Destroy a texture
+    virtual void destroyTexture(TextureHandle texture) = 0;
+
+    /// Texture width and height in pixels
+    [[nodiscard]] virtual glm::uvec2
+    textureSize(TextureHandle texture) const = 0;
+
+    /// Texture id for `ImGui::Image`, valid until the texture is destroyed
+    [[nodiscard]] virtual std::uint64_t
+    imguiTexture(TextureHandle texture) const = 0;
+
+    /// Draw a textured mesh into the current frame
+    ///
+    /// @param glowColor Color written to the glow buffer, used when glow is on
+    virtual void drawModel(MeshHandle mesh,
+                           TextureHandle skin,
+                           glm::mat4 const& model,
+                           glm::vec3 const& glowColor) = 0;
 
 protected:
     Renderer() = default;

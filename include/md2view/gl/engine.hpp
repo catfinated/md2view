@@ -5,7 +5,6 @@
 #include "md2view/gl/gl.hpp"
 #include "md2view/gl/gui.hpp"
 #include "md2view/gl/renderer.hpp"
-#include "md2view/gl/resource_manager.hpp"
 
 #include <gsl-lite/gsl-lite.hpp>
 
@@ -31,11 +30,6 @@ public:
 
     void runGame();
 
-    ResourceManager& resourceManager() {
-        gsl_Expects(resourceManager_);
-        return *resourceManager_;
-    }
-
     Renderer& renderer() {
         gsl_Expects(renderer_);
         return *renderer_;
@@ -50,9 +44,7 @@ private:
     [[nodiscard]] bool guiHasInput() const { return gui_ && !inputGoesToGame_; }
 
     std::unique_ptr<Renderer> renderer_;
-    std::unique_ptr<ResourceManager> resourceManager_;
     std::unique_ptr<GL::Gui> gui_;
-    // NB: declared after renderer_ so the game releases its GL objects first
     std::unique_ptr<Game> game_;
 };
 

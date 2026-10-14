@@ -5,6 +5,7 @@
 #include "md2view/gl/screen_quad.hpp"
 #include "md2view/gl/shader.hpp"
 #include "md2view/gl/texture2d.hpp"
+#include "md2view/image.hpp"
 #include "md2view/renderer.hpp"
 #include "md2view/window.hpp"
 
@@ -16,6 +17,7 @@
 #include <spdlog/spdlog.h>
 
 #include <array>
+#include <cstdint>
 #include <filesystem>
 #include <memory>
 #include <span>
@@ -194,15 +196,41 @@ void Renderer::destroyMesh(MeshHandle mesh) {
     gsl_Expects(erased == 1);
 }
 
+TextureHandle Renderer::createTexture(Image const& image) {
+    auto const id = nextTextureId_++;
+    textures_.emplace(id, Texture2D{image});
+    return TextureHandle{id};
+}
+
+void Renderer::destroyTexture(TextureHandle texture) {
+    auto const erased = textures_.erase(texture.id);
+    gsl_Expects(erased == 1);
+}
+
+Texture2D const& Renderer::texture(TextureHandle texture) const {
+    auto const it = textures_.find(texture.id);
+    gsl_Expects(it != textures_.end());
+    return it->second;
+}
+
+glm::uvec2 Renderer::textureSize(TextureHandle texture) const {
+    auto const& tex = this->texture(texture);
+    return {tex.width(), tex.height()};
+}
+
+std::uint64_t Renderer::imguiTexture(TextureHandle texture) const {
+    return this->texture(texture).id();
+}
+
 void Renderer::drawModel(MeshHandle mesh,
-                         Texture2D const& skin,
+                         TextureHandle skin,
                          glm::mat4 const& model,
                          glm::vec3 const& glowColor) {
     modelShader_.use();
     modelShader_.setModel(model);
     GL::Shader::setUniform(glowColorLoc_, glowColor);
     glActiveTexture(GL_TEXTURE0);
-    skin.bind();
+    texture(skin).bind();
     auto const it = meshes_.find(mesh.id);
     gsl_Expects(it != meshes_.end());
     it->second->draw();

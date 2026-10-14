@@ -50,7 +50,14 @@ void MD2View::resetCamera() { camera_.reset(glm::vec3(0.0f, 0.0f, 3.0f)); }
 
 void MD2View::loadCurrentTexture(GL::Engine& engine) {
     auto const& path = md2_->currentSkin().fpath;
-    texture_ = engine.resourceManager().loadTexture2D(path);
+    auto const it = textures_.find(path);
+    if (it != textures_.end()) {
+        texture_ = it->second;
+        return;
+    }
+
+    texture_ = engine.renderer().createTexture(engine.assets().loadImage(path));
+    textures_.emplace(path, texture_);
 }
 
 bool MD2View::onEngineInitialized(GL::Engine& engine) {
@@ -98,7 +105,7 @@ void MD2View::render(GL::Engine& engine) {
     }
 
     engine.renderer().setCamera(view_, projection_);
-    engine.renderer().drawModel(md2Mesh_, *texture_, model_, glowColor_);
+    engine.renderer().drawModel(md2Mesh_, texture_, model_, glowColor_);
     drawUi(engine);
 }
 
@@ -219,10 +226,11 @@ void MD2View::drawUi(GL::Engine& engine) {
         ImGui::PushStyleVar(ImGuiStyleVar_ImageBorderSize,
                             std::max(1.0f, ImGui::GetStyle().ImageBorderSize));
         ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(255, 255, 255, 128));
+        auto const skinSize = engine.renderer().textureSize(texture_);
         ImGui::ImageWithBg(
-            static_cast<ImTextureID>(texture_->id()),
-            ImVec2(gsl_lite::narrow_cast<float>(texture_->width()),
-                   gsl_lite::narrow_cast<float>(texture_->height())),
+            static_cast<ImTextureID>(engine.renderer().imguiTexture(texture_)),
+            ImVec2(gsl_lite::narrow_cast<float>(skinSize.x),
+                   gsl_lite::narrow_cast<float>(skinSize.y)),
             ImVec2(0, 0), ImVec2(1, 1), ImVec4(255, 255, 255, 255));
         ImGui::PopStyleColor();
         ImGui::PopStyleVar();

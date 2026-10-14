@@ -6,7 +6,6 @@
 #include "md2view/gl/gl.hpp"
 #include "md2view/gl/gui.hpp"
 #include "md2view/gl/renderer.hpp"
-#include "md2view/gl/resource_manager.hpp"
 #include "md2view/window.hpp"
 
 #include <GLFW/glfw3.h>
@@ -23,7 +22,6 @@ GL::Engine::Engine(CliArgs const& args, std::unique_ptr<Game> game)
     , game_{std::move(game)} {
     gsl_Expects(game_);
 
-    resourceManager_ = std::make_unique<ResourceManager>(assets());
     window_ =
         Window::create(width_, height_, game_->title(), Renderer::kWindowHints);
     renderer_ =

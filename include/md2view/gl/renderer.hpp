@@ -69,18 +69,23 @@ public:
                     std::span<glm::vec3 const> vertices) override;
     void destroyMesh(MeshHandle mesh) override;
 
-    /// Draw a textured model into the current frame
-    ///
-    /// @param glowColor Color written to the glow buffer, used when glow is on
+    [[nodiscard]] TextureHandle createTexture(Image const& image) override;
+    void destroyTexture(TextureHandle texture) override;
+    [[nodiscard]] glm::uvec2 textureSize(TextureHandle texture) const override;
+    [[nodiscard]] std::uint64_t
+    imguiTexture(TextureHandle texture) const override;
+
     void drawModel(MeshHandle mesh,
-                   Texture2D const& skin,
+                   TextureHandle skin,
                    glm::mat4 const& model,
-                   glm::vec3 const& glowColor);
+                   glm::vec3 const& glowColor) override;
 
     void onFramebufferResize(Window::Extent extent);
     [[nodiscard]] float aspectRatio() const override;
 
 private:
+    [[nodiscard]] Texture2D const& texture(TextureHandle texture) const;
+
     Window& window_;
     Window::Extent fbSize_{};
     std::array<float, 4> clearColor_{0.2f, 0.2f, 0.2f, 1.0f};
@@ -98,6 +103,8 @@ private:
 
     std::unordered_map<std::uint32_t, std::unique_ptr<Mesh>> meshes_;
     std::uint32_t nextMeshId_{1};
+    std::unordered_map<std::uint32_t, Texture2D> textures_;
+    std::uint32_t nextTextureId_{1};
 };
 
 } // namespace GL

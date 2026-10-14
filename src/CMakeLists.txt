@@ -65,7 +65,6 @@ add_library(md2vgl
   gl/gui.cpp
   gl/mesh.cpp
   gl/screen_quad.cpp
-  gl/resource_manager.cpp
   gl/shader.cpp
   gl/texture2d.cpp
   gl/frame_buffer.cpp

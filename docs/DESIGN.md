@@ -100,21 +100,22 @@ buffers and staging uploads, with `sync()` recording a transfer command.
 
 ## Scene composition (MD2View)
 
-`MD2View` owns both the data and GPU objects and is responsible for keeping them
-in sync each frame:
+`MD2View` owns the model data and holds handles to the GPU objects, which the
+renderer owns. It keeps them in sync each frame:
 
 ```
 update(dt):
-    md2_->update(dt);               // advance animation, write interpolatedVertices_
-    md2Mesh_->sync(md2_->interpolatedVertices()); // upload to GPU
+    md2_->update(dt);    // advance animation, write interpolatedVertices_
+    renderer.updateMesh(md2Mesh_, md2_->interpolatedVertices()); // upload to GPU
 
 render():
-    md2Mesh_->draw(*shader_);      // glDrawArrays
+    renderer.setCamera(view_, projection_);
+    renderer.drawModel(md2Mesh_, texture_, model_, glowColor_);
 ```
 
-When the user selects a different model, `loadModel()` replaces both `md2_`
-and `md2Mesh_`. `ResourceManager` caches `MD2` objects by path and is unaware
-of the GPU layer.
+When the user selects a different model, `loadModel()` replaces `md2_` and
+destroys and recreates `md2Mesh_`. `AssetLoader` caches `MD2` objects by path
+and is unaware of the GPU layer. `MD2View` caches skin texture handles by path.
 
 ## Rendering pipeline (GL backend)
 
