@@ -59,6 +59,7 @@ target_include_directories(md2vui PUBLIC ${TREEHH_INCLUDE_DIRS})
 target_compile_definitions(md2vui PUBLIC IMGUI_DISABLE_OBSOLETE_FUNCTIONS)
 
 add_library(md2vgl
+  gl/engine.cpp
   gl/md2view.cpp
   gl/gui.cpp
   gl/mesh.cpp

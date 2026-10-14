@@ -1,6 +1,7 @@
 #include "md2view/gl/engine.hpp"
 
 #include "md2view/engine.hpp"
+#include "md2view/gl/game.hpp"
 #include "md2view/gl/gl.hpp"
 #include "md2view/gl/gui.hpp"
 #include "md2view/gl/renderer.hpp"
@@ -15,8 +16,16 @@
 #include <memory>
 #include <optional>
 #include <stdexcept>
+#include <utility>
 
-template <typename Game> void GL::Engine<Game>::doInit() {
+GL::Engine::Engine(std::unique_ptr<Game> game)
+    : game_{std::move(game)} {
+    gsl_Expects(game_);
+}
+
+GL::Engine::~Engine() = default;
+
+void GL::Engine::doInit() {
     std::optional<std::filesystem::path> pak;
     if (!pakPath_.empty()) {
         pak = pakPath_;
@@ -24,13 +33,13 @@ template <typename Game> void GL::Engine<Game>::doInit() {
 
     resourceManager_ = std::make_unique<ResourceManager>("data", pak);
     window_ =
-        Window::create(width_, height_, game_.title(), Renderer::kWindowHints);
+        Window::create(width_, height_, game_->title(), Renderer::kWindowHints);
     renderer_ = std::make_unique<Renderer>(window_, *resourceManager_);
 
     window_.setFramebufferResizeHandler([this](int width, int height) {
         spdlog::debug("framebuffer resize x={} y={}", width, height);
         if (width > 0 && height > 0) {
-            game_.onFramebufferResize();
+            game_->onFramebufferResize();
             renderer_->onFramebufferResize(
                 Window::Extent{.width = width, .height = height});
         }
@@ -42,13 +51,13 @@ template <typename Game> void GL::Engine<Game>::doInit() {
 
     gui_ = std::make_unique<GL::Gui>(gsl_lite::not_null{window_.get()});
     glCheckError();
-    if (!game_.onEngineInitialized(*this)) {
+    if (!game_->onEngineInitialized(*this)) {
         throw std::runtime_error("failed to initialize game");
     }
     glCheckError();
 }
 
-template <typename Game> void GL::Engine<Game>::runGame() {
+void GL::Engine::runGame() {
     lastFrame_ = gsl_lite::narrow_cast<GLfloat>(glfwGetTime());
 
     while (!window_.shouldClose()) {
@@ -60,15 +69,15 @@ template <typename Game> void GL::Engine<Game>::runGame() {
         glfwPollEvents();
 
         if (inputGoesToGame_) {
-            game_.processInput(*this, deltaTime_);
+            game_->processInput(*this, deltaTime_);
         }
 
         gui_->update();
         glCheckError();
-        game_.update(*this, deltaTime_);
+        game_->update(*this, deltaTime_);
         glCheckError();
         renderer_->beginFrame();
-        game_.render(*this);
+        game_->render(*this);
         glCheckError();
         renderer_->postProcessFrame();
         gui_->render();
@@ -79,8 +88,7 @@ template <typename Game> void GL::Engine<Game>::runGame() {
     glCheckError();
 }
 
-template <typename Game>
-void GL::Engine<Game>::onKey(int key, int scancode, int action, int mods) {
+void GL::Engine::onKey(int key, int scancode, int action, int mods) {
     if (guiHasInput()) {
         gui_->onKey(key, scancode, action, mods);
         if (key == GLFW_KEY_ESCAPE && gui_->wantsTextInput()) {
@@ -95,35 +103,32 @@ void GL::Engine<Game>::onKey(int key, int scancode, int action, int mods) {
     }
 }
 
-template <typename Game>
-void GL::Engine<Game>::onCursorPos(double xpos, double ypos) {
+void GL::Engine::onCursorPos(double xpos, double ypos) {
     ::Engine::onCursorPos(xpos, ypos);
     if (guiHasInput()) {
         gui_->onCursorPos(xpos, ypos);
     } else if (inputGoesToGame_) {
-        game_.onMouseMovement(gsl_lite::narrow_cast<float>(mouse_.xoffset),
-                              gsl_lite::narrow_cast<float>(mouse_.yoffset));
+        game_->onMouseMovement(gsl_lite::narrow_cast<float>(mouse_.xoffset),
+                               gsl_lite::narrow_cast<float>(mouse_.yoffset));
     }
 }
 
-template <typename Game>
-void GL::Engine<Game>::onScroll(double xoffset, double yoffset) {
+void GL::Engine::onScroll(double xoffset, double yoffset) {
     ::Engine::onScroll(xoffset, yoffset);
     if (guiHasInput()) {
         gui_->onScroll(xoffset, yoffset);
     } else if (inputGoesToGame_) {
-        game_.onMouseScroll(xoffset, yoffset);
+        game_->onMouseScroll(xoffset, yoffset);
     }
 }
 
-template <typename Game>
-void GL::Engine<Game>::onMouseButton(int button, int action, int mods) {
+void GL::Engine::onMouseButton(int button, int action, int mods) {
     if (guiHasInput()) {
         gui_->onMouseButton(button, action, mods);
     }
 }
 
-template <typename Game> void GL::Engine<Game>::onChar(unsigned int codepoint) {
+void GL::Engine::onChar(unsigned int codepoint) {
     if (guiHasInput()) {
         gui_->onChar(codepoint);
     }

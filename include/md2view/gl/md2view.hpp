@@ -1,6 +1,7 @@
 #pragma once
 
 #include "md2view/camera.hpp"
+#include "md2view/gl/game.hpp"
 #include "md2view/gl/gl.hpp"
 #include "md2view/gl/mesh.hpp"
 #include "md2view/gl/texture2d.hpp"
@@ -13,30 +14,26 @@
 #include <memory>
 #include <string>
 
-namespace GL {
-template <typename Game> class Engine;
-}
-
-class MD2View {
+class MD2View : public GL::Game {
 public:
     MD2View();
 
-    bool onEngineInitialized(GL::Engine<MD2View>& engine);
-    void processInput(GL::Engine<MD2View>& engine, GLfloat deltaTime);
-    void onMouseMovement(GLfloat xoffset, GLfloat yoffset);
-    void onMouseScroll(double xoffset, double yoffset);
-    void onFramebufferResize();
-    void update(GL::Engine<MD2View>& engine, GLfloat deltaTime);
-    void render(GL::Engine<MD2View>& engine);
-    static char const* title() { return "MD2View"; }
+    [[nodiscard]] char const* title() const override { return "MD2View"; }
+    [[nodiscard]] bool onEngineInitialized(GL::Engine& engine) override;
+    void processInput(GL::Engine& engine, GLfloat deltaTime) override;
+    void onMouseMovement(GLfloat xoffset, GLfloat yoffset) override;
+    void onMouseScroll(double xoffset, double yoffset) override;
+    void onFramebufferResize() override;
+    void update(GL::Engine& engine, GLfloat deltaTime) override;
+    void render(GL::Engine& engine) override;
 
 private:
     void resetCamera();
     void resetModelMatrix();
-    void loadCurrentTexture(GL::Engine<MD2View>& engine);
+    void loadCurrentTexture(GL::Engine& engine);
     void updateModel();
-    void drawUi(GL::Engine<MD2View>& engine);
-    void loadModel(GL::Engine<MD2View>& engine);
+    void drawUi(GL::Engine& engine);
+    void loadModel(GL::Engine& engine);
 
     std::shared_ptr<MD2> md2_;
     std::unique_ptr<GL::Mesh> md2Mesh_;

@@ -1,15 +1,16 @@
-#include "md2view/gl/engine.ipp"
+#include "md2view/gl/engine.hpp"
 #include "md2view/gl/md2view.hpp"
 
 #include <spdlog/spdlog.h>
 
 #include <cstdlib>
 #include <exception>
+#include <memory>
 #include <span>
 
 int main(int argc, char const* argv[]) {
     try {
-        GL::Engine<MD2View> engine;
+        GL::Engine engine{std::make_unique<MD2View>()};
 
         if (!engine.init(std::span{argv, static_cast<size_t>(argc)})) {
             return EXIT_FAILURE;

@@ -12,9 +12,18 @@
 
 namespace GL {
 
-template <typename Game> class Engine : public ::Engine {
+class Game;
+
+class Engine : public ::Engine {
 public:
-    Engine() = default;
+    explicit Engine(std::unique_ptr<Game> game);
+    ~Engine() override;
+
+    Engine(Engine const&) = delete;
+    Engine& operator=(Engine const&) = delete;
+
+    Engine(Engine&&) noexcept = delete;
+    Engine& operator=(Engine&&) noexcept = delete;
 
     void runGame();
 
@@ -41,7 +50,8 @@ private:
     std::unique_ptr<Renderer> renderer_;
     std::unique_ptr<ResourceManager> resourceManager_;
     std::unique_ptr<GL::Gui> gui_;
-    Game game_;
+    // NB: declared after renderer_ so the game releases its GL objects first
+    std::unique_ptr<Game> game_;
     GLfloat deltaTime_ = 0.0f;
     GLfloat lastFrame_ = 0.0f;
 };

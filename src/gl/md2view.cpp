@@ -29,7 +29,7 @@
 
 MD2View::MD2View() { resetModelMatrix(); }
 
-void MD2View::loadModel(GL::Engine<MD2View>& engine) {
+void MD2View::loadModel(GL::Engine& engine) {
     md2_ = engine.resourceManager().loadModel(modelSelector_->modelPath());
     md2Mesh_ = std::make_unique<GL::Mesh>(md2_->interpolatedVertices(),
                                           md2_->scaledTexcoords());
@@ -46,12 +46,12 @@ void MD2View::resetModelMatrix() {
 
 void MD2View::resetCamera() { camera_.reset(glm::vec3(0.0f, 0.0f, 3.0f)); }
 
-void MD2View::loadCurrentTexture(GL::Engine<MD2View>& engine) {
+void MD2View::loadCurrentTexture(GL::Engine& engine) {
     auto const& path = md2_->currentSkin().fpath;
     texture_ = engine.resourceManager().loadTexture2D(path);
 }
 
-bool MD2View::onEngineInitialized(GL::Engine<MD2View>& engine) {
+bool MD2View::onEngineInitialized(GL::Engine& engine) {
     if (!engine.resourceManager().pak().hasModels()) {
         spdlog::error("PAK '{}' has no MD2 models to view",
                       engine.resourceManager().pak().fpath());
@@ -94,7 +94,7 @@ void MD2View::updateModel() {
     shader_->setModel(model_);
 }
 
-void MD2View::render(GL::Engine<MD2View>& engine) {
+void MD2View::render(GL::Engine& engine) {
     shader_->use();
 
     if (camera_.viewDirty()) {
@@ -120,7 +120,7 @@ void MD2View::render(GL::Engine<MD2View>& engine) {
     glCheckError();
 }
 
-void MD2View::drawUi(GL::Engine<MD2View>& engine) {
+void MD2View::drawUi(GL::Engine& engine) {
     static float const vec4width = 275;
     // draw gui
     ImGui::Begin("MD2View");
@@ -261,12 +261,12 @@ void MD2View::drawUi(GL::Engine<MD2View>& engine) {
     ImGui::End();
 }
 
-void MD2View::update(GL::Engine<MD2View>& /* engine */, GLfloat deltaTime) {
+void MD2View::update(GL::Engine& /* engine */, GLfloat deltaTime) {
     md2_->update(deltaTime);
     md2Mesh_->sync(md2_->interpolatedVertices());
 }
 
-void MD2View::processInput(GL::Engine<MD2View>& engine, GLfloat deltaTime) {
+void MD2View::processInput(GL::Engine& engine, GLfloat deltaTime) {
     if (engine.keyboard().keys()[GLFW_KEY_W]) {
         camera_.move(Camera::Direction::FORWARD, deltaTime);
     }
