@@ -30,7 +30,7 @@
 MD2View::MD2View() { resetModelMatrix(); }
 
 void MD2View::loadModel(GL::Engine& engine) {
-    md2_ = engine.resourceManager().loadModel(modelSelector_->modelPath());
+    md2_ = engine.assets().loadModel(modelSelector_->modelPath());
     md2Mesh_ = std::make_unique<GL::Mesh>(md2_->interpolatedVertices(),
                                           md2_->scaledTexcoords());
 }
@@ -52,14 +52,13 @@ void MD2View::loadCurrentTexture(GL::Engine& engine) {
 }
 
 bool MD2View::onEngineInitialized(GL::Engine& engine) {
-    if (!engine.resourceManager().pak().hasModels()) {
+    if (!engine.assets().pak().hasModels()) {
         spdlog::error("PAK '{}' has no MD2 models to view",
-                      engine.resourceManager().pak().fpath());
+                      engine.assets().pak().fpath());
         return false;
     }
     // init objects which needed an opengl context to initialize
-    modelSelector_ =
-        std::make_unique<ModelSelector>(engine.resourceManager().pak());
+    modelSelector_ = std::make_unique<ModelSelector>(engine.assets().pak());
     loadModel(engine);
 
     spdlog::info("begin load shaders");

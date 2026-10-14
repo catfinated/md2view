@@ -1,4 +1,5 @@
 #include "md2view/engine.hpp"
+#include "md2view/asset_loader.hpp"
 
 #include <GLFW/glfw3.h>
 #include <boost/program_options/options_description.hpp>
@@ -9,8 +10,11 @@
 #include <spdlog/common.h>
 #include <spdlog/spdlog.h>
 
+#include <filesystem>
 #include <iostream>
 #include <map>
+#include <memory>
+#include <optional>
 #include <span>
 #include <string>
 #include <utility>
@@ -82,6 +86,12 @@ bool Engine::init(std::span<char const*> args) {
     if (!parseArgs(args)) {
         return false;
     }
+
+    std::optional<std::filesystem::path> pak;
+    if (!pakPath_.empty()) {
+        pak = pakPath_;
+    }
+    assets_ = std::make_unique<AssetLoader>("data", pak);
 
     doInit();
     window_.setInputListener(this);

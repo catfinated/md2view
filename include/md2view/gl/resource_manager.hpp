@@ -11,20 +11,23 @@
 #include <string_view>
 #include <unordered_map>
 
-/// Cache and factory for GPU resources loaded from a PAK archive.
+/// Cache and factory for GPU resources.
 ///
 /// Caches loaded shaders and textures by
 /// their path strings. Repeated calls for the same path return the cached
 /// instance without re-reading from disk or re-uploading to the GPU.
-class ResourceManager : public AssetLoader {
+class ResourceManager {
 public:
-    /// @param rootdir  Project data root (shaders are expected at
-    /// `rootdir/shaders/`).
-    /// @param pakPath Path to a `.pak` file or directory. Defaults to
-    /// `rootdir/models`.
-    explicit ResourceManager(
-        std::filesystem::path const& rootdir,
-        std::optional<std::filesystem::path> const& pakPath = std::nullopt);
+    /// @param assets Source of texture images. Must outlive this object.
+    /// Shaders are expected at `assets.dataDir()/shaders/`.
+    explicit ResourceManager(AssetLoader& assets);
+    ~ResourceManager() = default;
+
+    ResourceManager(ResourceManager const&) = delete;
+    ResourceManager& operator=(ResourceManager const&) = delete;
+
+    ResourceManager(ResourceManager&&) noexcept = delete;
+    ResourceManager& operator=(ResourceManager&&) noexcept = delete;
 
     [[nodiscard]] std::filesystem::path const& shadersDir() const {
         return shadersDir_;
@@ -64,6 +67,7 @@ public:
     }
 
 private:
+    AssetLoader& assets_;
     std::filesystem::path shadersDir_;
     std::unordered_map<std::string, std::shared_ptr<GL::Shader>> shaders_;
     std::unordered_map<std::string, std::shared_ptr<GL::Texture2D>> textures2D_;

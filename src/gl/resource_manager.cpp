@@ -13,11 +13,9 @@
 #include <string>
 #include <string_view>
 
-ResourceManager::ResourceManager(
-    std::filesystem::path const& rootdir,
-    std::optional<std::filesystem::path> const& pakPath)
-    : AssetLoader(rootdir, pakPath)
-    , shadersDir_(dataDir() / "shaders") {}
+ResourceManager::ResourceManager(AssetLoader& assets)
+    : assets_(assets)
+    , shadersDir_(assets.dataDir() / "shaders") {}
 
 std::shared_ptr<GL::Shader>
 ResourceManager::loadShader(std::string const& name,
@@ -58,6 +56,6 @@ ResourceManager::loadTexture2D(std::string const& path,
     }
 
     auto result = textures2D_.emplace(
-        key, std::make_shared<GL::Texture2D>(loadImage(path)));
+        key, std::make_shared<GL::Texture2D>(assets_.loadImage(path)));
     return result.first->second;
 }

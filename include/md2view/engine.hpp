@@ -1,11 +1,14 @@
 #pragma once
 
+#include "md2view/asset_loader.hpp"
 #include "md2view/window.hpp"
 
 #include <boost/program_options.hpp>
+#include <gsl-lite/gsl-lite.hpp>
 
 #include <bitset>
 #include <cstddef>
+#include <memory>
 #include <optional>
 #include <span>
 #include <string>
@@ -56,6 +59,12 @@ public:
         return variablesMap_;
     }
 
+    /// CPU assets: PAK, models, and images. Valid after init().
+    [[nodiscard]] AssetLoader& assets() {
+        gsl_Expects(assets_);
+        return *assets_;
+    }
+
     [[nodiscard]] Keyboard const& keyboard() const { return keyboard_; }
     [[nodiscard]] Mouse const& mouse() const { return mouse_; }
 
@@ -79,6 +88,8 @@ protected:
     Keyboard keyboard_;
     Mouse mouse_;
     bool inputGoesToGame_{false};
+
+    std::unique_ptr<AssetLoader> assets_;
 
     boost::program_options::options_description optDesc_;
     boost::program_options::variables_map variablesMap_;

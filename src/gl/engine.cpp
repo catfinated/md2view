@@ -12,7 +12,6 @@
 #include <gsl-lite/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 
-#include <filesystem>
 #include <memory>
 #include <optional>
 #include <stdexcept>
@@ -26,12 +25,7 @@ GL::Engine::Engine(std::unique_ptr<Game> game)
 GL::Engine::~Engine() = default;
 
 void GL::Engine::doInit() {
-    std::optional<std::filesystem::path> pak;
-    if (!pakPath_.empty()) {
-        pak = pakPath_;
-    }
-
-    resourceManager_ = std::make_unique<ResourceManager>("data", pak);
+    resourceManager_ = std::make_unique<ResourceManager>(assets());
     window_ =
         Window::create(width_, height_, game_->title(), Renderer::kWindowHints);
     renderer_ = std::make_unique<Renderer>(window_, *resourceManager_);
