@@ -1,3 +1,5 @@
+/// @file
+/// OpenGL mesh with a dynamic position buffer and static texture coordinates
 #pragma once
 
 #include "md2view/gl/gl.hpp"

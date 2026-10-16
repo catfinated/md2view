@@ -1,8 +1,7 @@
-/**
- * @brief md2view Vulkan graphics renderer
- *
- * This is very much a work in progress.
- */
+/// @file
+/// md2view Vulkan graphics renderer
+///
+/// This is very much a work in progress.
 #pragma once
 
 #include "md2view/vk/vk.hpp"

@@ -1,7 +1,9 @@
-#pragma once
-
+/// @file
+/// Quake II MD2 model loading and keyframe animation
+///
 /// @see http://tfc.duke.free.fr/coding/md2-specs-en.html
 /// @see http://tfc.duke.free.fr/old/models/md2.htm
+#pragma once
 
 #include <boost/algorithm/clamp.hpp>
 #include <glm/glm.hpp>

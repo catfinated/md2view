@@ -1,3 +1,5 @@
+/// @file
+/// Game interface driven by an Engine
 #pragma once
 
 class Engine;

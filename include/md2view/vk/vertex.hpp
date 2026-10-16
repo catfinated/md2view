@@ -1,6 +1,5 @@
-/**
- * @brief Types and methods related to vertex data
- */
+/// @file
+/// Types and methods related to vertex data
 #pragma once
 
 #include <glm/glm.hpp>
@@ -11,9 +10,7 @@
 
 namespace VK {
 
-/**
- * @brief Example vertex buffer data
- */
+/// Example vertex buffer data
 struct Vertex {
     glm::vec2 pos;
     glm::vec3 color;

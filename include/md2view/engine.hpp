@@ -1,3 +1,5 @@
+/// @file
+/// Renderer-agnostic engine base class with asset loading and input state
 #pragma once
 
 #include "md2view/asset_loader.hpp"

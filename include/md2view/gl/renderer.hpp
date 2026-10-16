@@ -1,3 +1,5 @@
+/// @file
+/// OpenGL implementation of the Renderer interface
 #pragma once
 
 #include "md2view/gl/gl.hpp"
@@ -34,6 +36,8 @@ public:
         WindowHint{.hint = GLFW_OPENGL_FORWARD_COMPAT, .value = GLFW_TRUE},
     };
 
+    /// @param window     Window that owns the GL context, must outlive the
+    ///                   renderer
     /// @param shadersDir Directory containing GLSL shader sources
     Renderer(Window& window, std::filesystem::path const& shadersDir);
     ~Renderer() override = default;

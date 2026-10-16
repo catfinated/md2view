@@ -1,3 +1,5 @@
+/// @file
+/// Quake II PAK archive reader
 #pragma once
 
 #include <boost/algorithm/string/predicate.hpp>

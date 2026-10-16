@@ -1,3 +1,5 @@
+/// @file
+/// Full-screen quad for post-processing passes
 #pragma once
 
 #include "md2view/gl/gl.hpp"

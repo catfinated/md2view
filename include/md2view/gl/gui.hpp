@@ -1,3 +1,5 @@
+/// @file
+/// ImGui integration for the OpenGL renderer
 #pragma once
 
 #include "md2view/gl/gl.hpp" // IWYU pragma: keep

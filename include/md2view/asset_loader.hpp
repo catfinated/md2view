@@ -1,3 +1,5 @@
+/// @file
+/// Loads images and MD2 models from the PAK and data directory
 #pragma once
 
 #include "md2view/image.hpp"

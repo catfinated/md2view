@@ -1,3 +1,5 @@
+/// @file
+/// MD2 model viewer, the Game run by each engine
 #pragma once
 
 #include "md2view/camera.hpp"

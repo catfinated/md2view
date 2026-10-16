@@ -1,3 +1,5 @@
+/// @file
+/// OpenGL headers in the required include order, plus error checking helpers
 #pragma once
 
 #ifdef __APPLE__

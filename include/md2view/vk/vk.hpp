@@ -1,6 +1,5 @@
-/**
- * @brief Vulkan renderer utility types and methods
- */
+/// @file
+/// Vulkan renderer utility types and methods
 #pragma once
 
 #include "md2view/vk/buffer.hpp" // IWYU pragma: export

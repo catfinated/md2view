@@ -1,3 +1,5 @@
+/// @file
+/// PCX image decoder
 #pragma once
 
 #include <array>

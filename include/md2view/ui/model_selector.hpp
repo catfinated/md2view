@@ -1,3 +1,5 @@
+/// @file
+/// ImGui selection of the models in a PAK
 #pragma once
 
 #include <treehh/tree.hh>
@@ -23,7 +25,7 @@ public:
 
     [[nodiscard]] std::string modelPath() const;
 
-    /// @brief  Draw the model selection ui
+    /// Draw the model selection ui
     /// @return True if the selected model changed
     [[nodiscard]] bool drawUi();
 

@@ -1,3 +1,5 @@
+/// @file
+/// Command line argument parsing
 #pragma once
 
 #include <spdlog/common.h>

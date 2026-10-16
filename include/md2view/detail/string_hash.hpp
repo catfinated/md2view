@@ -1,3 +1,5 @@
+/// @file
+/// Transparent string hash for heterogeneous lookup in unordered containers
 #pragma once
 
 #include <cstddef>

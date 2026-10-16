@@ -1,3 +1,5 @@
+/// @file
+/// Temporary directory for tests, removed on destruction
 #pragma once
 
 #include <filesystem>

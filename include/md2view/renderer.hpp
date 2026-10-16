@@ -1,3 +1,5 @@
+/// @file
+/// Renderer interface and GPU resource handles
 #pragma once
 
 #include <glm/glm.hpp>
@@ -83,6 +85,9 @@ public:
 
     /// Draw a textured mesh into the current frame
     ///
+    /// @param mesh      Mesh to draw
+    /// @param skin      Texture applied to the mesh
+    /// @param model     Model (object to world) matrix
     /// @param glowColor Color written to the glow buffer, used when glow is on
     virtual void drawModel(MeshHandle mesh,
                            TextureHandle skin,

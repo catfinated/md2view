@@ -1,3 +1,5 @@
+/// @file
+/// OpenGL framebuffer object
 #pragma once
 
 #include "md2view/gl/gl.hpp"

@@ -1,3 +1,5 @@
+/// @file
+/// RGBA8 image loading
 #pragma once
 
 #include <filesystem>

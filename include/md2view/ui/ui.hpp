@@ -1,3 +1,5 @@
+/// @file
+/// Backend-agnostic ImGui panels
 #pragma once
 
 class Camera;

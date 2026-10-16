@@ -1,3 +1,5 @@
+/// @file
+/// OpenGL engine: window, renderer, GUI, and frame loop
 #pragma once
 
 #include "md2view/cli.hpp"

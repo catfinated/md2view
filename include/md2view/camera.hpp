@@ -1,3 +1,5 @@
+/// @file
+/// First-person fly camera
 #pragma once
 
 #include <glm/glm.hpp>

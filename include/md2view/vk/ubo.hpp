@@ -1,6 +1,5 @@
-/**
- * @brief UniformBufferObject types and methods
- */
+/// @file
+/// UniformBufferObject types and methods
 #pragma once
 
 #include <glm/glm.hpp>
