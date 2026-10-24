@@ -7,6 +7,9 @@
 
 #include <concepts>
 #include <cstdint>
+#include <optional>
+#include <utility>
+#include <vector>
 
 namespace VK {
 
@@ -37,16 +40,26 @@ public:
     GPU(GPU const&) = delete;
     GPU& operator=(GPU const&) = delete;
     GPU(GPU&&) = default;
+
+    /// Only valid when this GPU is empty
     GPU& operator=(GPU&&) = default;
 
-    vk::raii::PhysicalDevice const& physical() const { return physicalDevice_; }
-    vk::raii::Device const& logical() const { return device_; }
-    QueueFamilyIndices const& queueFamilyIndices() const {
+    [[nodiscard]] vk::raii::PhysicalDevice const& physical() const {
+        return physicalDevice_;
+    }
+    [[nodiscard]] vk::raii::Device const& logical() const { return device_; }
+    [[nodiscard]] QueueFamilyIndices const& queueFamilyIndices() const {
         return queueFamilyIndices_;
     }
-    vk::raii::Queue const& graphicsQueue() const { return graphicsQueue_; }
-    vk::raii::Queue const& presentQueue() const { return presentQueue_; }
-    vk::raii::CommandPool const& commandPool() const { return commandPool_; }
+    [[nodiscard]] vk::raii::Queue const& graphicsQueue() const {
+        return graphicsQueue_;
+    }
+    [[nodiscard]] vk::raii::Queue const& presentQueue() const {
+        return presentQueue_;
+    }
+    [[nodiscard]] vk::raii::CommandPool const& commandPool() const {
+        return commandPool_;
+    }
 
     [[nodiscard]] uint32_t
     findMemoryType(uint32_t typeFilter,
@@ -57,7 +70,7 @@ public:
 
     void waitIdle();
 
-    void submitOnce(std::invocable<vk::CommandBuffer&> auto func) const {
+    void submitOnce(std::invocable<vk::raii::CommandBuffer&> auto func) const {
         vk::CommandBufferAllocateInfo allocInfo{
             *commandPool_, vk::CommandBufferLevel::ePrimary, 1};
 

@@ -2,8 +2,18 @@
 
 #include <gsl-lite/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
+#include <vulkan/vulkan.hpp>
+#include <vulkan/vulkan_raii.hpp>
 
+#include <array>
+#include <cstdint>
+#include <optional>
 #include <set>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 namespace VK {
 
@@ -11,12 +21,12 @@ namespace {
 
 #ifdef __APPLE__
 // MoltenVK is a portability-subset implementation
-static constexpr std::array<char const*, 2> kDeviceExtensions = {
+constexpr std::array<char const*, 2> kDeviceExtensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
     "VK_KHR_portability_subset",
 };
 #else
-static constexpr std::array<char const*, 1> kDeviceExtensions = {
+constexpr std::array<char const*, 1> kDeviceExtensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 };
 #endif
@@ -131,6 +141,11 @@ vk::raii::Device createDevice(vk::raii::PhysicalDevice const& physicalDevice,
     return vk::raii::Device{physicalDevice, createInfo};
 }
 
+vk::raii::Queue getQueue(vk::raii::Device const& device,
+                         std::optional<uint32_t> family) {
+    return device.getQueue(family.value(), 0);
+}
+
 vk::raii::CommandPool createCommandPool(vk::raii::Device const& device,
                                         QueueFamilyIndices const& indices) {
     spdlog::info("creating command pool");
@@ -149,10 +164,8 @@ GPU::GPU(std::pair<vk::raii::PhysicalDevice, QueueFamilyIndices>&& args)
     , queueFamilyIndices_{std::move(args).second}
     , memoryProperties_{physicalDevice_.getMemoryProperties()}
     , device_{createDevice(physicalDevice_, queueFamilyIndices_)}
-    , graphicsQueue_{device_.getQueue(
-          queueFamilyIndices_.graphicsFamily.value(), 0)}
-    , presentQueue_{device_.getQueue(queueFamilyIndices_.presentFamily.value(),
-                                     0)}
+    , graphicsQueue_{getQueue(device_, queueFamilyIndices_.graphicsFamily)}
+    , presentQueue_{getQueue(device_, queueFamilyIndices_.presentFamily)}
     , commandPool_{createCommandPool(device_, queueFamilyIndices_)} {}
 
 void GPU::waitIdle() {

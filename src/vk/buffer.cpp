@@ -1,8 +1,11 @@
 #include "md2view/vk/buffer.hpp"
 #include "md2view/vk/gpu.hpp"
 
+#include <gsl-lite/gsl-lite.hpp>
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_raii.hpp>
+
+#include <utility>
 
 namespace VK {
 
