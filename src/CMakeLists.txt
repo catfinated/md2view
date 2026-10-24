@@ -95,7 +95,8 @@ target_compile_definitions(md2vgl
 add_library(md2vvk
   vk/vk.cpp
   vk/engine.cpp
-  vk/renderer.cpp)
+  vk/renderer.cpp
+  vk/gpu.cpp)
 
 target_link_libraries(md2vvk PUBLIC
    md2v
