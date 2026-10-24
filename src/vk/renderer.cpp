@@ -80,27 +80,22 @@ void Renderer::initVulkan() {
 
     // copy vertices to high performance on device gpu memory
     auto bufSize = sizeof(Vertex) * kVertices.size();
-    auto stagingBuffer =
-        createStagingBuffer(gpu_.logical(), gpu_.physical(), bufSize);
+    auto stagingBuffer = createStagingBuffer(gpu_, bufSize);
     stagingBuffer.memcpy(kVertices);
-    vertexBuffer_ =
-        createStaticVertexBuffer(gpu_.logical(), gpu_.physical(), bufSize);
-    copyBuffer(stagingBuffer, vertexBuffer_, gpu_.logical(), commandPool_,
-               gpu_.graphicsQueue());
+    vertexBuffer_ = createStaticVertexBuffer(gpu_, bufSize);
+    copyBuffer(stagingBuffer, vertexBuffer_, gpu_, commandPool_);
 
     // copy indices to high performance on device gpu memory
     bufSize = sizeof(kIndices[0]) * kIndices.size();
-    stagingBuffer =
-        createStagingBuffer(gpu_.logical(), gpu_.physical(), bufSize);
+    stagingBuffer = createStagingBuffer(gpu_, bufSize);
     stagingBuffer.memcpy(kIndices);
-    indexBuffer_ = createIndexBuffer(gpu_.logical(), gpu_.physical(), bufSize);
-    copyBuffer(stagingBuffer, indexBuffer_, gpu_.logical(), commandPool_,
-               gpu_.graphicsQueue());
+    indexBuffer_ = createIndexBuffer(gpu_, bufSize);
+    copyBuffer(stagingBuffer, indexBuffer_, gpu_, commandPool_);
 
     uniformBuffers_.reserve(kMaxFramesInFlight);
     for (auto i = 0U; i < kMaxFramesInFlight; ++i) {
-        uniformBuffers_.push_back(createUniformBuffer(
-            gpu_.logical(), gpu_.physical(), sizeof(UniformBufferObject)));
+        uniformBuffers_.push_back(
+            createUniformBuffer(gpu_, sizeof(UniformBufferObject)));
     }
 
     descriptorPool_ = createDescriptorPool(gpu_.logical(), kMaxFramesInFlight);

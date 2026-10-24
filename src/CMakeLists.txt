@@ -96,7 +96,8 @@ add_library(md2vvk
   vk/vk.cpp
   vk/engine.cpp
   vk/renderer.cpp
-  vk/gpu.cpp)
+  vk/gpu.cpp
+  vk/buffer.cpp)
 
 target_link_libraries(md2vvk PUBLIC
    md2v

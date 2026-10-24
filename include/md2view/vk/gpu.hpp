@@ -7,6 +7,8 @@
 
 #include "md2view/vk/vk.hpp"
 
+#include <cstdint>
+
 namespace VK {
 
 class GPU {
@@ -27,6 +29,9 @@ public:
     }
     vk::raii::Queue const& graphicsQueue() const { return graphicsQueue_; }
     vk::raii::Queue const& presentQueue() const { return presentQueue_; }
+
+    uint32_t findMemoryType(uint32_t typeFilter,
+                            vk::MemoryPropertyFlags properties) const;
 
     void waitIdle();
 

@@ -12,6 +12,8 @@
 
 namespace VK {
 
+class GPU;
+
 /// Buffer bound to device memory
 ///
 /// In Vulkan, a buffer has to be bound to some associated
@@ -52,15 +54,13 @@ struct BoundBuffer {
 
     /// Create BoundBuffer
     ///
-    /// @param device The logical device to create the buffer for
-    /// @param physicalDevice The physical device to allocate memory on
+    /// @param gpu Gpu to allocate memory on
     /// @param size The size of the buffer
     /// @param usage The usage flags for the buffer
     /// @param properties The memory properties for the buffer memory
     /// @return The created BoundBuffer
     /// @throws vk::SystemError if a Vulkan call fails
-    static BoundBuffer create(vk::raii::Device const& device,
-                              vk::raii::PhysicalDevice const& physicalDevice,
+    static BoundBuffer create(GPU const& gpu,
                               vk::DeviceSize size,
                               vk::BufferUsageFlags usage,
                               vk::MemoryPropertyFlags properties);
@@ -83,81 +83,62 @@ private:
 /// This will be a host visible buffer that can be mapped to cpu
 /// accessible memory.
 ///
-/// @param device The logical device to create the buffer for
-/// @param physicalDevice The physical device to allocate memory on
+/// @param gpu Gpu to allocate memory on
 /// @param size The size of the buffer
 /// @return The created BoundBuffer
 /// @throws vk::SystemError if a Vulkan call fails
-BoundBuffer
-createDynamicVertexBuffer(vk::raii::Device const& device,
-                          vk::raii::PhysicalDevice const& physicalDevice,
-                          vk::DeviceSize size);
+BoundBuffer createDynamicVertexBuffer(GPU const& gpu, vk::DeviceSize size);
 
 /// Create a BoundBuffer suitable for static vertex data
 ///
 /// This will be a device local buffer that can not be mapped to cpu
 /// accessible memory.
 ///
-/// @param device The logical device to create the buffer for
-/// @param physicalDevice The physical device to allocate memory on
+/// @param gpu Gpu to allocate memory on
 /// @param size The size of the buffer
 /// @return The created BoundBuffer
 /// @throws vk::SystemError if a Vulkan call fails
-BoundBuffer
-createStaticVertexBuffer(vk::raii::Device const& device,
-                         vk::raii::PhysicalDevice const& physicalDevice,
-                         vk::DeviceSize size);
+BoundBuffer createStaticVertexBuffer(GPU const& gpu, vk::DeviceSize size);
 
 /// Create a BoundBuffer suitable for index data
 ///
 /// This will be a device local buffer that can not be mapped to cpu
 /// accessible memory.
 ///
-/// @param device The logical device to create the buffer for
-/// @param physicalDevice The physical device to allocate memory on
+/// @param gpu Gpu to allocate memory on
 /// @param size The size of the buffer
 /// @return The created BoundBuffer
 /// @throws vk::SystemError if a Vulkan call fails
-BoundBuffer createIndexBuffer(vk::raii::Device const& device,
-                              vk::raii::PhysicalDevice const& physicalDevice,
-                              vk::DeviceSize size);
+BoundBuffer createIndexBuffer(GPU const& gpu, vk::DeviceSize size);
 
 /// Create a BoundBuffer suitable for staging data
 ///
-/// @param device The logical device to create the buffer for
-/// @param physicalDevice The physical device to allocate memory on
+/// @param gpu Gpu to allocate memory on
 /// @param size The size of the buffer
 /// @return The created BoundBuffer
 /// @throws vk::SystemError if a Vulkan call fails
-BoundBuffer createStagingBuffer(vk::raii::Device const& device,
-                                vk::raii::PhysicalDevice const& physicalDevice,
-                                vk::DeviceSize size);
+BoundBuffer createStagingBuffer(GPU const& gpu, vk::DeviceSize size);
 
 /// Create a persistently mapped BoundBuffer for uniform data
 ///
 /// This will be a host visible, host coherent buffer that is mapped
 /// for its entire lifetime.
 ///
-/// @param device The logical device to create the buffer for
-/// @param physicalDevice The physical device to allocate memory on
+/// @param gpu Gpu to allocate memory on
 /// @param size The size of the buffer
 /// @return The created BoundBuffer
 /// @throws vk::SystemError if a Vulkan call fails
-BoundBuffer createUniformBuffer(vk::raii::Device const& device,
-                                vk::raii::PhysicalDevice const& physicalDevice,
-                                vk::DeviceSize size);
+BoundBuffer createUniformBuffer(GPU const& gpu, vk::DeviceSize size);
 
 /// Copy a local buffer to a device buffer
 ///
 /// @param src The local buffer
 /// @param dst The device buffer
-/// @param device The logical device to perform the operation on
+/// @param gpu The gpu to perform the operation on
 /// @param commandPool The command pool to allocate command buffers from
-/// @param graphicsQueue The queue to submit the copy command to
 void copyBuffer(BoundBuffer const& src,
                 BoundBuffer const& dst,
-                vk::raii::Device const& device,
-                vk::raii::CommandPool const& commandPool,
-                vk::raii::Queue const& graphicsQueue);
+                GPU const& gpu,
+                vk::raii::CommandPool const& commandPool);
 
 } // namespace VK
