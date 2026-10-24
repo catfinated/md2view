@@ -64,10 +64,10 @@ void Renderer::initVulkan() {
     frameBuffers_ =
         createFrameBuffers(imageViews_, renderPass_,
                            swapChainSupportDetails_.extent, gpu_.logical());
-    commandPool_ = createCommandPool(gpu_.logical(), gpu_.queueFamilyIndices());
 
-    vk::CommandBufferAllocateInfo allocInfo{
-        *commandPool_, vk::CommandBufferLevel::ePrimary, kMaxFramesInFlight};
+    vk::CommandBufferAllocateInfo allocInfo{*gpu_.commandPool(),
+                                            vk::CommandBufferLevel::ePrimary,
+                                            kMaxFramesInFlight};
     commandBuffers_ = gpu_.logical().allocateCommandBuffers(allocInfo);
     imageAvailableSemaphores_ =
         createSemaphores(gpu_.logical(), kMaxFramesInFlight);
@@ -83,14 +83,14 @@ void Renderer::initVulkan() {
     auto stagingBuffer = createStagingBuffer(gpu_, bufSize);
     stagingBuffer.memcpy(kVertices);
     vertexBuffer_ = createStaticVertexBuffer(gpu_, bufSize);
-    copyBuffer(stagingBuffer, vertexBuffer_, gpu_, commandPool_);
+    copyBuffer(stagingBuffer, vertexBuffer_, gpu_);
 
     // copy indices to high performance on device gpu memory
     bufSize = sizeof(kIndices[0]) * kIndices.size();
     stagingBuffer = createStagingBuffer(gpu_, bufSize);
     stagingBuffer.memcpy(kIndices);
     indexBuffer_ = createIndexBuffer(gpu_, bufSize);
-    copyBuffer(stagingBuffer, indexBuffer_, gpu_, commandPool_);
+    copyBuffer(stagingBuffer, indexBuffer_, gpu_);
 
     uniformBuffers_.reserve(kMaxFramesInFlight);
     for (auto i = 0U; i < kMaxFramesInFlight; ++i) {

@@ -14,8 +14,9 @@ GPU::GPU(std::pair<vk::raii::PhysicalDevice, QueueFamilyIndices>&& args)
     , device_{createDevice(physicalDevice_, queueFamilyIndices_)}
     , graphicsQueue_{device_.getQueue(
           queueFamilyIndices_.graphicsFamily.value(), 0)}
-    , presentQueue_{
-          device_.getQueue(queueFamilyIndices_.presentFamily.value(), 0)} {}
+    , presentQueue_{device_.getQueue(queueFamilyIndices_.presentFamily.value(),
+                                     0)}
+    , commandPool_{createCommandPool(device_, queueFamilyIndices_)} {}
 
 void GPU::waitIdle() {
     if (*device_ != nullptr) {

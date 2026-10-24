@@ -72,32 +72,17 @@ BoundBuffer createUniformBuffer(GPU const& gpu, vk::DeviceSize size) {
 
 void copyBuffer(BoundBuffer const& src,
                 BoundBuffer const& dst,
-                GPU const& gpu,
-                vk::raii::CommandPool const& commandPool) {
+                GPU const& gpu) {
 
     gsl_Assert(src.size == dst.size);
-    vk::CommandBufferAllocateInfo allocInfo{
-        *commandPool, vk::CommandBufferLevel::ePrimary, 1};
-
-    auto commandBuffers = gpu.logical().allocateCommandBuffers(allocInfo);
-    auto& commandBuffer = commandBuffers.at(0);
-
-    vk::CommandBufferBeginInfo beginInfo{
-        vk::CommandBufferUsageFlagBits::eOneTimeSubmit};
-
     vk::BufferCopy copyRegion{};
     copyRegion.srcOffset = 0;
     copyRegion.dstOffset = 0;
     copyRegion.size = src.size;
 
-    commandBuffer.begin(beginInfo);
-    commandBuffer.copyBuffer(*src.buffer, *dst.buffer, copyRegion);
-    commandBuffer.end();
-
-    vk::SubmitInfo submitInfo{nullptr, nullptr, *commandBuffer};
-
-    gpu.graphicsQueue().submit(submitInfo, nullptr);
-    gpu.graphicsQueue().waitIdle();
+    gpu.submitOnce([&](auto& cmdBuf) {
+        cmdBuf.copyBuffer(*src.buffer, *dst.buffer, copyRegion);
+    });
 }
 
 } // namespace VK

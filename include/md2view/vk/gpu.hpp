@@ -7,6 +7,7 @@
 
 #include "md2view/vk/vk.hpp"
 
+#include <concepts>
 #include <cstdint>
 
 namespace VK {
@@ -29,11 +30,32 @@ public:
     }
     vk::raii::Queue const& graphicsQueue() const { return graphicsQueue_; }
     vk::raii::Queue const& presentQueue() const { return presentQueue_; }
+    vk::raii::CommandPool const& commandPool() const { return commandPool_; }
 
     uint32_t findMemoryType(uint32_t typeFilter,
                             vk::MemoryPropertyFlags properties) const;
 
     void waitIdle();
+
+    void submitOnce(std::invocable<vk::CommandBuffer&> auto func) const {
+        vk::CommandBufferAllocateInfo allocInfo{
+            *commandPool_, vk::CommandBufferLevel::ePrimary, 1};
+
+        auto commandBuffers = device_.allocateCommandBuffers(allocInfo);
+        auto& commandBuffer = commandBuffers.at(0);
+
+        vk::CommandBufferBeginInfo beginInfo{
+            vk::CommandBufferUsageFlagBits::eOneTimeSubmit};
+
+        commandBuffer.begin(beginInfo);
+        func(commandBuffer);
+        commandBuffer.end();
+
+        vk::SubmitInfo submitInfo{nullptr, nullptr, *commandBuffer};
+
+        graphicsQueue_.submit(submitInfo, nullptr);
+        graphicsQueue_.waitIdle();
+    }
 
 private:
     explicit GPU(
@@ -45,6 +67,7 @@ private:
     vk::raii::Device device_{nullptr};
     vk::raii::Queue graphicsQueue_{nullptr};
     vk::raii::Queue presentQueue_{nullptr};
+    vk::raii::CommandPool commandPool_{nullptr};
 };
 
 } // namespace VK

@@ -61,7 +61,6 @@ private:
     vk::raii::PipelineLayout pipelineLayout_{nullptr};
     vk::raii::Pipeline graphicsPipeline_{nullptr};
     std::vector<vk::raii::Framebuffer> frameBuffers_;
-    vk::raii::CommandPool commandPool_{nullptr};
     std::vector<vk::raii::CommandBuffer> commandBuffers_;
     std::vector<vk::raii::Semaphore> imageAvailableSemaphores_;
     std::vector<vk::raii::Semaphore> renderFinishedSemaphores_;

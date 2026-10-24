@@ -135,10 +135,6 @@ BoundBuffer createUniformBuffer(GPU const& gpu, vk::DeviceSize size);
 /// @param src The local buffer
 /// @param dst The device buffer
 /// @param gpu The gpu to perform the operation on
-/// @param commandPool The command pool to allocate command buffers from
-void copyBuffer(BoundBuffer const& src,
-                BoundBuffer const& dst,
-                GPU const& gpu,
-                vk::raii::CommandPool const& commandPool);
+void copyBuffer(BoundBuffer const& src, BoundBuffer const& dst, GPU const& gpu);
 
 } // namespace VK
