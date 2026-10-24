@@ -15,4 +15,10 @@ GPU::GPU(std::pair<vk::raii::PhysicalDevice, QueueFamilyIndices>&& args)
     , presentQueue_{
           device_.getQueue(queueFamilyIndices_.presentFamily.value(), 0)} {}
 
+void GPU::waitIdle() {
+    if (*device_ != nullptr) {
+        device_.waitIdle();
+    }
+}
+
 } // namespace VK

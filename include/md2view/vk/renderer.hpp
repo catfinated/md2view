@@ -4,6 +4,7 @@
 /// This is very much a work in progress.
 #pragma once
 
+#include "md2view/vk/gpu.hpp"
 #include "md2view/vk/vk.hpp"
 #include "md2view/window.hpp"
 
@@ -47,11 +48,7 @@ private:
     vk::raii::Instance instance_{nullptr};
     vk::raii::DebugUtilsMessengerEXT debugMessenger_{nullptr};
     vk::raii::SurfaceKHR surface_{nullptr};
-    vk::raii::PhysicalDevice physicalDevice_{nullptr};
-    QueueFamilyIndices queueFamilyIndices_;
-    vk::raii::Device device_{nullptr};
-    vk::raii::Queue graphicsQueue_{nullptr};
-    vk::raii::Queue presentQueue_{nullptr};
+    GPU gpu_;
     vk::raii::SwapchainKHR swapChain_{nullptr};
     std::vector<vk::Image> swapChainImages_;
     SwapChainSupportDetails swapChainSupportDetails_;

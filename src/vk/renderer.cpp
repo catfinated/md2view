@@ -43,72 +43,70 @@ Renderer::Renderer(Window& window)
 
 Renderer::~Renderer() {
     window_.setFramebufferResizeHandler(nullptr);
-    if (*device_ != nullptr) {
-        device_.waitIdle();
-    }
+    gpu_.waitIdle();
 }
 
 void Renderer::initVulkan() {
     instance_ = createInstance(context_);
     debugMessenger_ = createDebugUtilsMessenger(instance_);
     surface_ = createSurface(instance_, window_);
-    std::tie(physicalDevice_, queueFamilyIndices_) =
-        pickPhysicalDevice(instance_, *surface_);
-    device_ = createDevice(physicalDevice_, queueFamilyIndices_);
+    gpu_ = GPU(instance_, *surface_);
 
-    graphicsQueue_ =
-        device_.getQueue(queueFamilyIndices_.graphicsFamily.value(), 0);
-    presentQueue_ =
-        device_.getQueue(queueFamilyIndices_.presentFamily.value(), 0);
-
-    std::tie(swapChain_, swapChainSupportDetails_) = createSwapChain(
-        physicalDevice_, device_, window_, *surface_, queueFamilyIndices_);
+    std::tie(swapChain_, swapChainSupportDetails_) =
+        createSwapChain(gpu_.physical(), gpu_.logical(), window_, *surface_,
+                        gpu_.queueFamilyIndices());
     swapChainImages_ = swapChain_.getImages();
-    imageViews_ =
-        createImageViews(device_, swapChainImages_, swapChainSupportDetails_);
+    imageViews_ = createImageViews(gpu_.logical(), swapChainImages_,
+                                   swapChainSupportDetails_);
 
     createRenderPass();
     createGraphicsPipeline();
-    frameBuffers_ = createFrameBuffers(
-        imageViews_, renderPass_, swapChainSupportDetails_.extent, device_);
-    commandPool_ = createCommandPool(device_, queueFamilyIndices_);
+    frameBuffers_ =
+        createFrameBuffers(imageViews_, renderPass_,
+                           swapChainSupportDetails_.extent, gpu_.logical());
+    commandPool_ = createCommandPool(gpu_.logical(), gpu_.queueFamilyIndices());
 
     vk::CommandBufferAllocateInfo allocInfo{
         *commandPool_, vk::CommandBufferLevel::ePrimary, kMaxFramesInFlight};
-    commandBuffers_ = device_.allocateCommandBuffers(allocInfo);
-    imageAvailableSemaphores_ = createSemaphores(device_, kMaxFramesInFlight);
+    commandBuffers_ = gpu_.logical().allocateCommandBuffers(allocInfo);
+    imageAvailableSemaphores_ =
+        createSemaphores(gpu_.logical(), kMaxFramesInFlight);
     // NB: one per swap chain image rather than per frame in flight. A render
     // finished semaphore stays in use by its presentation until that image is
     // acquired again, so it cannot be cycled with the frame index.
     renderFinishedSemaphores_ = createSemaphores(
-        device_, static_cast<unsigned int>(swapChainImages_.size()));
-    inflightFences_ = createFences(device_, kMaxFramesInFlight);
+        gpu_.logical(), static_cast<unsigned int>(swapChainImages_.size()));
+    inflightFences_ = createFences(gpu_.logical(), kMaxFramesInFlight);
 
     // copy vertices to high performance on device gpu memory
     auto bufSize = sizeof(Vertex) * kVertices.size();
-    auto stagingBuffer = createStagingBuffer(device_, physicalDevice_, bufSize);
+    auto stagingBuffer =
+        createStagingBuffer(gpu_.logical(), gpu_.physical(), bufSize);
     stagingBuffer.memcpy(kVertices);
-    vertexBuffer_ = createStaticVertexBuffer(device_, physicalDevice_, bufSize);
-    copyBuffer(stagingBuffer, vertexBuffer_, device_, commandPool_,
-               graphicsQueue_);
+    vertexBuffer_ =
+        createStaticVertexBuffer(gpu_.logical(), gpu_.physical(), bufSize);
+    copyBuffer(stagingBuffer, vertexBuffer_, gpu_.logical(), commandPool_,
+               gpu_.graphicsQueue());
 
     // copy indices to high performance on device gpu memory
     bufSize = sizeof(kIndices[0]) * kIndices.size();
-    stagingBuffer = createStagingBuffer(device_, physicalDevice_, bufSize);
+    stagingBuffer =
+        createStagingBuffer(gpu_.logical(), gpu_.physical(), bufSize);
     stagingBuffer.memcpy(kIndices);
-    indexBuffer_ = createIndexBuffer(device_, physicalDevice_, bufSize);
-    copyBuffer(stagingBuffer, indexBuffer_, device_, commandPool_,
-               graphicsQueue_);
+    indexBuffer_ = createIndexBuffer(gpu_.logical(), gpu_.physical(), bufSize);
+    copyBuffer(stagingBuffer, indexBuffer_, gpu_.logical(), commandPool_,
+               gpu_.graphicsQueue());
 
     uniformBuffers_.reserve(kMaxFramesInFlight);
     for (auto i = 0U; i < kMaxFramesInFlight; ++i) {
         uniformBuffers_.push_back(createUniformBuffer(
-            device_, physicalDevice_, sizeof(UniformBufferObject)));
+            gpu_.logical(), gpu_.physical(), sizeof(UniformBufferObject)));
     }
 
-    descriptorPool_ = createDescriptorPool(device_, kMaxFramesInFlight);
-    descriptorSets_ = createDescriptorSets(
-        device_, descriptorPool_, descriptorSetLayout_, kMaxFramesInFlight);
+    descriptorPool_ = createDescriptorPool(gpu_.logical(), kMaxFramesInFlight);
+    descriptorSets_ =
+        createDescriptorSets(gpu_.logical(), descriptorPool_,
+                             descriptorSetLayout_, kMaxFramesInFlight);
     gsl_Assert(descriptorSets_.size() == uniformBuffers_.size());
 
     for (auto [boundBuffer, descriptorSet] :
@@ -126,7 +124,7 @@ void Renderer::initVulkan() {
         descriptorWrite.descriptorCount = 1;
         descriptorWrite.pBufferInfo = &bufferInfo;
 
-        device_.updateDescriptorSets(descriptorWrite, nullptr);
+        gpu_.logical().updateDescriptorSets(descriptorWrite, nullptr);
     }
 
     spdlog::info("vulkan initialization complete. num views={}",
@@ -145,31 +143,33 @@ void Renderer::recreateSwapChain() {
         glfwWaitEvents();
     }
 
-    device_.waitIdle();
+    gpu_.waitIdle();
     frameBuffers_.clear();
     imageViews_.clear();
     swapChain_ = nullptr; // NB: must destroy previous swap chain first!
 
-    std::tie(swapChain_, swapChainSupportDetails_) = createSwapChain(
-        physicalDevice_, device_, window_, *surface_, queueFamilyIndices_);
+    std::tie(swapChain_, swapChainSupportDetails_) =
+        createSwapChain(gpu_.physical(), gpu_.logical(), window_, *surface_,
+                        gpu_.queueFamilyIndices());
     swapChainImages_ = swapChain_.getImages();
-    imageViews_ =
-        createImageViews(device_, swapChainImages_, swapChainSupportDetails_);
-    frameBuffers_ = createFrameBuffers(
-        imageViews_, renderPass_, swapChainSupportDetails_.extent, device_);
+    imageViews_ = createImageViews(gpu_.logical(), swapChainImages_,
+                                   swapChainSupportDetails_);
+    frameBuffers_ =
+        createFrameBuffers(imageViews_, renderPass_,
+                           swapChainSupportDetails_.extent, gpu_.logical());
     // the image count can change, and each render finished semaphore belongs
     // to an image, so rebuild them with the swap chain
     renderFinishedSemaphores_ = createSemaphores(
-        device_, static_cast<unsigned int>(swapChainImages_.size()));
+        gpu_.logical(), static_cast<unsigned int>(swapChainImages_.size()));
     spdlog::debug("recreated swap chain");
 }
 
 void Renderer::createGraphicsPipeline() {
     spdlog::info("creating graphics pipeline");
     auto vertShaderModule =
-        createShaderModule("data/shaders/vert.spv", device_);
+        createShaderModule("data/shaders/vert.spv", gpu_.logical());
     auto fragShaderModule =
-        createShaderModule("data/shaders/frag.spv", device_);
+        createShaderModule("data/shaders/frag.spv", gpu_.logical());
 
     vk::PipelineShaderStageCreateInfo vertShaderStageInfo{};
     vertShaderStageInfo.stage =
@@ -247,12 +247,12 @@ void Renderer::createGraphicsPipeline() {
     vk::PipelineDynamicStateCreateInfo dynamicState{
         {}, static_cast<uint32_t>(dynamicStates.size()), dynamicStates.data()};
 
-    descriptorSetLayout_ = createDescriptorSetLayout(device_);
+    descriptorSetLayout_ = createDescriptorSetLayout(gpu_.logical());
 
     vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.setLayoutCount = 1;
     pipelineLayoutInfo.pSetLayouts = &*descriptorSetLayout_;
-    pipelineLayout_ = device_.createPipelineLayout(pipelineLayoutInfo);
+    pipelineLayout_ = gpu_.logical().createPipelineLayout(pipelineLayoutInfo);
 
     vk::GraphicsPipelineCreateInfo pipelineInfo{};
     pipelineInfo.stageCount = 2;
@@ -271,7 +271,8 @@ void Renderer::createGraphicsPipeline() {
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
     pipelineInfo.basePipelineIndex = -1;              // Optional
 
-    graphicsPipeline_ = device_.createGraphicsPipeline(nullptr, pipelineInfo);
+    graphicsPipeline_ =
+        gpu_.logical().createGraphicsPipeline(nullptr, pipelineInfo);
 }
 
 void Renderer::createRenderPass() {
@@ -326,7 +327,7 @@ void Renderer::createRenderPass() {
     renderPassInfo.dependencyCount = 1;
     renderPassInfo.pDependencies = &dependency;
 
-    renderPass_ = device_.createRenderPass(renderPassInfo);
+    renderPass_ = gpu_.logical().createRenderPass(renderPassInfo);
 }
 
 void Renderer::recordCommandBuffer(vk::raii::CommandBuffer& commandBuffer,
@@ -381,7 +382,7 @@ void Renderer::recordCommandBuffer(vk::raii::CommandBuffer& commandBuffer,
 
 void Renderer::drawFrame(float time) {
     auto& fence = inflightFences_.at(currentFrame_);
-    gsl_Assert(device_.waitForFences({*fence}, true, UINT64_MAX) ==
+    gsl_Assert(gpu_.logical().waitForFences({*fence}, true, UINT64_MAX) ==
                vk::Result::eSuccess);
 
     auto& imageAvailableSemaphore = imageAvailableSemaphores_.at(currentFrame_);
@@ -405,7 +406,7 @@ void Renderer::drawFrame(float time) {
         throw std::runtime_error("failed to acquire swap chain image");
     }
 
-    device_.resetFences({*fence});
+    gpu_.logical().resetFences({*fence});
 
     auto& commandBuffer = commandBuffers_.at(currentFrame_);
     commandBuffer.reset();
@@ -431,7 +432,7 @@ void Renderer::drawFrame(float time) {
     submitInfo.signalSemaphoreCount = signalSemaphores.size();
     submitInfo.pSignalSemaphores = signalSemaphores.data();
 
-    graphicsQueue_.submit({submitInfo}, *fence);
+    gpu_.graphicsQueue().submit({submitInfo}, *fence);
 
     vk::PresentInfoKHR presentInfo{};
     presentInfo.waitSemaphoreCount = signalSemaphores.size();
@@ -446,8 +447,8 @@ void Renderer::drawFrame(float time) {
     // vk hpp throws exception on OutOfDateKHR result
     // https://github.com/KhronosGroup/Vulkan-Hpp/issues/599
     result = static_cast<vk::Result>(
-        presentQueue_.getDispatcher()->vkQueuePresentKHR(
-            static_cast<VkQueue>(*presentQueue_),
+        gpu_.presentQueue().getDispatcher()->vkQueuePresentKHR(
+            static_cast<VkQueue>(*gpu_.presentQueue()),
             reinterpret_cast<const VkPresentInfoKHR*>(&presentInfo)));
 
     currentFrame_ = (currentFrame_ + 1U) % kMaxFramesInFlight;
