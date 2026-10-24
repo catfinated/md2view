@@ -5,70 +5,38 @@
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_raii.hpp>
 
-#include <utility>
-
 namespace VK {
 
-BoundBuffer BoundBuffer::create(GPU const& gpu,
-                                vk::DeviceSize size,
-                                vk::BufferUsageFlags usage,
-                                vk::MemoryPropertyFlags properties) {
-    // first create the buffer
-    vk::BufferCreateInfo bufferInfo{};
-    bufferInfo.size = size;
-    bufferInfo.usage = usage;
-    bufferInfo.sharingMode = vk::SharingMode::eExclusive;
-    auto buf = gpu.logical().createBuffer(bufferInfo);
-
-    // next allocate the memory
-    auto const memRequirements = buf.getMemoryRequirements();
-    vk::MemoryAllocateInfo allocInfo{};
-    allocInfo.allocationSize = memRequirements.size;
-    allocInfo.memoryTypeIndex =
-        gpu.findMemoryType(memRequirements.memoryTypeBits, properties);
-    auto mem = gpu.logical().allocateMemory(allocInfo);
-
-    // bind buffer to memory and return
-    buf.bindMemory(*mem, 0UL);
-    return BoundBuffer{
-        .buffer = std::move(buf),
-        .memory = std::move(mem),
-        .size = size,
-    };
-}
-
 BoundBuffer createDynamicVertexBuffer(GPU const& gpu, vk::DeviceSize size) {
-    return BoundBuffer::create(gpu, size,
-                               vk::BufferUsageFlagBits::eVertexBuffer,
-                               vk::MemoryPropertyFlagBits::eHostVisible |
-                                   vk::MemoryPropertyFlagBits::eHostCoherent);
+    return gpu.createBuffer(size, vk::BufferUsageFlagBits::eVertexBuffer,
+                            vk::MemoryPropertyFlagBits::eHostVisible |
+                                vk::MemoryPropertyFlagBits::eHostCoherent);
 }
 
 BoundBuffer createStaticVertexBuffer(GPU const& gpu, vk::DeviceSize size) {
-    return BoundBuffer::create(gpu, size,
-                               vk::BufferUsageFlagBits::eTransferDst |
-                                   vk::BufferUsageFlagBits::eVertexBuffer,
-                               vk::MemoryPropertyFlagBits::eDeviceLocal);
+    return gpu.createBuffer(size,
+                            vk::BufferUsageFlagBits::eTransferDst |
+                                vk::BufferUsageFlagBits::eVertexBuffer,
+                            vk::MemoryPropertyFlagBits::eDeviceLocal);
 }
 
 BoundBuffer createIndexBuffer(GPU const& gpu, vk::DeviceSize size) {
-    return BoundBuffer::create(gpu, size,
-                               vk::BufferUsageFlagBits::eTransferDst |
-                                   vk::BufferUsageFlagBits::eIndexBuffer,
-                               vk::MemoryPropertyFlagBits::eDeviceLocal);
+    return gpu.createBuffer(size,
+                            vk::BufferUsageFlagBits::eTransferDst |
+                                vk::BufferUsageFlagBits::eIndexBuffer,
+                            vk::MemoryPropertyFlagBits::eDeviceLocal);
 }
 
 BoundBuffer createStagingBuffer(GPU const& gpu, vk::DeviceSize size) {
-    return BoundBuffer::create(gpu, size, vk::BufferUsageFlagBits::eTransferSrc,
-                               vk::MemoryPropertyFlagBits::eHostVisible |
-                                   vk::MemoryPropertyFlagBits::eHostCoherent);
+    return gpu.createBuffer(size, vk::BufferUsageFlagBits::eTransferSrc,
+                            vk::MemoryPropertyFlagBits::eHostVisible |
+                                vk::MemoryPropertyFlagBits::eHostCoherent);
 }
 
 BoundBuffer createUniformBuffer(GPU const& gpu, vk::DeviceSize size) {
-    auto buf =
-        BoundBuffer::create(gpu, size, vk::BufferUsageFlagBits::eUniformBuffer,
-                            vk::MemoryPropertyFlagBits::eHostVisible |
-                                vk::MemoryPropertyFlagBits::eHostCoherent);
+    auto buf = gpu.createBuffer(size, vk::BufferUsageFlagBits::eUniformBuffer,
+                                vk::MemoryPropertyFlagBits::eHostVisible |
+                                    vk::MemoryPropertyFlagBits::eHostCoherent);
     buf.map();
     return buf;
 }

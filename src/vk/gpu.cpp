@@ -1,5 +1,7 @@
 #include "md2view/vk/gpu.hpp"
 
+#include "md2view/vk/buffer.hpp"
+
 #include <gsl-lite/gsl-lite.hpp>
 #include <spdlog/spdlog.h>
 #include <vulkan/vulkan.hpp>
@@ -188,6 +190,33 @@ uint32_t GPU::findMemoryType(uint32_t typeFilter,
     }
 
     throw std::runtime_error("failed to find suitable memory type!");
+}
+
+BoundBuffer GPU::createBuffer(vk::DeviceSize size,
+                              vk::BufferUsageFlags usage,
+                              vk::MemoryPropertyFlags properties) const {
+    // first create the buffer
+    vk::BufferCreateInfo bufferInfo{};
+    bufferInfo.size = size;
+    bufferInfo.usage = usage;
+    bufferInfo.sharingMode = vk::SharingMode::eExclusive;
+    auto buf = device_.createBuffer(bufferInfo);
+
+    // next allocate the memory
+    auto const memRequirements = buf.getMemoryRequirements();
+    vk::MemoryAllocateInfo allocInfo{};
+    allocInfo.allocationSize = memRequirements.size;
+    allocInfo.memoryTypeIndex =
+        findMemoryType(memRequirements.memoryTypeBits, properties);
+    auto mem = device_.allocateMemory(allocInfo);
+
+    // bind buffer to memory and return
+    buf.bindMemory(*mem, 0UL);
+    return BoundBuffer{
+        .buffer = std::move(buf),
+        .memory = std::move(mem),
+        .size = size,
+    };
 }
 
 SwapChainSupportDetails

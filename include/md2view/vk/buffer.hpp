@@ -52,19 +52,6 @@ struct BoundBuffer {
         copyBytes(&obj, sizeof(T));
     }
 
-    /// Create BoundBuffer
-    ///
-    /// @param gpu Gpu to allocate memory on
-    /// @param size The size of the buffer
-    /// @param usage The usage flags for the buffer
-    /// @param properties The memory properties for the buffer memory
-    /// @return The created BoundBuffer
-    /// @throws vk::SystemError if a Vulkan call fails
-    static BoundBuffer create(GPU const& gpu,
-                              vk::DeviceSize size,
-                              vk::BufferUsageFlags usage,
-                              vk::MemoryPropertyFlags properties);
-
 private:
     void copyBytes(void const* src, std::size_t srcSize) const {
         gsl_Assert(srcSize == size);

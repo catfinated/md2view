@@ -2,6 +2,8 @@
 /// Vulkan GPU class
 #pragma once
 
+#include "md2view/vk/buffer.hpp"
+
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_raii.hpp>
 
@@ -64,6 +66,17 @@ public:
     [[nodiscard]] uint32_t
     findMemoryType(uint32_t typeFilter,
                    vk::MemoryPropertyFlags properties) const;
+
+    /// Create a buffer bound to newly allocated device memory
+    ///
+    /// @param size The size of the buffer
+    /// @param usage The usage flags for the buffer
+    /// @param properties The memory properties for the buffer memory
+    /// @throws vk::SystemError if a Vulkan call fails
+    [[nodiscard]] BoundBuffer
+    createBuffer(vk::DeviceSize size,
+                 vk::BufferUsageFlags usage,
+                 vk::MemoryPropertyFlags properties) const;
 
     [[nodiscard]] SwapChainSupportDetails
     swapChainSupport(vk::SurfaceKHR const& surface) const;
