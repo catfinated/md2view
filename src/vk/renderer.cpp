@@ -53,8 +53,7 @@ void Renderer::initVulkan() {
     gpu_ = GPU(instance_, *surface_);
 
     std::tie(swapChain_, swapChainSupportDetails_) =
-        createSwapChain(gpu_.physical(), gpu_.logical(), window_, *surface_,
-                        gpu_.queueFamilyIndices());
+        createSwapChain(gpu_, window_, *surface_);
     swapChainImages_ = swapChain_.getImages();
     imageViews_ = createImageViews(gpu_.logical(), swapChainImages_,
                                    swapChainSupportDetails_);
@@ -144,8 +143,7 @@ void Renderer::recreateSwapChain() {
     swapChain_ = nullptr; // NB: must destroy previous swap chain first!
 
     std::tie(swapChain_, swapChainSupportDetails_) =
-        createSwapChain(gpu_.physical(), gpu_.logical(), window_, *surface_,
-                        gpu_.queueFamilyIndices());
+        createSwapChain(gpu_, window_, *surface_);
     swapChainImages_ = swapChain_.getImages();
     imageViews_ = createImageViews(gpu_.logical(), swapChainImages_,
                                    swapChainSupportDetails_);

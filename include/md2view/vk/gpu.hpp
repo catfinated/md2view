@@ -5,12 +5,28 @@
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_raii.hpp>
 
-#include "md2view/vk/vk.hpp"
-
 #include <concepts>
 #include <cstdint>
 
 namespace VK {
+
+struct QueueFamilyIndices {
+    std::optional<uint32_t> graphicsFamily;
+    std::optional<uint32_t> presentFamily;
+
+    [[nodiscard]] bool isComplete() const noexcept {
+        return graphicsFamily.has_value() && presentFamily.has_value();
+    }
+};
+
+struct SwapChainSupportDetails {
+    vk::SurfaceCapabilitiesKHR capabilities;
+    std::vector<vk::SurfaceFormatKHR> formats;
+    std::vector<vk::PresentModeKHR> presentModes;
+
+    vk::SurfaceFormatKHR surfaceFormat;
+    vk::Extent2D extent;
+};
 
 class GPU {
 public:
@@ -32,8 +48,12 @@ public:
     vk::raii::Queue const& presentQueue() const { return presentQueue_; }
     vk::raii::CommandPool const& commandPool() const { return commandPool_; }
 
-    uint32_t findMemoryType(uint32_t typeFilter,
-                            vk::MemoryPropertyFlags properties) const;
+    [[nodiscard]] uint32_t
+    findMemoryType(uint32_t typeFilter,
+                   vk::MemoryPropertyFlags properties) const;
+
+    [[nodiscard]] SwapChainSupportDetails
+    swapChainSupport(vk::SurfaceKHR const& surface) const;
 
     void waitIdle();
 
